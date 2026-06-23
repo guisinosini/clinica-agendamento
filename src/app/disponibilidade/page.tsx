@@ -42,7 +42,7 @@ export default function DisponibilidadePage() {
   const stats = useMemo(() => {
     const total = rooms.length * TIME_SLOTS.length;
     const occupied = reservationsMap.size;
-    const mine = [...reservationsMap.values()].filter(v => v.mine).length;
+    const mine = Array.from(reservationsMap.values()).filter(v => v.mine).length;
     return { total, occupied, free: total - occupied, mine };
   }, [reservationsMap, rooms.length]);
 
