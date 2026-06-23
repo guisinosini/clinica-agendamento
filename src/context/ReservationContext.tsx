@@ -206,7 +206,9 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
         professionalId: r.professional_id,
         date: r.date,
         startTime: r.start_time.substring(0, 5),
-        endTime: r.end_time.substring(0, 5)
+        endTime: r.end_time.substring(0, 5),
+        patientName: r.patient_name,
+        service: r.service
       })));
     }
   };
@@ -217,7 +219,9 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
       professional_id: res.professionalId,
       date: res.date,
       start_time: `${res.startTime}:00`,
-      end_time: `${res.endTime}:00`
+      end_time: `${res.endTime}:00`,
+      patient_name: res.patientName || null,
+      service: res.service || null
     }));
 
     const { data, error } = await supabase.from('reservations').insert(dbReservations).select();

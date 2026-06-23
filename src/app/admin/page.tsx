@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useReservation } from "../../context/ReservationContext";
+import { supabase } from "../../lib/supabase";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function AdminDashboard() {
   
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState<"reservations" | "rooms">("reservations");
+  const [professionalsMap, setProfessionalsMap] = useState<Record<string, string>>({});
   
   // Room Form State
   const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
@@ -25,6 +27,17 @@ export default function AdminDashboard() {
       setIsAdmin(true);
     } else {
       router.push("/");
+    }
+
+    // Fetch professionals to show their names
+    if (savedPin === "1234") {
+      supabase.from("professionals").select("id, name").then(({ data }) => {
+        if (data) {
+          const map: Record<string, string> = {};
+          data.forEach(p => map[p.id] = p.name);
+          setProfessionalsMap(map);
+        }
+      });
     }
   }, [router]);
 
@@ -122,7 +135,8 @@ export default function AdminDashboard() {
                   <tr style={{ borderBottom: "2px solid var(--border-color)", textAlign: "left" }}>
                     <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Data</th>
                     <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Horário</th>
-                    <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Sala</th>
+                    <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Profissional</th>
+                    <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Sala / Paciente</th>
                     <th style={{ padding: "1rem", color: "var(--text-secondary)", textAlign: "right" }}>Ações</th>
                   </tr>
                 </thead>
@@ -131,7 +145,19 @@ export default function AdminDashboard() {
                     <tr key={res.id} style={{ borderBottom: "1px solid var(--border-color)" }}>
                       <td style={{ padding: "1rem", fontWeight: 600 }}>{res.date.split('-').reverse().join('/')}</td>
                       <td style={{ padding: "1rem" }}>{res.startTime} - {res.endTime}</td>
-                      <td style={{ padding: "1rem" }}>{getRoomName(res.roomId)}</td>
+                      <td style={{ padding: "1rem", fontWeight: 500, color: "var(--primary)" }}>
+                        {professionalsMap[res.professionalId] || "Desconhecido"}
+                      </td>
+                      <td style={{ padding: "1rem" }}>
+                        <div style={{ fontWeight: 600 }}>{getRoomName(res.roomId)}</div>
+                        {(res.patientName || res.service) && (
+                          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>
+                            {res.patientName && <span>{res.patientName}</span>}
+                            {res.patientName && res.service && <span> • </span>}
+                            {res.service && <span>{res.service}</span>}
+                          </div>
+                        )}
+                      </td>
                       <td style={{ padding: "1rem", textAlign: "right" }}>
                         <button 
                           onClick={() => handleCancelReservation(res.id)}

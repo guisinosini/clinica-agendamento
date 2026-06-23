@@ -19,4 +19,6 @@ export type Reservation = {
   date: string; // Formato YYYY-MM-DD
   startTime: string; // Ex: "08:00"
   endTime: string; // Ex: "09:00"
+  patientName?: string;
+  service?: string;
 };

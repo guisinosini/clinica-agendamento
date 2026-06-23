@@ -12,6 +12,8 @@ export default function ReservarPage() {
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(NEXT_DAYS[0]);
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
+  const [patientName, setPatientName] = useState("");
+  const [service, setService] = useState("");
   const [feedbackMsg, setFeedbackMsg] = useState<string>("");
 
   useEffect(() => {
@@ -51,6 +53,8 @@ export default function ReservarPage() {
         date: selectedDate,
         startTime: slot,
         endTime: `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`,
+        patientName: patientName || undefined,
+        service: service || undefined
       };
     });
     addReservations(newReservations);
@@ -58,6 +62,8 @@ export default function ReservarPage() {
     setTimeout(() => {
       setSelectedRoom(null);
       setSelectedSlots([]);
+      setPatientName("");
+      setService("");
       setFeedbackMsg("");
       router.push("/minhas-reservas");
     }, 1500);
@@ -295,6 +301,47 @@ export default function ReservarPage() {
               </div>
             </div>
           </section>
+
+          {/* Passo 4: Dados do Paciente (Opcional) */}
+          {selectedSlots.length > 0 && (
+            <section className="animate-slide" style={{ marginBottom: "2rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
+                <div style={{
+                  width: "32px", height: "32px", borderRadius: "var(--radius-full)",
+                  background: "var(--primary)",
+                  color: "var(--primary-mid)", fontSize: "0.9rem", fontWeight: 700,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0, boxShadow: "var(--clay-btn)",
+                }}>4</div>
+                <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-secondary)" }}>Dados do Agendamento</h2>
+              </div>
+              
+              <div className="card" style={{ padding: "2rem" }}>
+                <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem" }}>
+                  <div>
+                    <label className="label">Nome do Paciente</label>
+                    <input 
+                      type="text" 
+                      className="input" 
+                      placeholder="Ex: Maria Oliveira" 
+                      value={patientName}
+                      onChange={(e) => setPatientName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Serviço / Procedimento</label>
+                    <input 
+                      type="text" 
+                      className="input" 
+                      placeholder="Ex: Terapia de Casal" 
+                      value={service}
+                      onChange={(e) => setService(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
         </div>
       )}
 

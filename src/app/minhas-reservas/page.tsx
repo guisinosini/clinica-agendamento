@@ -139,9 +139,13 @@ export default function MinhasReservasPage() {
 
                       {/* Info da Reserva */}
                       <div>
-                        <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.2rem" }}>
-                          {getRoomName(reservation.roomId)}
+                        <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.2rem", color: "var(--text-main)" }}>
+                          {reservation.patientName || "Paciente não informado"}
                         </h3>
+                        <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>
+                          {getRoomName(reservation.roomId)}
+                          {reservation.service && ` • ${reservation.service}`}
+                        </p>
                         <span className="badge badge-primary" style={{ fontSize: "0.72rem" }}>
                           1 hora
                         </span>

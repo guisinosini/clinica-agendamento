@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useReservation } from "../context/ReservationContext";
 
 export default function Home() {
-  const { professional, loading, login, register, logout } = useReservation();
+  const { professional, loading, login, register, logout, reservations, rooms } = useReservation();
 
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState("");
@@ -197,6 +197,24 @@ export default function Home() {
     },
   ];
 
+  // Listagem de próximos agendamentos
+  const todayDate = new Date().toISOString().split("T")[0];
+  const upcomingReservations = reservations
+    .filter(res => res.professionalId === professional.id && res.date >= todayDate)
+    .sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return a.startTime.localeCompare(b.startTime);
+    })
+    .slice(0, 5); // Mostrar apenas os próximos 5
+
+  const getRoomName = (id: string) => rooms.find(r => r.id === id)?.name ?? "Sala Desconhecida";
+
+  const formatDate = (dateStr: string) => {
+    const [y, m, d] = dateStr.split("-");
+    const date = new Date(Number(y), Number(m) - 1, Number(d));
+    return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+  };
+
   return (
     <div className="container animate-fade" style={{ paddingTop: "2rem", paddingBottom: "4rem" }}>
       {/* Header do Dashboard */}
@@ -268,6 +286,53 @@ export default function Home() {
           </div>
         ))}
       </div>
+
+      {/* Próximos Agendamentos */}
+      <section style={{ marginTop: "3rem" }}>
+        <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "1.25rem", color: "var(--text-main)" }}>
+          Seus Próximos Agendamentos
+        </h2>
+        {upcomingReservations.length === 0 ? (
+          <div className="card" style={{ padding: "2rem", textAlign: "center" }}>
+            <p style={{ color: "var(--text-muted)" }}>Você não tem agendamentos futuros.</p>
+          </div>
+        ) : (
+          <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
+            {upcomingReservations.map(res => (
+              <div key={res.id} className="card" style={{ padding: "1.25rem", display: "flex", gap: "1rem", alignItems: "center" }}>
+                <div style={{
+                  backgroundColor: "var(--primary-light)", color: "var(--primary)",
+                  padding: "0.5rem 0.75rem", borderRadius: "var(--radius-sm)",
+                  textAlign: "center", fontWeight: 700, minWidth: "70px"
+                }}>
+                  <div style={{ fontSize: "1.1rem", lineHeight: "1" }}>{formatDate(res.date)}</div>
+                  <div style={{ fontSize: "0.75rem", marginTop: "0.25rem", opacity: 0.8 }}>{res.startTime}</div>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ fontWeight: 700, fontSize: "1rem", color: "var(--text-main)" }}>
+                    {res.patientName || "Paciente não informado"}
+                  </h3>
+                  <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                    {getRoomName(res.roomId)}
+                  </p>
+                  {res.service && (
+                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                      {res.service}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {upcomingReservations.length > 0 && (
+          <div style={{ marginTop: "1rem", textAlign: "right" }}>
+            <Link href="/minhas-reservas" style={{ fontSize: "0.9rem", color: "var(--primary)", fontWeight: 600, textDecoration: "underline" }}>
+              Ver todos os agendamentos
+            </Link>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
