@@ -17,11 +17,11 @@ CREATE TABLE rooms (
 
 -- Inserindo as salas padrão
 INSERT INTO rooms (id, name, description) VALUES
-  ('r1', 'Consultório 1', 'Terapia Individual'),
-  ('r2', 'Consultório 2', 'Casal e Família'),
-  ('r3', 'Consultório 3', 'Avaliação Psicológica'),
-  ('r4', 'Consultório 4', 'Infantil (Ludoterapia)'),
-  ('r5', 'Sala de Reunião', 'Reuniões e Grupos');
+  ('r1', 'Consultório 1', ''),
+  ('r2', 'Consultório 2', ''),
+  ('r3', 'Consultório 3', ''),
+  ('r4', 'Consultório 4', ''),
+  ('r5', 'Sala de Reunião', '');
 
 -- Criação da tabela de Reservas
 CREATE TABLE reservations (

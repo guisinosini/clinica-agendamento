@@ -118,7 +118,9 @@ export default function ReservarPage() {
               }}
             >
               <h3 style={{ marginBottom: '0.5rem', color: selectedRoom === room.id ? 'var(--primary)' : 'inherit' }}>{room.name}</h3>
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{room.description}</p>
+              {room.description && (
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{room.description}</p>
+              )}
             </div>
           ))}
         </div>
