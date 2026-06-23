@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useReservation } from "../context/ReservationContext";
 
 export default function Home() {
-  const { professional } = useReservation();
+  const { professional, loading } = useReservation();
+
+  if (loading || !professional) return <div className="container" style={{ padding: '4rem', textAlign: 'center' }}>Carregando dados da clínica...</div>;
 
   return (
     <div className="container">

@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useReservation, NEXT_DAYS, TIME_SLOTS } from "../../context/ReservationContext";
 
 export default function DisponibilidadePage() {
-  const { rooms, reservations, professional } = useReservation();
+  const { rooms, reservations, professional, loading } = useReservation();
   const [selectedDate, setSelectedDate] = useState<string>(NEXT_DAYS[0]);
+
+  if (loading || !professional) return <div className="container" style={{ padding: '4rem', textAlign: 'center' }}>Carregando grade de horários...</div>;
 
   const formatDayName = (dateStr: string) => {
     const d = new Date(dateStr + "T12:00:00Z");

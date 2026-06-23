@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useReservation } from "../../context/ReservationContext";
 
 export default function MinhasReservasPage() {
-  const { reservations, cancelReservation, rooms, professional } = useReservation();
+  const { reservations, cancelReservation, rooms, professional, loading } = useReservation();
+
+  if (loading || !professional) return <div className="container" style={{ padding: '4rem', textAlign: 'center' }}>Carregando suas reservas...</div>;
 
   // Filtramos apenas as reservas do profissional logado
   const myReservations = reservations.filter((res) => res.professionalId === professional.id);

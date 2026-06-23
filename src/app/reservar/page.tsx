@@ -7,12 +7,14 @@ import { useReservation, NEXT_DAYS, TIME_SLOTS } from "../../context/Reservation
 
 export default function ReservarPage() {
   const router = useRouter();
-  const { rooms, reservations, addReservations, professional } = useReservation();
+  const { rooms, reservations, addReservations, professional, loading } = useReservation();
   
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(NEXT_DAYS[0]);
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
   const [feedbackMsg, setFeedbackMsg] = useState<string>("");
+
+  if (loading || !professional) return <div className="container" style={{ padding: '4rem', textAlign: 'center' }}>Carregando salas...</div>;
 
   const formatDayName = (dateStr: string) => {
     const d = new Date(dateStr + "T12:00:00Z");
