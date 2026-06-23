@@ -92,13 +92,13 @@ export default function MinhasReservasPage() {
                   padding: "0.3rem 0.875rem",
                   borderRadius: "var(--radius-full)",
                   background: isToday(date)
-                    ? "linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%)"
+                    ? "var(--primary)"
                     : "var(--primary-light)",
-                  color: isToday(date) ? "white" : "var(--primary)",
+                  color: isToday(date) ? "var(--primary-mid)" : "var(--primary)",
                   fontSize: "0.8rem",
                   fontWeight: 700,
                   textTransform: "capitalize",
-                  boxShadow: isToday(date) ? "var(--shadow-primary)" : "none",
+                  boxShadow: isToday(date) ? "var(--clay-btn)" : "var(--clay-input)",
                 }}>
                   {isToday(date) ? "📍 Hoje" : formatDate(date)}
                 </div>
@@ -123,14 +123,14 @@ export default function MinhasReservasPage() {
                     <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
                       {/* Badge de Horário */}
                       <div style={{
-                        background: "linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%)",
-                        color: "white",
+                        background: "var(--primary)",
+                        color: "var(--primary-mid)",
                         padding: "0.85rem 1rem",
                         borderRadius: "var(--radius-md)",
                         fontWeight: 700,
                         textAlign: "center",
                         minWidth: "90px",
-                        boxShadow: "var(--shadow-primary)",
+                        boxShadow: "var(--clay-btn)",
                         flexShrink: 0,
                       }}>
                         <div style={{ fontSize: "1.1rem" }}>{reservation.startTime}</div>

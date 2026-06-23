@@ -110,14 +110,14 @@ export default function DisponibilidadePage() {
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
             <thead>
-              <tr style={{ background: "linear-gradient(135deg, var(--primary-light) 0%, #E0E7FF 100%)" }}>
+              <tr style={{ background: "var(--primary-light)" }}>
                 <th style={{
                   padding: "1rem 1.25rem",
                   borderBottom: "1px solid var(--border-color)",
                   textAlign: "left",
                   width: "90px",
                   position: "sticky", left: 0, zIndex: 2,
-                  background: "linear-gradient(135deg, var(--primary-light) 0%, #E0E7FF 100%)",
+                  background: "var(--primary-light)",
                   fontSize: "0.8rem",
                   fontWeight: 700,
                   color: "var(--primary)",
@@ -146,7 +146,7 @@ export default function DisponibilidadePage() {
                   key={slot}
                   style={{
                     borderBottom: "1px solid var(--border-color)",
-                    backgroundColor: slotIdx % 2 === 0 ? "white" : "#FAFBFF",
+                    backgroundColor: slotIdx % 2 === 0 ? "var(--bg-color)" : "var(--card-bg)",
                   }}
                 >
                   {/* Coluna de Horário */}
@@ -157,7 +157,7 @@ export default function DisponibilidadePage() {
                     color: "var(--text-secondary)",
                     position: "sticky", left: 0, zIndex: 1,
                     borderRight: "1px solid var(--border-color)",
-                    backgroundColor: slotIdx % 2 === 0 ? "white" : "#FAFBFF",
+                    backgroundColor: slotIdx % 2 === 0 ? "var(--bg-color)" : "var(--card-bg)",
                     whiteSpace: "nowrap",
                   }}>
                     {slot}
@@ -169,9 +169,9 @@ export default function DisponibilidadePage() {
                     const occupied = !!data;
                     const mine = data?.mine ?? false;
 
-                    let bg = "#ECFDF5", color = "#047857", label = "Livre", icon = "✓";
-                    if (occupied && mine) { bg = "#EEF2FF"; color = "var(--primary)"; label = "Sua Reserva"; icon = "📌"; }
-                    if (occupied && !mine) { bg = "#FEF2F2"; color = "#B91C1C"; label = "Ocupado"; icon = "✗"; }
+                    let bg = "var(--bg-color)", color = "var(--text-secondary)", label = "Livre", icon = "✓";
+                    if (occupied && mine) { bg = "var(--primary)"; color = "var(--primary-mid)"; label = "Sua Reserva"; icon = "📌"; }
+                    if (occupied && !mine) { bg = "var(--primary-light)"; color = "var(--primary)"; label = "Ocupado"; icon = "✗"; }
 
                     return (
                       <td key={room.id} style={{ padding: "0.5rem", textAlign: "center" }}>

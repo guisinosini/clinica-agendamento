@@ -56,20 +56,21 @@ export default function Home() {
         alignItems: "center",
         justifyContent: "center",
         padding: "1rem",
-        background: "linear-gradient(135deg, #EEF2FF 0%, #F5F6FA 50%, #E0E7FF 100%)",
+        background: "var(--bg-color)",
       }}>
         <div style={{ width: "100%", maxWidth: "440px" }}>
           {/* Logo / Header */}
           <div style={{ textAlign: "center", marginBottom: "2rem" }} className="animate-slide">
             <div style={{
               width: "72px", height: "72px",
-              background: "linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%)",
+              background: "var(--primary)",
+              color: "var(--primary-mid)",
               borderRadius: "20px",
               margin: "0 auto 1.25rem",
               display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "var(--shadow-primary)",
+              boxShadow: "var(--clay-btn)",
             }}>
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
                 <line x1="8" y1="2" x2="8" y2="6" />
@@ -155,7 +156,6 @@ export default function Home() {
     {
       href: "/reservar",
       emoji: "📅",
-      color: "#EEF2FF",
       title: "Nova Reserva",
       desc: "Selecione uma sala, escolha o dia e garanta seus horários de atendimento.",
       btnLabel: "Acessar Salas",
@@ -164,7 +164,6 @@ export default function Home() {
     {
       href: "/disponibilidade",
       emoji: "👀",
-      color: "#F0FDF4",
       title: "Disponibilidade",
       desc: "Veja o panorama de toda a clínica e saiba quais horários estão livres.",
       btnLabel: "Ver Calendário",
@@ -173,7 +172,6 @@ export default function Home() {
     {
       href: "/minhas-reservas",
       emoji: "📝",
-      color: "#FFFBEB",
       title: "Minhas Reservas",
       desc: "Acompanhe e gerencie todos os seus agendamentos futuros.",
       btnLabel: "Ver Histórico",
@@ -232,12 +230,13 @@ export default function Home() {
             style={{ display: "flex", flexDirection: "column" }}
           >
             <div style={{
-              width: "52px", height: "52px",
-              backgroundColor: card.color,
+              width: "56px", height: "56px",
+              backgroundColor: "var(--bg-color)",
               borderRadius: "var(--radius-md)",
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: "1.6rem",
               marginBottom: "1.25rem",
+              boxShadow: "var(--clay-input)",
             }}>
               {card.emoji}
             </div>

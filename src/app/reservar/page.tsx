@@ -109,11 +109,11 @@ export default function ReservarPage() {
       <section style={{ marginBottom: "2rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
           <div style={{
-            width: "28px", height: "28px", borderRadius: "var(--radius-full)",
-            background: "linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%)",
-            color: "white", fontSize: "0.8rem", fontWeight: 700,
+            width: "32px", height: "32px", borderRadius: "var(--radius-full)",
+            background: "var(--primary)",
+            color: "var(--primary-mid)", fontSize: "0.9rem", fontWeight: 700,
             display: "flex", alignItems: "center", justifyContent: "center",
-            flexShrink: 0,
+            flexShrink: 0, boxShadow: "var(--clay-btn)",
           }}>1</div>
           <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-secondary)" }}>Selecione a Sala</h2>
         </div>
@@ -127,10 +127,8 @@ export default function ReservarPage() {
                 style={{
                   padding: "1.5rem 1.25rem",
                   borderRadius: "var(--radius-lg)",
-                  border: `2px solid ${isSelected ? "var(--primary)" : "var(--border-color)"}`,
-                  background: isSelected
-                    ? "linear-gradient(135deg, var(--primary-light) 0%, #E0E7FF 100%)"
-                    : "var(--card-bg)",
+                  border: `2px solid ${isSelected ? "var(--primary)" : "transparent"}`,
+                  background: "var(--card-bg)",
                   cursor: "pointer",
                   transition: "all 0.2s ease",
                   boxShadow: isSelected ? "var(--shadow-primary)" : "var(--shadow-sm)",
@@ -171,11 +169,11 @@ export default function ReservarPage() {
           <section style={{ marginBottom: "2rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
               <div style={{
-                width: "28px", height: "28px", borderRadius: "var(--radius-full)",
-                background: "linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%)",
-                color: "white", fontSize: "0.8rem", fontWeight: 700,
+                width: "32px", height: "32px", borderRadius: "var(--radius-full)",
+                background: "var(--primary)",
+                color: "var(--primary-mid)", fontSize: "0.9rem", fontWeight: 700,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0,
+                flexShrink: 0, boxShadow: "var(--clay-btn)",
               }}>2</div>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-secondary)" }}>Escolha a Data</h2>
             </div>
@@ -216,11 +214,11 @@ export default function ReservarPage() {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem", flexWrap: "wrap", gap: "0.75rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
                 <div style={{
-                  width: "28px", height: "28px", borderRadius: "var(--radius-full)",
-                  background: "linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%)",
-                  color: "white", fontSize: "0.8rem", fontWeight: 700,
+                  width: "32px", height: "32px", borderRadius: "var(--radius-full)",
+                  background: "var(--primary)",
+                  color: "var(--primary-mid)", fontSize: "0.9rem", fontWeight: 700,
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  flexShrink: 0,
+                  flexShrink: 0, boxShadow: "var(--clay-btn)",
                 }}>3</div>
                 <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-secondary)" }}>Selecione os Horários</h2>
               </div>
@@ -251,15 +249,15 @@ export default function ReservarPage() {
                           ? "var(--border-color)"
                           : isSelected ? "var(--primary)" : "var(--border-color)",
                         background: isOccupied
-                          ? "#F8FAFC"
+                          ? "var(--primary-light)"
                           : isSelected
-                            ? "linear-gradient(135deg, var(--primary) 0%, #6366F1 100%)"
-                            : "white",
-                        color: isOccupied ? "var(--text-light)" : isSelected ? "white" : "var(--text-secondary)",
+                            ? "var(--primary)"
+                            : "var(--card-bg)",
+                        color: isOccupied ? "var(--text-light)" : isSelected ? "var(--primary-mid)" : "var(--text-secondary)",
                         cursor: isOccupied ? "not-allowed" : "pointer",
                         transition: "all 0.15s ease",
                         textDecoration: isOccupied ? "line-through" : "none",
-                        boxShadow: isSelected ? "0 4px 12px rgba(79, 70, 229, 0.25)" : "var(--shadow-xs)",
+                        boxShadow: isSelected ? "var(--clay-btn)" : "var(--clay-input)",
                         transform: isSelected ? "translateY(-1px)" : "none",
                       }}
                     >
@@ -272,9 +270,9 @@ export default function ReservarPage() {
               {/* Legenda */}
               <div style={{ display: "flex", gap: "1.25rem", marginTop: "1.5rem", fontSize: "0.8rem", color: "var(--text-muted)", flexWrap: "wrap", borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
                 {[
-                  { color: "white", border: "var(--border-color)", label: "Disponível" },
+                  { color: "var(--card-bg)", border: "var(--border-color)", label: "Disponível" },
                   { color: "var(--primary)", border: "var(--primary)", label: "Selecionado" },
-                  { color: "#F8FAFC", border: "var(--border-color)", label: "Ocupado" },
+                  { color: "var(--primary-light)", border: "var(--primary-light)", label: "Ocupado" },
                 ].map(item => (
                   <div key={item.label} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                     <div style={{ width: "14px", height: "14px", backgroundColor: item.color, border: `1.5px solid ${item.border}`, borderRadius: "4px" }} />

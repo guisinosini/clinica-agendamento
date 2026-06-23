@@ -1,54 +1,66 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 /* ============================================
-   DESIGN TOKENS - SISTEMA DE DESIGN PREMIUM
+   DESIGN TOKENS - TEMA CLAYMORPHISM PREMIUM
    ============================================ */
 :root {
-  /* Paleta Principal */
-  --primary: #4F46E5;
-  --primary-hover: #4338CA;
-  --primary-light: #EEF2FF;
-  --primary-mid: #C7D2FE;
+  /* Paleta Principal (Inspirada na imagem da Clínica) */
+  --primary: #4a3449; /* Roxo escuro / Ameixa */
+  --primary-hover: #3b283a;
+  --primary-light: #e8dfe6; /* Tom bem suave para fundos de destaque */
+  --primary-mid: #C8B0A6; /* Bege / Rosé Gold da logo */
 
   /* Cores de Superfície */
-  --bg-color: #F5F6FA;
-  --bg-gradient: linear-gradient(135deg, #F5F6FA 0%, #EEF2FF 100%);
-  --card-bg: #FFFFFF;
-  --card-hover-bg: #FAFBFF;
-  --nav-bg: rgba(255, 255, 255, 0.85);
+  --bg-color: #f6f3f0; /* Fundo principal off-white quente */
+  --bg-gradient: #f6f3f0;
+  --card-bg: #f6f3f0;
+  --nav-bg: rgba(246, 243, 240, 0.85);
 
   /* Tipografia */
-  --text-main: #0F172A;
-  --text-secondary: #334155;
-  --text-muted: #64748B;
-  --text-light: #94A3B8;
-
-  /* Bordas */
-  --border-color: #E2E8F0;
-  --border-focus: #A5B4FC;
+  --text-main: #332432;
+  --text-secondary: #584456;
+  --text-muted: #857283;
+  --text-light: #b0a1af;
 
   /* Status */
   --success: #10B981;
-  --success-light: #ECFDF5;
   --danger: #EF4444;
-  --danger-light: #FEF2F2;
-  --warning: #F59E0B;
-  --warning-light: #FFFBEB;
 
-  /* Sombras */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04);
-  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
-  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.03);
-  --shadow-primary: 0 8px 25px rgba(79, 70, 229, 0.25);
+  /* Sombras Claymorphism e Neumorphism */
+  --shadow-dark: #e0d9d4;
+  --shadow-light: #ffffff;
 
-  /* Tipografia */
+  --clay-card: 
+    10px 10px 20px var(--shadow-dark), 
+    -10px -10px 20px var(--shadow-light),
+    inset -2px -2px 6px rgba(255, 255, 255, 0.7),
+    inset 2px 2px 6px rgba(224, 217, 212, 0.2);
+
+  --clay-card-hover: 
+    12px 12px 24px var(--shadow-dark), 
+    -12px -12px 24px var(--shadow-light),
+    inset -2px -2px 6px rgba(255, 255, 255, 0.8),
+    inset 2px 2px 6px rgba(224, 217, 212, 0.3);
+
+  --clay-btn: 
+    4px 4px 10px rgba(74, 52, 73, 0.25),
+    inset -2px -2px 5px rgba(0, 0, 0, 0.15),
+    inset 2px 2px 5px rgba(255, 255, 255, 0.2);
+
+  --clay-btn-hover: 
+    6px 6px 14px rgba(74, 52, 73, 0.35),
+    inset -2px -2px 5px rgba(0, 0, 0, 0.2),
+    inset 2px 2px 5px rgba(255, 255, 255, 0.3);
+
+  --clay-input:
+    inset 4px 4px 8px var(--shadow-dark),
+    inset -4px -4px 8px var(--shadow-light);
+
+  /* Tipografia & Bordas */
   --font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
   --radius-full: 9999px;
 }
 
@@ -63,39 +75,20 @@
 
 html {
   scroll-behavior: smooth;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background: var(--bg-gradient);
-  background-attachment: fixed;
+  background: var(--bg-color);
   color: var(--text-main);
   font-family: var(--font-family);
   line-height: 1.6;
   min-height: 100vh;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-button {
-  cursor: pointer;
-  border: none;
-  background: none;
-  font-family: inherit;
-}
-
-input, select, textarea {
-  font-family: inherit;
-}
-
-img {
-  max-width: 100%;
-  display: block;
-}
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; border: none; background: none; font-family: inherit; }
+input, select, textarea { font-family: inherit; }
+img { max-width: 100%; display: block; }
 
 /* ============================================
    LAYOUT
@@ -107,9 +100,7 @@ img {
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 1rem;
-  }
+  .container { padding: 1rem; }
 }
 
 /* ============================================
@@ -122,15 +113,16 @@ img {
   background: var(--nav-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
+  /* Claymorphism Navbar */
+  box-shadow: 0 4px 15px rgba(224, 217, 212, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .navbar-inner {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem;
-  height: 64px;
+  height: 70px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -142,245 +134,206 @@ img {
   align-items: center;
   gap: 0.75rem;
   font-weight: 700;
-  font-size: 1.1rem;
-  color: var(--text-main);
+  font-size: 1.15rem;
+  color: var(--primary);
+  letter-spacing: 0.02em;
 }
 
 .navbar-brand-icon {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%);
+  width: 40px;
+  height: 40px;
+  background: var(--primary);
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-primary);
+  box-shadow: var(--clay-btn);
+  color: white;
 }
 
 .navbar-actions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .navbar-avatar {
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%);
-  color: white;
+  background: var(--primary);
+  color: var(--primary-mid);
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border: 2px solid var(--border-color);
+  box-shadow: 
+    4px 4px 10px var(--shadow-dark), 
+    -4px -4px 10px var(--shadow-light),
+    inset -2px -2px 5px rgba(0, 0, 0, 0.2);
+  border: 2px solid var(--primary-light);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .navbar-avatar:hover {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-light);
+  transform: scale(1.05);
+  border-color: var(--primary-mid);
 }
 
 @media (max-width: 768px) {
-  .navbar-inner {
-    padding: 0 1rem;
-  }
+  .navbar-inner { padding: 0 1rem; }
 }
 
 /* ============================================
-   BOTÕES
+   BOTÕES CLAYMORPHISM
    ============================================ */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, var(--primary) 0%, #6366F1 100%);
+  background: var(--primary);
   color: white;
-  padding: 0.7rem 1.5rem;
-  border-radius: var(--radius-sm);
+  padding: 0.8rem 1.6rem;
+  border-radius: var(--radius-md);
   font-weight: 600;
-  font-size: 0.925rem;
-  transition: all 0.2s ease;
-  box-shadow: var(--shadow-primary);
-  letter-spacing: 0.01em;
-  white-space: nowrap;
+  font-size: 0.95rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--clay-btn);
+  letter-spacing: 0.02em;
 }
 
 .btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(79, 70, 229, 0.35);
-  filter: brightness(1.05);
+  box-shadow: var(--clay-btn-hover);
+  background: var(--primary-hover);
 }
 
 .btn:active {
-  transform: translateY(0);
+  transform: translateY(1px);
+  box-shadow: 
+    inset 2px 2px 5px rgba(0, 0, 0, 0.2),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.1);
 }
 
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
   transform: none;
-  box-shadow: none;
 }
 
 .btn-outline {
-  background: transparent;
+  background: var(--bg-color);
   color: var(--primary);
-  border: 1.5px solid var(--primary-mid);
-  box-shadow: none;
+  box-shadow: 
+    5px 5px 10px var(--shadow-dark), 
+    -5px -5px 10px var(--shadow-light);
+  border: none;
 }
 
 .btn-outline:hover {
   background: var(--primary-light);
-  border-color: var(--primary);
-  box-shadow: none;
-  transform: translateY(-1px);
-  filter: none;
+  color: var(--primary-hover);
+  box-shadow: 
+    7px 7px 14px var(--shadow-dark), 
+    -7px -7px 14px var(--shadow-light);
 }
 
 .btn-ghost {
-  background: transparent;
-  color: var(--text-muted);
-  box-shadow: none;
-  padding: 0.6rem 1rem;
+  color: var(--text-secondary);
+  font-weight: 600;
 }
 
 .btn-ghost:hover {
-  background: var(--border-color);
-  color: var(--text-main);
-  box-shadow: none;
-  transform: none;
-  filter: none;
+  color: var(--primary);
+  background: rgba(200, 176, 166, 0.15); /* Bege super claro */
+  border-radius: var(--radius-sm);
 }
 
-.btn-danger {
-  background: linear-gradient(135deg, var(--danger) 0%, #DC2626 100%);
-  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.25);
-}
-
-.btn-danger:hover {
-  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.35);
-}
-
-.btn-sm {
-  padding: 0.45rem 1rem;
-  font-size: 0.85rem;
-}
-
-.btn-lg {
-  padding: 0.9rem 2rem;
-  font-size: 1rem;
-}
+.btn-sm { padding: 0.5rem 1.2rem; font-size: 0.875rem; }
+.btn-lg { padding: 1rem 2.2rem; font-size: 1.05rem; }
 
 /* ============================================
-   CARDS
+   CARDS CLAYMORPHISM
    ============================================ */
 .card {
   background: var(--card-bg);
   border-radius: var(--radius-lg);
-  padding: 1.75rem;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border-color);
-  transition: all 0.2s ease;
+  padding: 2rem;
+  box-shadow: var(--clay-card);
+  border: 1px solid rgba(255, 255, 255, 0.6); /* Borda clarinha para efeito 3D */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-xl);
-  border-color: var(--primary-mid);
-  background: var(--card-hover-bg);
+  transform: translateY(-5px);
+  box-shadow: var(--clay-card-hover);
 }
 
 /* ============================================
-   INPUTS
+   INPUTS NEUMORPHISM
    ============================================ */
 .input {
   width: 100%;
-  padding: 0.8rem 1rem;
+  padding: 1rem 1.25rem;
   border-radius: var(--radius-sm);
-  border: 1.5px solid var(--border-color);
-  background: #FAFBFF;
+  border: none;
+  background: var(--bg-color);
   color: var(--text-main);
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-family: var(--font-family);
   outline: none;
+  box-shadow: var(--clay-input);
   transition: all 0.2s ease;
 }
 
 .input:focus {
-  border-color: var(--primary);
-  background: white;
-  box-shadow: 0 0 0 3px var(--primary-light);
+  box-shadow: 
+    inset 5px 5px 10px var(--shadow-dark),
+    inset -5px -5px 10px var(--shadow-light),
+    0 0 0 2px var(--primary-mid); /* Anel de foco Bege/Rosé */
 }
 
-.input::placeholder {
-  color: var(--text-light);
-}
+.input::placeholder { color: var(--text-light); }
 
 .label {
   display: block;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-secondary);
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.5rem;
+  margin-left: 0.25rem;
 }
 
 /* ============================================
    UTILITÁRIOS
    ============================================ */
-.grid {
-  display: grid;
-  gap: 1.5rem;
-}
-
-.flex {
-  display: flex;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.justify-between {
-  justify-content: space-between;
-}
-
-.text-muted {
-  color: var(--text-muted);
-}
+.grid { display: grid; gap: 2rem; }
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.text-muted { color: var(--text-muted); }
 
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.65rem;
+  padding: 0.3rem 0.8rem;
   border-radius: var(--radius-full);
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 700;
   letter-spacing: 0.03em;
+  box-shadow: 
+    2px 2px 5px var(--shadow-dark), 
+    -2px -2px 5px var(--shadow-light);
 }
 
-.badge-primary {
-  background: var(--primary-light);
-  color: var(--primary);
-}
-
-.badge-success {
-  background: var(--success-light);
-  color: var(--success);
-}
-
-.badge-danger {
-  background: var(--danger-light);
-  color: var(--danger);
-}
+.badge-primary { background: var(--primary-light); color: var(--primary); border: 1px solid rgba(255,255,255,0.6); }
 
 /* ============================================
-   AVATAR
+   AVATAR GRANDE
    ============================================ */
 .avatar {
   border-radius: var(--radius-full);
@@ -389,85 +342,59 @@ img {
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  color: white;
-  background: linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%);
+  color: var(--primary-mid);
+  background: var(--primary);
   overflow: hidden;
   flex-shrink: 0;
+  box-shadow: var(--clay-card);
+  border: 3px solid rgba(255,255,255,0.4);
 }
 
 /* ============================================
-   DIVISORES
+   DIVISORES E LOADING
    ============================================ */
 .divider {
-  height: 1px;
-  background: var(--border-color);
-  margin: 1.5rem 0;
+  height: 2px;
+  background: var(--shadow-dark);
+  border-bottom: 1px solid var(--shadow-light);
+  margin: 2rem 0;
+  border-radius: 2px;
 }
 
-/* ============================================
-   LOADING
-   ============================================ */
 .loading-screen {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--primary-light);
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--primary-light);
   border-top-color: var(--primary);
   border-radius: var(--radius-full);
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  box-shadow: var(--clay-btn);
 }
 
 /* ============================================
    ANIMATIONS
    ============================================ */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.animate-fade { animation: fadeIn 0.4s ease forwards; }
-.animate-slide { animation: slideUp 0.5s ease forwards; }
+.animate-fade { animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.animate-slide { animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
 
 /* ============================================
    RESPONSIVIDADE
    ============================================ */
 @media (max-width: 640px) {
   .hide-mobile { display: none !important; }
-
-  .btn {
-    padding: 0.65rem 1.2rem;
-    font-size: 0.875rem;
-  }
-
-  .card {
-    padding: 1.25rem;
-    border-radius: var(--radius-md);
-  }
-}
-
-@media (max-width: 480px) {
-  h1 { font-size: 1.4rem !important; }
-  h2 { font-size: 1.1rem !important; }
+  .btn { padding: 0.75rem 1.4rem; font-size: 0.9rem; }
+  .card { padding: 1.5rem; border-radius: var(--radius-md); }
 }
