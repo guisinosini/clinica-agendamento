@@ -34,6 +34,11 @@ interface ReservationContextData {
   register: (name: string, email: string, specialty: string) => Promise<{ success: boolean; message: string }>;
   updateProfile: (id: string, name: string, specialty: string, avatarUrl?: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
+  // Funções Administrativas
+  fetchAllReservations: () => Reservation[]; // Apenas retorna tudo
+  addRoom: (id: string, name: string, description: string) => Promise<boolean>;
+  updateRoom: (id: string, name: string, description: string) => Promise<boolean>;
+  deleteRoom: (id: string) => Promise<boolean>;
 }
 
 const ReservationContext = createContext<ReservationContextData>({} as ReservationContextData);
@@ -170,6 +175,24 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     if (data) setRooms(data.map(r => ({ id: r.id, name: r.name, description: r.description })));
   };
 
+  const addRoom = async (id: string, name: string, description: string) => {
+    const { error } = await supabase.from('rooms').insert([{ id, name, description }]);
+    if (!error) { await fetchRooms(); return true; }
+    console.error(error); return false;
+  };
+
+  const updateRoom = async (id: string, name: string, description: string) => {
+    const { error } = await supabase.from('rooms').update({ name, description }).eq('id', id);
+    if (!error) { await fetchRooms(); return true; }
+    console.error(error); return false;
+  };
+
+  const deleteRoom = async (id: string) => {
+    const { error } = await supabase.from('rooms').delete().eq('id', id);
+    if (!error) { await fetchRooms(); return true; }
+    console.error(error); return false;
+  };
+
   const fetchReservations = async () => {
     const { data } = await supabase
       .from('reservations')
@@ -228,7 +251,11 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     login,
     register,
     updateProfile,
-    logout
+    logout,
+    fetchAllReservations: () => reservations,
+    addRoom,
+    updateRoom,
+    deleteRoom
   }), [reservations, rooms, professional, loading]);
 
   return (

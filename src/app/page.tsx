@@ -143,6 +143,24 @@ export default function Home() {
                 {isRegistering ? "Fazer Login" : "Cadastre-se"}
               </button>
             </p>
+            
+            {/* Acesso Admin Oculto/Discreto */}
+            <div style={{ textAlign: "center", marginTop: "1rem" }}>
+              <button
+                onClick={() => {
+                  const pin = window.prompt("Digite o PIN Administrativo:");
+                  if (pin === "1234") { // PIN simples de exemplo
+                    sessionStorage.setItem("@Clinica:adminPin", pin);
+                    window.location.href = "/admin";
+                  } else if (pin) {
+                    alert("PIN Incorreto!");
+                  }
+                }}
+                style={{ fontSize: "0.8rem", color: "var(--text-light)", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
+              >
+                Acesso Administrativo
+              </button>
+            </div>
           </div>
         </div>
       </div>
