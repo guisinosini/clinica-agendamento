@@ -6,12 +6,11 @@ import { useReservation } from "../context/ReservationContext";
 
 export default function Home() {
   const { professional, loading, login, register, logout } = useReservation();
-  
+
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
-  
   const [errorMsg, setErrorMsg] = useState("");
   const [isSubmiting, setIsSubmiting] = useState(false);
 
@@ -21,7 +20,7 @@ export default function Home() {
 
     setIsSubmiting(true);
     setErrorMsg("");
-    
+
     let result;
     if (isRegistering) {
       if (!name || !specialty) {
@@ -34,186 +33,224 @@ export default function Home() {
       result = await login(email);
     }
 
-    if (!result.success) {
-      setErrorMsg(result.message);
-    }
-    
+    if (!result.success) setErrorMsg(result.message);
     setIsSubmiting(false);
   };
 
+  // ─── LOADING ────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <p style={{ color: 'var(--text-muted)' }}>Carregando dados da clínica...</p>
+      <div className="loading-screen">
+        <div className="spinner" />
+        <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>Carregando dados da clínica...</p>
       </div>
     );
   }
 
-  // TELA DE LOGIN / CADASTRO (Mostrada se não houver profissional logado)
+  // ─── TELA DE LOGIN / CADASTRO ────────────────────────────────
   if (!professional) {
     return (
-      <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: '1rem' }}>
-        <div className="card" style={{ width: '100%', maxWidth: '450px', padding: '2.5rem 2rem', animation: 'fadeIn 0.4s ease' }}>
-          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <div style={{ width: '64px', height: '64px', backgroundColor: 'var(--primary)', borderRadius: '16px', margin: '0 auto 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
+      <div style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "1rem",
+        background: "linear-gradient(135deg, #EEF2FF 0%, #F5F6FA 50%, #E0E7FF 100%)",
+      }}>
+        <div style={{ width: "100%", maxWidth: "440px" }}>
+          {/* Logo / Header */}
+          <div style={{ textAlign: "center", marginBottom: "2rem" }} className="animate-slide">
+            <div style={{
+              width: "72px", height: "72px",
+              background: "linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%)",
+              borderRadius: "20px",
+              margin: "0 auto 1.25rem",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "var(--shadow-primary)",
+            }}>
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
             </div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-main)' }}>
-              {isRegistering ? "Novo Profissional" : "Clínica Agendamentos"}
+            <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
+              {isRegistering ? "Criar Conta" : "Clínica"}
             </h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-              {isRegistering 
-                ? "Preencha seus dados para começar a gerenciar seus horários." 
-                : "Entre com seu e-mail de profissional para gerenciar suas salas."}
+            <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", marginTop: "0.4rem" }}>
+              {isRegistering
+                ? "Preencha seus dados para começar."
+                : "Bem-vindo(a) de volta! Entre para continuar."}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-            
-            {isRegistering && (
-              <>
-                <div>
-                  <label htmlFor="name" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500 }}>Nome Completo</label>
-                  <input 
-                    id="name"
-                    type="text" 
-                    placeholder="Ex: Dr. João Silva" 
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    style={{ width: '100%', padding: '0.85rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none', fontSize: '1rem', transition: 'border-color 0.2s' }}
-                    required={isRegistering}
-                    onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
-                    onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
-                  />
-                </div>
+          {/* Card do Formulário */}
+          <div className="card animate-slide" style={{ padding: "2.5rem 2rem" }}>
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
+              {isRegistering && (
+                <>
+                  <div>
+                    <label htmlFor="name" className="label">Nome Completo</label>
+                    <input id="name" type="text" placeholder="Dr. João Silva" value={name}
+                      onChange={(e) => setName(e.target.value)} className="input" required={isRegistering} />
+                  </div>
+                  <div>
+                    <label htmlFor="specialty" className="label">Especialidade</label>
+                    <input id="specialty" type="text" placeholder="Ex: Psicólogo, Nutricionista..." value={specialty}
+                      onChange={(e) => setSpecialty(e.target.value)} className="input" required={isRegistering} />
+                  </div>
+                </>
+              )}
 
-                <div>
-                  <label htmlFor="specialty" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500 }}>Especialidade</label>
-                  <input 
-                    id="specialty"
-                    type="text" 
-                    placeholder="Ex: Psicólogo, Nutricionista..." 
-                    value={specialty}
-                    onChange={(e) => setSpecialty(e.target.value)}
-                    style={{ width: '100%', padding: '0.85rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none', fontSize: '1rem', transition: 'border-color 0.2s' }}
-                    required={isRegistering}
-                    onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
-                    onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
-                  />
-                </div>
-              </>
-            )}
-
-            <div>
-              <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500 }}>E-mail Cadastrado</label>
-              <input 
-                id="email"
-                type="email" 
-                placeholder="dr.joao@clinica.com" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{ width: '100%', padding: '0.85rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none', fontSize: '1rem', transition: 'border-color 0.2s' }}
-                required
-                onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
-                onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
-              />
-            </div>
-
-            {errorMsg && (
-              <div style={{ padding: '0.75rem', backgroundColor: '#FEE2E2', color: '#B91C1C', borderRadius: '8px', fontSize: '0.85rem', textAlign: 'center', animation: 'fadeIn 0.2s' }}>
-                {errorMsg}
+              <div>
+                <label htmlFor="email" className="label">E-mail Profissional</label>
+                <input id="email" type="email" placeholder="dr.joao@clinica.com" value={email}
+                  onChange={(e) => setEmail(e.target.value)} className="input" required />
               </div>
-            )}
 
-            <button 
-              type="submit" 
-              className="btn" 
-              disabled={isSubmiting || !email}
-              style={{ padding: '0.85rem', fontWeight: 600, opacity: isSubmiting ? 0.7 : 1, marginTop: '0.5rem' }}
-            >
-              {isSubmiting ? "Aguarde..." : (isRegistering ? "Criar Conta e Acessar" : "Acessar Plataforma")}
-            </button>
-          </form>
+              {errorMsg && (
+                <div className="animate-fade" style={{
+                  padding: "0.75rem 1rem",
+                  backgroundColor: "var(--danger-light)",
+                  color: "var(--danger)",
+                  borderRadius: "var(--radius-sm)",
+                  fontSize: "0.875rem",
+                  border: "1px solid #FECACA",
+                  fontWeight: 500,
+                }}>
+                  {errorMsg}
+                </div>
+              )}
 
-          {/* Botão para alternar entre Login e Cadastro */}
-          <div style={{ textAlign: 'center', marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              {isRegistering ? "Já tem uma conta?" : "Ainda não tem conta na clínica?"}
+              <button type="submit" className="btn btn-lg" disabled={isSubmiting || !email}
+                style={{ marginTop: "0.5rem" }}>
+                {isSubmiting ? "Aguarde..." : (isRegistering ? "Criar Conta e Acessar" : "Entrar")}
+              </button>
+            </form>
+
+            <div className="divider" />
+
+            <p style={{ textAlign: "center", fontSize: "0.9rem", color: "var(--text-muted)" }}>
+              {isRegistering ? "Já tem uma conta?" : "Ainda não tem conta?"}
+              {" "}
+              <button
+                onClick={() => { setIsRegistering(!isRegistering); setErrorMsg(""); }}
+                style={{ color: "var(--primary)", fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}
+              >
+                {isRegistering ? "Fazer Login" : "Cadastre-se"}
+              </button>
             </p>
-            <button 
-              onClick={() => {
-                setIsRegistering(!isRegistering);
-                setErrorMsg("");
-              }}
-              style={{
-                background: 'none', border: 'none', color: 'var(--primary)', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', marginTop: '0.5rem', textDecoration: 'underline'
-              }}
-            >
-              {isRegistering ? "Fazer Login" : "Cadastre-se como Profissional"}
-            </button>
           </div>
         </div>
       </div>
     );
   }
 
-  // TELA PRINCIPAL (DASHBOARD)
+  // ─── DASHBOARD ───────────────────────────────────────────────
+  const initials = professional.name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
+
+  const dashboardCards = [
+    {
+      href: "/reservar",
+      emoji: "📅",
+      color: "#EEF2FF",
+      title: "Nova Reserva",
+      desc: "Selecione uma sala, escolha o dia e garanta seus horários de atendimento.",
+      btnLabel: "Acessar Salas",
+      btnClass: "btn",
+    },
+    {
+      href: "/disponibilidade",
+      emoji: "👀",
+      color: "#F0FDF4",
+      title: "Disponibilidade",
+      desc: "Veja o panorama de toda a clínica e saiba quais horários estão livres.",
+      btnLabel: "Ver Calendário",
+      btnClass: "btn btn-outline",
+    },
+    {
+      href: "/minhas-reservas",
+      emoji: "📝",
+      color: "#FFFBEB",
+      title: "Minhas Reservas",
+      desc: "Acompanhe e gerencie todos os seus agendamentos futuros.",
+      btnLabel: "Ver Histórico",
+      btnClass: "btn btn-outline",
+    },
+  ];
+
   return (
-    <div className="container" style={{ paddingBottom: '4rem', animation: 'fadeIn 0.4s ease' }}>
-      <header style={{ marginBottom: '3rem', marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 700 }}>Painel do Profissional</h1>
-          <p className="text-muted" style={{ fontSize: '1.1rem', marginTop: '0.2rem' }}>Bem-vindo(a), <span style={{ color: 'var(--primary)', fontWeight: 600 }}>{professional.name}</span></p>
-          <small style={{ color: 'var(--text-muted)', opacity: 0.7 }}>Especialidade: {professional.specialty}</small>
+    <div className="container animate-fade" style={{ paddingTop: "2rem", paddingBottom: "4rem" }}>
+      {/* Header do Dashboard */}
+      <header style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: "2.5rem",
+        flexWrap: "wrap",
+        gap: "1rem",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          {/* Avatar */}
+          <div className="avatar" style={{ width: "56px", height: "56px", fontSize: "1.2rem", flexShrink: 0 }}>
+            {professional.avatarUrl ? (
+              <img src={professional.avatarUrl} alt={professional.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : initials}
+          </div>
+          <div>
+            <p style={{ fontSize: "0.875rem", color: "var(--text-muted)", marginBottom: "0.15rem" }}>Bem-vindo(a) de volta,</p>
+            <h1 style={{ fontSize: "1.5rem", fontWeight: 800, letterSpacing: "-0.02em" }}>{professional.name}</h1>
+            {professional.specialty && (
+              <span className="badge badge-primary" style={{ marginTop: "0.3rem" }}>{professional.specialty}</span>
+            )}
+          </div>
         </div>
-        <button onClick={logout} className="btn btn-outline" style={{ padding: '0.5rem 1.5rem' }}>Sair</button>
+
+        {/* Ações do Cabeçalho */}
+        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+          <Link href="/perfil" className="btn btn-outline btn-sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            <span className="hide-mobile">Editar Perfil</span>
+          </Link>
+          <button onClick={logout} className="btn btn-ghost btn-sm">
+            Sair
+          </button>
+        </div>
       </header>
 
-      <main className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%', transition: 'transform 0.2s ease', cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-4px)'} onMouseOut={e => e.currentTarget.style.transform = 'none'}>
-          <div style={{ width: '48px', height: '48px', backgroundColor: '#EEF2FF', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
-            <span style={{ fontSize: '1.5rem' }}>📅</span>
+      {/* Cards do Dashboard */}
+      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
+        {dashboardCards.map((card) => (
+          <div
+            key={card.href}
+            className="card card-hover"
+            style={{ display: "flex", flexDirection: "column" }}
+          >
+            <div style={{
+              width: "52px", height: "52px",
+              backgroundColor: card.color,
+              borderRadius: "var(--radius-md)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "1.6rem",
+              marginBottom: "1.25rem",
+            }}>
+              {card.emoji}
+            </div>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "0.65rem" }}>{card.title}</h2>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", lineHeight: "1.6", flexGrow: 1, marginBottom: "1.5rem" }}>
+              {card.desc}
+            </p>
+            <Link href={card.href} className={card.btnClass} style={{ textAlign: "center" }}>
+              {card.btnLabel}
+            </Link>
           </div>
-          <h2 style={{ marginBottom: '1rem', fontSize: '1.3rem' }}>Nova Reserva</h2>
-          <p style={{ marginBottom: '2rem', color: 'var(--text-muted)', flexGrow: 1 }}>
-            Selecione uma das salas disponíveis, escolha o dia e garanta seus horários de atendimento.
-          </p>
-          <Link href="/reservar" className="btn" style={{ textAlign: 'center' }}>
-            Acessar Salas
-          </Link>
-        </div>
-
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%', transition: 'transform 0.2s ease', cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-4px)'} onMouseOut={e => e.currentTarget.style.transform = 'none'}>
-          <div style={{ width: '48px', height: '48px', backgroundColor: '#F3F4F6', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
-            <span style={{ fontSize: '1.5rem' }}>👀</span>
-          </div>
-          <h2 style={{ marginBottom: '1rem', fontSize: '1.3rem' }}>Disponibilidade Geral</h2>
-          <p style={{ marginBottom: '2rem', color: 'var(--text-muted)', flexGrow: 1 }}>
-            Visualize o panorama de toda a clínica para saber exatamente quais horários estão livres e quem está atendendo.
-          </p>
-          <Link href="/disponibilidade" className="btn btn-outline" style={{ textAlign: 'center' }}>
-            Ver Calendário
-          </Link>
-        </div>
-
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%', transition: 'transform 0.2s ease', cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-4px)'} onMouseOut={e => e.currentTarget.style.transform = 'none'}>
-          <div style={{ width: '48px', height: '48px', backgroundColor: '#ECFDF5', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
-            <span style={{ fontSize: '1.5rem' }}>📝</span>
-          </div>
-          <h2 style={{ marginBottom: '1rem', fontSize: '1.3rem' }}>Minhas Reservas</h2>
-          <p style={{ marginBottom: '2rem', color: 'var(--text-muted)', flexGrow: 1 }}>
-            Acompanhe todos os seus agendamentos futuros e gerencie ou cancele suas marcações.
-          </p>
-          <Link href="/minhas-reservas" className="btn btn-outline" style={{ textAlign: 'center' }}>
-            Histórico Pessoal
-          </Link>
-        </div>
-      </main>
+        ))}
+      </div>
     </div>
   );
 }

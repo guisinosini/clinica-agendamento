@@ -3,6 +3,7 @@ export type Professional = {
   name: string;
   email: string;
   specialty: string;
+  avatarUrl?: string | null; // URL da foto de perfil (opcional)
 };
 
 export type Room = {

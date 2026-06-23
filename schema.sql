@@ -4,6 +4,7 @@ CREATE TABLE professionals (
   name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
   specialty TEXT,
+  avatar_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -51,3 +52,12 @@ CREATE POLICY "Permitir deleção de reservas" ON reservations FOR DELETE USING 
 -- Políticas para Profissionais (Necessárias para o Cadastro e Login)
 CREATE POLICY "Leitura pública para profissionais" ON professionals FOR SELECT USING (true);
 CREATE POLICY "Permitir cadastro de profissionais" ON professionals FOR INSERT WITH CHECK (true);
+CREATE POLICY "Permitir atualização de perfil" ON professionals FOR UPDATE USING (true);
+
+-- STORAGE: Criar bucket para avatares
+-- Execute no painel do Supabase > Storage > New Bucket:
+-- Nome: avatars | Public: true
+-- Depois execute:
+-- CREATE POLICY "Avatares públicos" ON storage.objects FOR SELECT USING (bucket_id = 'avatars');
+-- CREATE POLICY "Upload de avatares" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'avatars');
+-- CREATE POLICY "Atualizar avatar" ON storage.objects FOR UPDATE USING (bucket_id = 'avatars');

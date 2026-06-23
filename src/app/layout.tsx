@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ReservationProvider } from "@/context/ReservationContext";
+import Navbar from "@/components/Navbar";
 
 export const metadata: Metadata = {
-  title: "Clínica - Gestão de Salas",
-  description: "Sistema de agendamento de salas de atendimento para profissionais.",
+  title: "Clínica — Gestão de Salas",
+  description: "Sistema de agendamento de salas de atendimento para profissionais de saúde.",
 };
 
 export default function RootLayout({
@@ -16,7 +17,10 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body>
         <ReservationProvider>
-          {children}
+          <Navbar />
+          <main>
+            {children}
+          </main>
         </ReservationProvider>
       </body>
     </html>

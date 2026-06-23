@@ -33,6 +33,7 @@ interface ReservationContextData {
   loading: boolean;
   login: (email: string) => Promise<{ success: boolean; message: string }>;
   register: (name: string, email: string, specialty: string) => Promise<{ success: boolean; message: string }>;
+  updateProfile: (id: string, name: string, specialty: string, avatarUrl?: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
 }
 
@@ -84,7 +85,7 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
 
       if (data) {
-        setProfessional({ id: data.id, name: data.name, email: data.email, specialty: data.specialty });
+        setProfessional({ id: data.id, name: data.name, email: data.email, specialty: data.specialty, avatarUrl: data.avatar_url ?? null });
         localStorage.setItem("@Clinica:email", data.email);
         return { success: true, message: "Login realizado com sucesso!" };
       } else {
@@ -122,7 +123,7 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
 
       if (data) {
-        setProfessional({ id: data.id, name: data.name, email: data.email, specialty: data.specialty });
+        setProfessional({ id: data.id, name: data.name, email: data.email, specialty: data.specialty, avatarUrl: data.avatar_url ?? null });
         localStorage.setItem("@Clinica:email", data.email);
         return { success: true, message: "Cadastro realizado com sucesso!" };
       }
@@ -138,6 +139,31 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setProfessional(null);
     localStorage.removeItem("@Clinica:email");
+  };
+
+  const updateProfile = async (id: string, name: string, specialty: string, avatarUrl?: string) => {
+    try {
+      const updateData: Record<string, string> = { name, specialty };
+      if (avatarUrl !== undefined) updateData.avatar_url = avatarUrl;
+
+      const { data, error } = await supabase
+        .from('professionals')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setProfessional({ id: data.id, name: data.name, email: data.email, specialty: data.specialty, avatarUrl: data.avatar_url ?? null });
+        return { success: true, message: "Perfil atualizado com sucesso!" };
+      }
+      return { success: false, message: "Erro desconhecido." };
+    } catch (err) {
+      console.error("Erro ao atualizar perfil:", err);
+      return { success: false, message: "Erro ao atualizar o perfil." };
+    }
   };
 
   const fetchRooms = async () => {
@@ -202,6 +228,7 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     loading,
     login,
     register,
+    updateProfile,
     logout
   }), [reservations, rooms, professional, loading]);
 
