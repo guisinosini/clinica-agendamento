@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useReservation, NEXT_DAYS, TIME_SLOTS } from "../../context/ReservationContext";
@@ -13,6 +13,12 @@ export default function ReservarPage() {
   const [selectedDate, setSelectedDate] = useState<string>(NEXT_DAYS[0]);
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
   const [feedbackMsg, setFeedbackMsg] = useState<string>("");
+
+  useEffect(() => {
+    if (!loading && !professional) {
+      router.push("/");
+    }
+  }, [loading, professional, router]);
 
   if (loading || !professional) return <div className="container" style={{ padding: '4rem', textAlign: 'center' }}>Carregando salas...</div>;
 
@@ -27,14 +33,13 @@ export default function ReservarPage() {
     return dateStr.split('-')[2];
   };
 
-  // Identifica slots que já estão ocupados para a sala e data selecionadas
-  const getOccupiedSlots = () => {
+  // Identifica slots que já estão ocupados para a sala e data selecionadas (Otimizado com useMemo)
+  const occupiedSlots = useMemo(() => {
+    if (!selectedRoom) return [];
     return reservations
       .filter(res => res.roomId === selectedRoom && res.date === selectedDate)
       .map(res => res.startTime);
-  };
-
-  const occupiedSlots = getOccupiedSlots();
+  }, [reservations, selectedRoom, selectedDate]);
 
   const handleSlotClick = (slot: string) => {
     if (occupiedSlots.includes(slot)) return; // não faz nada se estiver ocupado

@@ -1,10 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useReservation } from "../../context/ReservationContext";
 
 export default function MinhasReservasPage() {
   const { reservations, cancelReservation, rooms, professional, loading } = useReservation();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !professional) {
+      router.push("/");
+    }
+  }, [loading, professional, router]);
 
   if (loading || !professional) return <div className="container" style={{ padding: '4rem', textAlign: 'center' }}>Carregando suas reservas...</div>;
 

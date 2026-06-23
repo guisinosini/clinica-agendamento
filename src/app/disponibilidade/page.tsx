@@ -1,12 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useReservation, NEXT_DAYS, TIME_SLOTS } from "../../context/ReservationContext";
 
 export default function DisponibilidadePage() {
   const { rooms, reservations, professional, loading } = useReservation();
   const [selectedDate, setSelectedDate] = useState<string>(NEXT_DAYS[0]);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !professional) {
+      router.push("/");
+    }
+  }, [loading, professional, router]);
 
   if (loading || !professional) return <div className="container" style={{ padding: '4rem', textAlign: 'center' }}>Carregando grade de horários...</div>;
 
@@ -17,18 +25,17 @@ export default function DisponibilidadePage() {
     return new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }).format(d);
   };
 
-  const isOccupied = (roomId: string, timeSlot: string) => {
-    return reservations.some(
-      res => res.roomId === roomId && res.date === selectedDate && res.startTime === timeSlot
-    );
-  };
-
-  // Verifica se a reserva é do profissional logado
-  const isMyReservation = (roomId: string, timeSlot: string) => {
-    return reservations.some(
-      res => res.roomId === roomId && res.date === selectedDate && res.startTime === timeSlot && res.professionalId === professional.id
-    );
-  };
+  // Mapeamento otimizado das reservas para o dia selecionado (O(1) lookup)
+  const reservationsMap = useMemo(() => {
+    const map = new Map<string, { mine: boolean }>();
+    reservations.forEach(res => {
+      if (res.date === selectedDate) {
+        const key = `${res.roomId}-${res.startTime}`;
+        map.set(key, { mine: res.professionalId === professional.id });
+      }
+    });
+    return map;
+  }, [reservations, selectedDate, professional.id]);
 
   return (
     <div className="container" style={{ paddingBottom: '4rem' }}>
@@ -89,8 +96,10 @@ export default function DisponibilidadePage() {
                 
                 {/* Status de Cada Sala */}
                 {rooms.map(room => {
-                  const occupied = isOccupied(room.id, slot);
-                  const mine = isMyReservation(room.id, slot);
+                  const cellKey = `${room.id}-${slot}`;
+                  const reservation = reservationsMap.get(cellKey);
+                  const occupied = !!reservation;
+                  const mine = reservation?.mine ?? false;
                   
                   return (
                     <td key={room.id} style={{ padding: '0.5rem', textAlign: 'center' }}>
