@@ -46,10 +46,11 @@ export default function DisponibilidadePage() {
 
       {/* Selecionador de Data */}
       <section style={{ marginBottom: '2rem' }}>
-        <div className="flex justify-between items-center" style={{ marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <h2 style={{ fontSize: '1.2rem', color: 'var(--text-main)' }}>Escolha o dia para visualizar</h2>
-          <input 
-            type="date" 
+        <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: 'var(--text-main)' }}>Escolha o dia para visualizar</h2>
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem', gap: '0.5rem' }}>
+          <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>Toque para abrir o calendário</label>
+          <input
+            type="date"
             value={selectedDate}
             min={NEXT_DAYS[0]}
             onChange={(e) => {
@@ -58,39 +59,21 @@ export default function DisponibilidadePage() {
               }
             }}
             style={{
-              padding: '0.6rem 1rem',
-              borderRadius: '8px',
-              border: '1px solid var(--border-color)',
-              backgroundColor: 'var(--card-bg)',
+              fontSize: '1.4rem',
+              fontWeight: 700,
+              padding: '1rem 1.5rem',
+              borderRadius: 'var(--radius-md)',
+              border: '2px solid var(--primary-mid)',
+              backgroundColor: 'var(--primary-light)',
+              color: 'var(--primary)',
+              cursor: 'pointer',
               outline: 'none',
               fontFamily: 'inherit',
-              color: 'var(--text-main)',
-              cursor: 'pointer',
-              fontWeight: 500
+              width: '100%',
+              maxWidth: '340px',
+              textAlign: 'center',
             }}
           />
-        </div>
-        <div className="flex" style={{ gap: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
-          {NEXT_DAYS.map(date => (
-            <div 
-              key={date}
-              onClick={() => setSelectedDate(date)}
-              style={{
-                minWidth: '80px',
-                padding: '1rem 0.5rem',
-                textAlign: 'center',
-                borderRadius: '12px',
-                border: `2px solid ${selectedDate === date ? 'var(--primary)' : 'var(--border-color)'}`,
-                backgroundColor: selectedDate === date ? 'var(--primary)' : 'var(--card-bg)',
-                color: selectedDate === date ? 'white' : 'var(--text-main)',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-            >
-              <p style={{ fontSize: '0.8rem', textTransform: 'uppercase', opacity: 0.9 }}>{formatDayName(date)}</p>
-              <p style={{ fontSize: '1.5rem', fontWeight: 'bold', marginTop: '0.2rem' }}>{date.split('-')[2]}</p>
-            </div>
-          ))}
         </div>
       </section>
 
