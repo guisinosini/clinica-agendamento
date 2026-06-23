@@ -15,25 +15,16 @@ export default function ReservarPage() {
   const [feedbackMsg, setFeedbackMsg] = useState<string>("");
 
   useEffect(() => {
-    if (!loading && !professional) {
-      router.push("/");
-    }
+    if (!loading && !professional) router.push("/");
   }, [loading, professional, router]);
 
-  if (loading || !professional) return <div className="container" style={{ padding: '4rem', textAlign: 'center' }}>Carregando salas...</div>;
+  if (loading || !professional) return (
+    <div className="loading-screen">
+      <div className="spinner" />
+      <p style={{ color: "var(--text-muted)" }}>Carregando salas...</p>
+    </div>
+  );
 
-  const formatDayName = (dateStr: string) => {
-    const d = new Date(dateStr + "T12:00:00Z");
-    const today = new Date().toISOString().split('T')[0];
-    if (dateStr === today) return "Hoje";
-    return new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }).format(d);
-  };
-
-  const formatDayNumber = (dateStr: string) => {
-    return dateStr.split('-')[2];
-  };
-
-  // Identifica slots que já estão ocupados para a sala e data selecionadas (Otimizado com useMemo)
   const occupiedSlots = useMemo(() => {
     if (!selectedRoom) return [];
     return reservations
@@ -42,200 +33,287 @@ export default function ReservarPage() {
   }, [reservations, selectedRoom, selectedDate]);
 
   const handleSlotClick = (slot: string) => {
-    if (occupiedSlots.includes(slot)) return; // não faz nada se estiver ocupado
-    
-    if (selectedSlots.includes(slot)) {
-      setSelectedSlots(selectedSlots.filter(s => s !== slot));
-    } else {
-      setSelectedSlots([...selectedSlots, slot].sort());
-    }
+    if (occupiedSlots.includes(slot)) return;
+    setSelectedSlots(prev =>
+      prev.includes(slot) ? prev.filter(s => s !== slot) : [...prev, slot].sort()
+    );
   };
 
   const handleConfirm = () => {
     if (!selectedRoom || selectedSlots.length === 0) return;
-    
-    // Como os slots são de 1 hora, soma 60 min ao startTime
     const newReservations = selectedSlots.map(slot => {
-      const [hours, minutes] = slot.split(':').map(Number);
-      const dateObj = new Date();
-      dateObj.setHours(hours + 1, minutes, 0); // soma 1 hora
-      
-      const endHours = String(dateObj.getHours()).padStart(2, '0');
-      const endMinutes = String(dateObj.getMinutes()).padStart(2, '0');
-      const endTime = `${endHours}:${endMinutes}`;
-
+      const [hours, minutes] = slot.split(":").map(Number);
+      const d = new Date();
+      d.setHours(hours + 1, minutes, 0);
       return {
         roomId: selectedRoom,
         professionalId: professional.id,
         date: selectedDate,
         startTime: slot,
-        endTime: endTime
+        endTime: `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`,
       };
     });
-
     addReservations(newReservations);
-    
     setFeedbackMsg("Reserva confirmada com sucesso!");
-    
     setTimeout(() => {
       setSelectedRoom(null);
       setSelectedSlots([]);
       setFeedbackMsg("");
-      router.push("/minhas-reservas"); // Redireciona para ver a reserva
+      router.push("/minhas-reservas");
     }, 1500);
   };
 
+  const roomIcons = ["🛋️", "💬", "📋", "🧸", "🤝"];
+  const selectedRoomObj = rooms.find(r => r.id === selectedRoom);
+
+  const formatSelectedDate = (dateStr: string) => {
+    const [y, m, d] = dateStr.split("-");
+    const date = new Date(Number(y), Number(m) - 1, Number(d));
+    return date.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+  };
+
   return (
-    <div className="container" style={{ paddingBottom: '6rem' }}>
-      <header className="flex justify-between items-center" style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Nova Reserva</h1>
-        <Link href="/" className="btn btn-outline" style={{ padding: '0.5rem 1rem' }}>Voltar</Link>
+    <div className="container animate-fade" style={{ paddingBottom: "8rem", paddingTop: "1.5rem" }}>
+      {/* Header */}
+      <header style={{ marginBottom: "2rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.25rem" }}>
+          <Link href="/" style={{ color: "var(--text-muted)", display: "flex", alignItems: "center" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </Link>
+          <h1 style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Nova Reserva</h1>
+        </div>
+        <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginLeft: "1.75rem" }}>Siga os passos abaixo para agendar sua sala</p>
       </header>
 
+      {/* Feedback */}
       {feedbackMsg && (
-        <div style={{ padding: '1rem', backgroundColor: 'var(--success)', color: 'white', borderRadius: '8px', marginBottom: '1.5rem', animation: 'fadeIn 0.3s' }}>
-          {feedbackMsg}
+        <div className="animate-fade" style={{
+          padding: "1rem 1.5rem",
+          background: "linear-gradient(135deg, var(--success) 0%, #059669 100%)",
+          color: "white",
+          borderRadius: "var(--radius-md)",
+          marginBottom: "1.5rem",
+          fontWeight: 600,
+          display: "flex",
+          alignItems: "center",
+          gap: "0.75rem",
+          boxShadow: "0 4px 15px rgba(16, 185, 129, 0.3)",
+        }}>
+          ✅ {feedbackMsg}
         </div>
       )}
 
-      {/* Passo 1: Selecionar a Sala */}
-      <section style={{ marginBottom: '2rem' }}>
-        <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: 'var(--text-main)' }}>1. Selecione a Sala</h2>
-        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-          {rooms.map(room => (
-            <div 
-              key={room.id}
-              onClick={() => { setSelectedRoom(room.id); setSelectedSlots([]); }}
-              style={{
-                padding: '1.5rem',
-                borderRadius: '12px',
-                border: `2px solid ${selectedRoom === room.id ? 'var(--primary)' : 'var(--border-color)'}`,
-                backgroundColor: selectedRoom === room.id ? '#EEF2FF' : 'var(--card-bg)',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: selectedRoom === room.id ? '0 4px 12px rgba(79, 70, 229, 0.15)' : 'none'
-              }}
-            >
-              <h3 style={{ marginBottom: '0.5rem', color: selectedRoom === room.id ? 'var(--primary)' : 'inherit' }}>{room.name}</h3>
-              {room.description && (
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{room.description}</p>
-              )}
-            </div>
-          ))}
+      {/* Passo 1: Sala */}
+      <section style={{ marginBottom: "2rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
+          <div style={{
+            width: "28px", height: "28px", borderRadius: "var(--radius-full)",
+            background: "linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%)",
+            color: "white", fontSize: "0.8rem", fontWeight: 700,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0,
+          }}>1</div>
+          <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-secondary)" }}>Selecione a Sala</h2>
+        </div>
+        <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.875rem" }}>
+          {rooms.map((room, idx) => {
+            const isSelected = selectedRoom === room.id;
+            return (
+              <button
+                key={room.id}
+                onClick={() => { setSelectedRoom(room.id); setSelectedSlots([]); }}
+                style={{
+                  padding: "1.5rem 1.25rem",
+                  borderRadius: "var(--radius-lg)",
+                  border: `2px solid ${isSelected ? "var(--primary)" : "var(--border-color)"}`,
+                  background: isSelected
+                    ? "linear-gradient(135deg, var(--primary-light) 0%, #E0E7FF 100%)"
+                    : "var(--card-bg)",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  boxShadow: isSelected ? "var(--shadow-primary)" : "var(--shadow-sm)",
+                  textAlign: "left",
+                  transform: isSelected ? "translateY(-3px)" : "none",
+                }}
+              >
+                <div style={{ fontSize: "1.8rem", marginBottom: "0.75rem" }}>{roomIcons[idx] || "🏥"}</div>
+                <p style={{
+                  fontWeight: 700, fontSize: "0.95rem",
+                  color: isSelected ? "var(--primary)" : "var(--text-main)",
+                }}>
+                  {room.name}
+                </p>
+                {isSelected && (
+                  <div style={{
+                    marginTop: "0.5rem",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.25rem",
+                    fontSize: "0.75rem",
+                    color: "var(--primary)",
+                    fontWeight: 600,
+                  }}>
+                    ✓ Selecionada
+                  </div>
+                )}
+              </button>
+            );
+          })}
         </div>
       </section>
 
-      {/* Só mostra calendário e horários se uma sala for selecionada */}
+      {/* Passos 2 e 3 (aparecem após sala ser selecionada) */}
       {selectedRoom && (
-        <div style={{ animation: 'fadeIn 0.3s ease-in-out' }}>
-          
-          {/* Passo 2: Selecionar Data */}
-          <section style={{ marginBottom: '2rem' }}>
-            <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>2. Escolha o Dia</h2>
-            <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>Toque para abrir o calendário</label>
+        <div className="animate-slide">
+          {/* Passo 2: Data */}
+          <section style={{ marginBottom: "2rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
+              <div style={{
+                width: "28px", height: "28px", borderRadius: "var(--radius-full)",
+                background: "linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%)",
+                color: "white", fontSize: "0.8rem", fontWeight: 700,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0,
+              }}>2</div>
+              <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-secondary)" }}>Escolha a Data</h2>
+            </div>
+            <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "2.5rem 2rem", gap: "0.75rem" }}>
+              <div style={{ fontSize: "2rem" }}>📅</div>
+              <p style={{ fontSize: "0.875rem", color: "var(--text-muted)", fontWeight: 500 }}>Selecione o dia desejado</p>
               <input
                 type="date"
                 value={selectedDate}
                 min={NEXT_DAYS[0]}
                 onChange={(e) => {
-                  if (e.target.value) {
-                    setSelectedDate(e.target.value);
-                    setSelectedSlots([]);
-                  }
+                  if (e.target.value) { setSelectedDate(e.target.value); setSelectedSlots([]); }
                 }}
                 style={{
-                  fontSize: '1.4rem',
-                  fontWeight: 700,
-                  padding: '1rem 1.5rem',
-                  borderRadius: 'var(--radius-md)',
-                  border: '2px solid var(--primary-mid)',
-                  backgroundColor: 'var(--primary-light)',
-                  color: 'var(--primary)',
-                  cursor: 'pointer',
-                  outline: 'none',
-                  fontFamily: 'inherit',
-                  width: '100%',
-                  maxWidth: '340px',
-                  textAlign: 'center',
+                  fontSize: "1.35rem", fontWeight: 700,
+                  padding: "1rem 2rem",
+                  borderRadius: "var(--radius-md)",
+                  border: "2px solid var(--primary-mid)",
+                  backgroundColor: "var(--primary-light)",
+                  color: "var(--primary)",
+                  cursor: "pointer", outline: "none",
+                  fontFamily: "inherit",
+                  width: "100%", maxWidth: "320px",
+                  textAlign: "center",
+                  boxShadow: "var(--shadow-sm)",
                 }}
               />
-            </div>
-          </section>
-
-          {/* Passo 3: Escolher os Horários (1 hora por slot) */}
-          <section style={{ marginBottom: '2rem' }}>
-            <div className="flex justify-between items-center" style={{ marginBottom: '1rem' }}>
-              <h2 style={{ fontSize: '1.2rem' }}>3. Selecione os Horários</h2>
-              <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                {selectedSlots.length} hora(s) escolhida(s)
-              </span>
-            </div>
-
-            <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '0.75rem' }}>
-              {TIME_SLOTS.map(slot => {
-                const isOccupied = occupiedSlots.includes(slot);
-                const isSelected = selectedSlots.includes(slot);
-                
-                return (
-                  <button
-                    key={slot}
-                    disabled={isOccupied}
-                    onClick={() => handleSlotClick(slot)}
-                    style={{
-                      padding: '0.75rem',
-                      borderRadius: '8px',
-                      fontWeight: 500,
-                      border: '1px solid',
-                      borderColor: isOccupied ? 'var(--border-color)' : isSelected ? 'var(--primary)' : 'var(--border-color)',
-                      backgroundColor: isOccupied ? '#F3F4F6' : isSelected ? 'var(--primary)' : 'white',
-                      color: isOccupied ? '#9CA3AF' : isSelected ? 'white' : 'var(--text-main)',
-                      cursor: isOccupied ? 'not-allowed' : 'pointer',
-                      transition: 'all 0.2s',
-                      textDecoration: isOccupied ? 'line-through' : 'none'
-                    }}
-                  >
-                    {slot}
-                  </button>
-                );
-              })}
-            </div>
-            
-            {/* Legenda */}
-            <div className="flex" style={{ gap: '1.5rem', marginTop: '1.5rem', fontSize: '0.9rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
-              <div className="flex items-center" style={{ gap: '0.5rem' }}>
-                <div style={{ width: '16px', height: '16px', backgroundColor: 'white', border: '1px solid var(--border-color)', borderRadius: '4px' }}></div>
-                <span>Disponível</span>
-              </div>
-              <div className="flex items-center" style={{ gap: '0.5rem' }}>
-                <div style={{ width: '16px', height: '16px', backgroundColor: 'var(--primary)', borderRadius: '4px' }}></div>
-                <span>Selecionado</span>
-              </div>
-              <div className="flex items-center" style={{ gap: '0.5rem' }}>
-                <div style={{ width: '16px', height: '16px', backgroundColor: '#F3F4F6', border: '1px solid var(--border-color)', borderRadius: '4px' }}></div>
-                <span>Ocupado</span>
-              </div>
-            </div>
-          </section>
-
-          {/* Passo 4: Confirmação */}
-          <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '1rem', backgroundColor: 'white', borderTop: '1px solid var(--border-color)', boxShadow: '0 -4px 6px -1px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'center', zIndex: 10 }}>
-            <div style={{ width: '100%', maxWidth: '1200px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <p style={{ fontWeight: 600 }}>Total: {selectedSlots.length} hora(s)</p>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                  {selectedRoom && rooms.find(r => r.id === selectedRoom)?.name} | {selectedDate.split('-').reverse().join('/')}
+              {selectedDate && (
+                <p style={{ fontSize: "0.875rem", color: "var(--text-muted)", textTransform: "capitalize", marginTop: "0.25rem" }}>
+                  {formatSelectedDate(selectedDate)}
                 </p>
-              </div>
-              <button 
-                onClick={handleConfirm}
-                disabled={selectedSlots.length === 0}
-                className="btn"
-                style={{ opacity: selectedSlots.length === 0 ? 0.5 : 1, padding: '0.75rem 2rem' }}
-              >
-                Confirmar Reserva
-              </button>
+              )}
             </div>
+          </section>
+
+          {/* Passo 3: Horários */}
+          <section style={{ marginBottom: "2rem" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem", flexWrap: "wrap", gap: "0.75rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <div style={{
+                  width: "28px", height: "28px", borderRadius: "var(--radius-full)",
+                  background: "linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%)",
+                  color: "white", fontSize: "0.8rem", fontWeight: 700,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                }}>3</div>
+                <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-secondary)" }}>Selecione os Horários</h2>
+              </div>
+              {selectedSlots.length > 0 && (
+                <span className="badge badge-primary" style={{ fontSize: "0.8rem" }}>
+                  {selectedSlots.length} hora(s) selecionada(s)
+                </span>
+              )}
+            </div>
+
+            <div className="card" style={{ padding: "1.5rem" }}>
+              <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(95px, 1fr))", gap: "0.625rem" }}>
+                {TIME_SLOTS.map(slot => {
+                  const isOccupied = occupiedSlots.includes(slot);
+                  const isSelected = selectedSlots.includes(slot);
+                  return (
+                    <button
+                      key={slot}
+                      disabled={isOccupied}
+                      onClick={() => handleSlotClick(slot)}
+                      style={{
+                        padding: "0.85rem 0.5rem",
+                        borderRadius: "var(--radius-sm)",
+                        fontWeight: 600,
+                        fontSize: "0.9rem",
+                        border: "1.5px solid",
+                        borderColor: isOccupied
+                          ? "var(--border-color)"
+                          : isSelected ? "var(--primary)" : "var(--border-color)",
+                        background: isOccupied
+                          ? "#F8FAFC"
+                          : isSelected
+                            ? "linear-gradient(135deg, var(--primary) 0%, #6366F1 100%)"
+                            : "white",
+                        color: isOccupied ? "var(--text-light)" : isSelected ? "white" : "var(--text-secondary)",
+                        cursor: isOccupied ? "not-allowed" : "pointer",
+                        transition: "all 0.15s ease",
+                        textDecoration: isOccupied ? "line-through" : "none",
+                        boxShadow: isSelected ? "0 4px 12px rgba(79, 70, 229, 0.25)" : "var(--shadow-xs)",
+                        transform: isSelected ? "translateY(-1px)" : "none",
+                      }}
+                    >
+                      {slot}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Legenda */}
+              <div style={{ display: "flex", gap: "1.25rem", marginTop: "1.5rem", fontSize: "0.8rem", color: "var(--text-muted)", flexWrap: "wrap", borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
+                {[
+                  { color: "white", border: "var(--border-color)", label: "Disponível" },
+                  { color: "var(--primary)", border: "var(--primary)", label: "Selecionado" },
+                  { color: "#F8FAFC", border: "var(--border-color)", label: "Ocupado" },
+                ].map(item => (
+                  <div key={item.label} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    <div style={{ width: "14px", height: "14px", backgroundColor: item.color, border: `1.5px solid ${item.border}`, borderRadius: "4px" }} />
+                    <span>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* Barra de Confirmação Fixa */}
+      {selectedSlots.length > 0 && (
+        <div className="animate-slide" style={{
+          position: "fixed", bottom: 0, left: 0, right: 0,
+          padding: "1rem 1.5rem",
+          background: "rgba(255,255,255,0.9)",
+          backdropFilter: "blur(12px)",
+          borderTop: "1px solid var(--border-color)",
+          boxShadow: "0 -8px 24px rgba(0,0,0,0.08)",
+          display: "flex", justifyContent: "center", zIndex: 50,
+        }}>
+          <div style={{ width: "100%", maxWidth: "1200px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+            <div>
+              <p style={{ fontWeight: 700, fontSize: "1rem" }}>
+                {selectedRoomObj?.name} · {selectedSlots.length} hora(s)
+              </p>
+              <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "capitalize" }}>
+                {formatSelectedDate(selectedDate)}
+              </p>
+            </div>
+            <button
+              onClick={handleConfirm}
+              className="btn"
+              style={{ padding: "0.85rem 2rem", whiteSpace: "nowrap" }}
+            >
+              Confirmar Reserva
+            </button>
           </div>
         </div>
       )}

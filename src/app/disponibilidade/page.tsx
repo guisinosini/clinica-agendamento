@@ -11,133 +11,203 @@ export default function DisponibilidadePage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !professional) {
-      router.push("/");
-    }
+    if (!loading && !professional) router.push("/");
   }, [loading, professional, router]);
 
-  if (loading || !professional) return <div className="container" style={{ padding: '4rem', textAlign: 'center' }}>Carregando grade de horários...</div>;
+  if (loading || !professional) return (
+    <div className="loading-screen">
+      <div className="spinner" />
+      <p style={{ color: "var(--text-muted)" }}>Carregando grade de horários...</p>
+    </div>
+  );
 
-  const formatDayName = (dateStr: string) => {
-    const d = new Date(dateStr + "T12:00:00Z");
-    const today = new Date().toISOString().split('T')[0];
-    if (dateStr === today) return "Hoje";
-    return new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }).format(d);
+  const formatSelectedDate = (dateStr: string) => {
+    const [y, m, d] = dateStr.split("-");
+    const date = new Date(Number(y), Number(m) - 1, Number(d));
+    return date.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
   };
 
-  // Mapeamento otimizado das reservas para o dia selecionado (O(1) lookup)
+  // Mapeamento O(1) das reservas para o dia selecionado
   const reservationsMap = useMemo(() => {
     const map = new Map<string, { mine: boolean }>();
     reservations.forEach(res => {
       if (res.date === selectedDate) {
-        const key = `${res.roomId}-${res.startTime}`;
-        map.set(key, { mine: res.professionalId === professional.id });
+        map.set(`${res.roomId}-${res.startTime}`, { mine: res.professionalId === professional.id });
       }
     });
     return map;
   }, [reservations, selectedDate, professional.id]);
 
+  // Estatísticas do dia
+  const stats = useMemo(() => {
+    const total = rooms.length * TIME_SLOTS.length;
+    const occupied = reservationsMap.size;
+    const mine = [...reservationsMap.values()].filter(v => v.mine).length;
+    return { total, occupied, free: total - occupied, mine };
+  }, [reservationsMap, rooms.length]);
+
   return (
-    <div className="container" style={{ paddingBottom: '4rem' }}>
-      <header className="flex justify-between items-center" style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Espiar Disponibilidade</h1>
-        <Link href="/" className="btn btn-outline" style={{ padding: '0.5rem 1rem' }}>Voltar</Link>
+    <div className="container animate-fade" style={{ paddingTop: "1.5rem", paddingBottom: "4rem" }}>
+      {/* Header */}
+      <header style={{ marginBottom: "2rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.25rem" }}>
+          <Link href="/" style={{ color: "var(--text-muted)", display: "flex", alignItems: "center" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </Link>
+          <h1 style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Disponibilidade</h1>
+        </div>
+        <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginLeft: "1.75rem", textTransform: "capitalize" }}>
+          {formatSelectedDate(selectedDate)}
+        </p>
       </header>
 
-      {/* Selecionador de Data */}
-      <section style={{ marginBottom: '2rem' }}>
-        <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: 'var(--text-main)' }}>Escolha o dia para visualizar</h2>
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem', gap: '0.5rem' }}>
-          <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>Toque para abrir o calendário</label>
+      {/* Seletor de Data */}
+      <section style={{ marginBottom: "1.75rem" }}>
+        <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "2rem", gap: "0.75rem" }}>
+          <div style={{ fontSize: "2rem" }}>📅</div>
+          <p style={{ fontSize: "0.875rem", color: "var(--text-muted)", fontWeight: 500 }}>Selecione o dia para visualizar</p>
           <input
             type="date"
             value={selectedDate}
             min={NEXT_DAYS[0]}
-            onChange={(e) => {
-              if (e.target.value) {
-                setSelectedDate(e.target.value);
-              }
-            }}
+            onChange={(e) => { if (e.target.value) setSelectedDate(e.target.value); }}
             style={{
-              fontSize: '1.4rem',
-              fontWeight: 700,
-              padding: '1rem 1.5rem',
-              borderRadius: 'var(--radius-md)',
-              border: '2px solid var(--primary-mid)',
-              backgroundColor: 'var(--primary-light)',
-              color: 'var(--primary)',
-              cursor: 'pointer',
-              outline: 'none',
-              fontFamily: 'inherit',
-              width: '100%',
-              maxWidth: '340px',
-              textAlign: 'center',
+              fontSize: "1.35rem", fontWeight: 700,
+              padding: "1rem 2rem",
+              borderRadius: "var(--radius-md)",
+              border: "2px solid var(--primary-mid)",
+              backgroundColor: "var(--primary-light)",
+              color: "var(--primary)",
+              cursor: "pointer", outline: "none",
+              fontFamily: "inherit",
+              width: "100%", maxWidth: "320px",
+              textAlign: "center",
+              boxShadow: "var(--shadow-sm)",
             }}
           />
         </div>
       </section>
 
-      {/* Grade / Matriz de Horários */}
-      <section className="card" style={{ padding: '0', overflowX: 'auto', animation: 'fadeIn 0.3s' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
-          <thead>
-            <tr>
-              <th style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-color)', position: 'sticky', left: 0, zIndex: 2, textAlign: 'left', width: '100px' }}>
-                Horário
-              </th>
-              {rooms.map(room => (
-                <th key={room.id} style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-color)', textAlign: 'center' }}>
-                  {room.name}
+      {/* Cards de Estatísticas */}
+      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "0.875rem", marginBottom: "2rem" }}>
+        {[
+          { label: "Livres", value: stats.free, color: "var(--success)", bg: "var(--success-light)", icon: "✅" },
+          { label: "Ocupados", value: stats.occupied, color: "var(--danger)", bg: "var(--danger-light)", icon: "🔴" },
+          { label: "Suas Reservas", value: stats.mine, color: "var(--primary)", bg: "var(--primary-light)", icon: "📌" },
+        ].map(stat => (
+          <div key={stat.label} className="card" style={{ textAlign: "center", padding: "1.25rem 1rem", backgroundColor: stat.bg, border: "none" }}>
+            <div style={{ fontSize: "1.4rem", marginBottom: "0.3rem" }}>{stat.icon}</div>
+            <div style={{ fontSize: "1.8rem", fontWeight: 800, color: stat.color, lineHeight: 1 }}>{stat.value}</div>
+            <div style={{ fontSize: "0.78rem", color: stat.color, fontWeight: 600, marginTop: "0.3rem", opacity: 0.8 }}>{stat.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Tabela de Grade */}
+      <section className="card" style={{ padding: "0", overflow: "hidden" }}>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
+            <thead>
+              <tr style={{ background: "linear-gradient(135deg, var(--primary-light) 0%, #E0E7FF 100%)" }}>
+                <th style={{
+                  padding: "1rem 1.25rem",
+                  borderBottom: "1px solid var(--border-color)",
+                  textAlign: "left",
+                  width: "90px",
+                  position: "sticky", left: 0, zIndex: 2,
+                  background: "linear-gradient(135deg, var(--primary-light) 0%, #E0E7FF 100%)",
+                  fontSize: "0.8rem",
+                  fontWeight: 700,
+                  color: "var(--primary)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}>
+                  Horário
                 </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {TIME_SLOTS.map(slot => (
-              <tr key={slot} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                {/* Coluna Horário Fixa */}
-                <td style={{ padding: '1rem', fontWeight: 600, backgroundColor: 'white', position: 'sticky', left: 0, zIndex: 1, borderRight: '1px solid var(--border-color)' }}>
-                  {slot}
-                </td>
-                
-                {/* Status de Cada Sala */}
-                {rooms.map(room => {
-                  const cellKey = `${room.id}-${slot}`;
-                  const reservation = reservationsMap.get(cellKey);
-                  const occupied = !!reservation;
-                  const mine = reservation?.mine ?? false;
-                  
-                  return (
-                    <td key={room.id} style={{ padding: '0.5rem', textAlign: 'center' }}>
-                      <div 
-                        style={{
-                          backgroundColor: occupied ? (mine ? '#E0E7FF' : '#FEE2E2') : '#D1FAE5',
-                          color: occupied ? (mine ? 'var(--primary)' : '#B91C1C') : '#047857',
-                          padding: '0.5rem',
-                          borderRadius: '6px',
-                          fontSize: '0.85rem',
-                          fontWeight: 500,
-                        }}
-                      >
-                        {occupied ? (mine ? "Sua Reserva" : "Ocupado") : "Livre"}
-                      </div>
-                    </td>
-                  );
-                })}
+                {rooms.map(room => (
+                  <th key={room.id} style={{
+                    padding: "1rem",
+                    borderBottom: "1px solid var(--border-color)",
+                    textAlign: "center",
+                    fontSize: "0.85rem",
+                    fontWeight: 700,
+                    color: "var(--text-secondary)",
+                  }}>
+                    {room.name}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {TIME_SLOTS.map((slot, slotIdx) => (
+                <tr
+                  key={slot}
+                  style={{
+                    borderBottom: "1px solid var(--border-color)",
+                    backgroundColor: slotIdx % 2 === 0 ? "white" : "#FAFBFF",
+                  }}
+                >
+                  {/* Coluna de Horário */}
+                  <td style={{
+                    padding: "0.75rem 1.25rem",
+                    fontWeight: 700,
+                    fontSize: "0.875rem",
+                    color: "var(--text-secondary)",
+                    position: "sticky", left: 0, zIndex: 1,
+                    borderRight: "1px solid var(--border-color)",
+                    backgroundColor: slotIdx % 2 === 0 ? "white" : "#FAFBFF",
+                    whiteSpace: "nowrap",
+                  }}>
+                    {slot}
+                  </td>
+
+                  {/* Células de Status */}
+                  {rooms.map(room => {
+                    const data = reservationsMap.get(`${room.id}-${slot}`);
+                    const occupied = !!data;
+                    const mine = data?.mine ?? false;
+
+                    let bg = "#ECFDF5", color = "#047857", label = "Livre", icon = "✓";
+                    if (occupied && mine) { bg = "#EEF2FF"; color = "var(--primary)"; label = "Sua Reserva"; icon = "📌"; }
+                    if (occupied && !mine) { bg = "#FEF2F2"; color = "#B91C1C"; label = "Ocupado"; icon = "✗"; }
+
+                    return (
+                      <td key={room.id} style={{ padding: "0.5rem", textAlign: "center" }}>
+                        <div style={{
+                          backgroundColor: bg,
+                          color,
+                          padding: "0.45rem 0.5rem",
+                          borderRadius: "var(--radius-sm)",
+                          fontSize: "0.78rem",
+                          fontWeight: 600,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.25rem",
+                          minWidth: "90px",
+                          justifyContent: "center",
+                        }}>
+                          <span>{icon}</span>
+                          <span>{label}</span>
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
-      
-      {/* Botão Flutuante Sugerindo Ação */}
-      <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-        <p style={{ marginBottom: '1rem', color: 'var(--text-muted)' }}>Encontrou um horário livre perfeito para você?</p>
+
+      {/* CTA */}
+      <div style={{ marginTop: "2rem", textAlign: "center" }}>
+        <p style={{ marginBottom: "1rem", color: "var(--text-muted)", fontSize: "0.9rem" }}>Encontrou um horário livre perfeito?</p>
         <Link href="/reservar" className="btn">
           Ir para Nova Reserva
         </Link>
       </div>
-
     </div>
   );
 }

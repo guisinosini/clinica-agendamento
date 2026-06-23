@@ -10,140 +10,177 @@ export default function MinhasReservasPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !professional) {
-      router.push("/");
-    }
+    if (!loading && !professional) router.push("/");
   }, [loading, professional, router]);
 
-  if (loading || !professional) return <div className="container" style={{ padding: '4rem', textAlign: 'center' }}>Carregando suas reservas...</div>;
+  if (loading || !professional) return (
+    <div className="loading-screen">
+      <div className="spinner" />
+      <p style={{ color: "var(--text-muted)" }}>Carregando suas reservas...</p>
+    </div>
+  );
 
-  // Filtramos apenas as reservas do profissional logado
-  const myReservations = reservations.filter((res) => res.professionalId === professional.id);
+  const myReservations = reservations
+    .filter((res) => res.professionalId === professional.id)
+    .sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return a.startTime.localeCompare(b.startTime);
+    });
 
-  // Ordenamos as reservas por data e depois por hora
-  const sortedReservations = [...myReservations].sort((a, b) => {
-    if (a.date !== b.date) return a.date.localeCompare(b.date);
-    return a.startTime.localeCompare(b.startTime);
-  });
-
-  const getRoomName = (roomId: string) => {
-    const room = rooms.find((r) => r.id === roomId);
-    return room ? room.name : "Sala Desconhecida";
-  };
+  const getRoomName = (roomId: string) => rooms.find((r) => r.id === roomId)?.name ?? "Sala Desconhecida";
 
   const formatDate = (dateString: string) => {
-    // Evitar problemas de timezone adicionando T12:00:00Z ou split
     const [year, month, day] = dateString.split("-");
     const d = new Date(Number(year), Number(month) - 1, Number(day));
-    
-    return d.toLocaleDateString("pt-BR", {
-      weekday: "long",
-      day: "2-digit",
-      month: "long",
-    });
+    return d.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
   };
 
-  const handleCancelReservation = (id: string) => {
+  const isToday = (dateString: string) => {
+    return dateString === new Date().toISOString().split("T")[0];
+  };
+
+  const handleCancel = (id: string) => {
     if (confirm("Tem certeza que deseja cancelar esta reserva?")) {
       cancelReservation(id);
-      alert("Reserva cancelada com sucesso.");
     }
   };
 
+  // Agrupar por data
+  const grouped = myReservations.reduce<Record<string, typeof myReservations>>((acc, res) => {
+    if (!acc[res.date]) acc[res.date] = [];
+    acc[res.date].push(res);
+    return acc;
+  }, {});
+
   return (
-    <div className="container" style={{ paddingBottom: "4rem" }}>
+    <div className="container animate-fade" style={{ paddingTop: "1.5rem", paddingBottom: "4rem" }}>
+      {/* Header */}
       <header style={{ marginBottom: "2rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <h1 style={{ fontSize: "1.8rem", fontWeight: 700 }}>Minhas Reservas</h1>
-            <p className="text-muted">Gerencie seus horários agendados</p>
-          </div>
-          <Link href="/" className="btn btn-outline" style={{ padding: "0.5rem 1rem" }}>
-            Voltar
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.25rem" }}>
+          <Link href="/" style={{ color: "var(--text-muted)", display: "flex", alignItems: "center" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
           </Link>
+          <h1 style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Minhas Reservas</h1>
         </div>
+        <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginLeft: "1.75rem" }}>
+          {myReservations.length > 0
+            ? `${myReservations.length} agendamento(s) encontrado(s)`
+            : "Nenhum agendamento futuro"}
+        </p>
       </header>
 
-      <main>
-        {sortedReservations.length === 0 ? (
-          <div className="card" style={{ textAlign: "center", padding: "4rem 2rem", animation: "fadeIn 0.3s" }}>
-            <h3 style={{ marginBottom: "1rem", color: "var(--text-main)", fontSize: "1.2rem" }}>Você não possui reservas no momento.</h3>
-            <p style={{ color: "var(--text-muted)", marginBottom: "2rem" }}>
-              Nenhum agendamento futuro encontrado para o seu perfil.
-            </p>
-            <Link href="/reservar" className="btn" style={{ display: "inline-block" }}>
-              Fazer uma Nova Reserva
-            </Link>
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem", animation: "fadeIn 0.3s" }}>
-            {sortedReservations.map((reservation) => (
-              <div
-                key={reservation.id}
-                className="card"
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "1.5rem",
-                  transition: "all 0.2s ease",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-                  <div
-                    style={{
-                      backgroundColor: "var(--primary)",
-                      color: "white",
-                      padding: "1rem",
-                      borderRadius: "0.5rem",
-                      fontWeight: 600,
-                      textAlign: "center",
-                      minWidth: "85px",
-                      boxShadow: "0 4px 6px -1px rgba(79, 70, 229, 0.2)",
-                    }}
-                  >
-                    <div>{reservation.startTime}</div>
-                    <div style={{ fontSize: "0.8rem", opacity: 0.8 }}>às {reservation.endTime}</div>
-                  </div>
-                  <div>
-                    <h3 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "0.25rem" }}>
-                      {getRoomName(reservation.roomId)}
-                    </h3>
-                    <p style={{ color: "var(--text-muted)", textTransform: "capitalize" }}>
-                      {formatDate(reservation.date)}
-                    </p>
-                  </div>
+      {myReservations.length === 0 ? (
+        <div className="card animate-slide" style={{ textAlign: "center", padding: "4rem 2rem" }}>
+          <div style={{ fontSize: "3.5rem", marginBottom: "1rem" }}>📋</div>
+          <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "0.75rem" }}>Nenhuma reserva encontrada</h3>
+          <p style={{ color: "var(--text-muted)", marginBottom: "2rem", maxWidth: "320px", margin: "0 auto 2rem" }}>
+            Você ainda não tem agendamentos. Que tal reservar uma sala agora?
+          </p>
+          <Link href="/reservar" className="btn">
+            Fazer Nova Reserva
+          </Link>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+          {Object.entries(grouped).map(([date, items]) => (
+            <div key={date}>
+              {/* Separador de Data */}
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.875rem" }}>
+                <div style={{
+                  padding: "0.3rem 0.875rem",
+                  borderRadius: "var(--radius-full)",
+                  background: isToday(date)
+                    ? "linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%)"
+                    : "var(--primary-light)",
+                  color: isToday(date) ? "white" : "var(--primary)",
+                  fontSize: "0.8rem",
+                  fontWeight: 700,
+                  textTransform: "capitalize",
+                  boxShadow: isToday(date) ? "var(--shadow-primary)" : "none",
+                }}>
+                  {isToday(date) ? "📍 Hoje" : formatDate(date)}
                 </div>
-                <div>
-                  <button
-                    onClick={() => handleCancelReservation(reservation.id)}
-                    style={{
-                      backgroundColor: "transparent",
-                      color: "var(--danger)",
-                      border: "1px solid var(--danger)",
-                      padding: "0.5rem 1rem",
-                      borderRadius: "0.375rem",
-                      cursor: "pointer",
-                      fontWeight: 500,
-                      transition: "all 0.2s ease",
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.backgroundColor = "var(--danger)";
-                      e.currentTarget.style.color = "white";
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.backgroundColor = "transparent";
-                      e.currentTarget.style.color = "var(--danger)";
-                    }}
-                  >
-                    Cancelar
-                  </button>
-                </div>
+                <div style={{ flex: 1, height: "1px", backgroundColor: "var(--border-color)" }} />
               </div>
-            ))}
-          </div>
-        )}
-      </main>
+
+              {/* Cards de Reserva */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                {items.map((reservation) => (
+                  <div
+                    key={reservation.id}
+                    className="card"
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "1.25rem 1.5rem",
+                      gap: "1rem",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
+                      {/* Badge de Horário */}
+                      <div style={{
+                        background: "linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%)",
+                        color: "white",
+                        padding: "0.85rem 1rem",
+                        borderRadius: "var(--radius-md)",
+                        fontWeight: 700,
+                        textAlign: "center",
+                        minWidth: "90px",
+                        boxShadow: "var(--shadow-primary)",
+                        flexShrink: 0,
+                      }}>
+                        <div style={{ fontSize: "1.1rem" }}>{reservation.startTime}</div>
+                        <div style={{ fontSize: "0.72rem", opacity: 0.85, marginTop: "0.1rem" }}>até {reservation.endTime}</div>
+                      </div>
+
+                      {/* Info da Reserva */}
+                      <div>
+                        <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.2rem" }}>
+                          {getRoomName(reservation.roomId)}
+                        </h3>
+                        <span className="badge badge-primary" style={{ fontSize: "0.72rem" }}>
+                          1 hora
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Botão Cancelar */}
+                    <button
+                      onClick={() => handleCancel(reservation.id)}
+                      style={{
+                        backgroundColor: "transparent",
+                        color: "var(--danger)",
+                        border: "1.5px solid var(--danger)",
+                        padding: "0.5rem 1.1rem",
+                        borderRadius: "var(--radius-sm)",
+                        cursor: "pointer",
+                        fontWeight: 600,
+                        fontSize: "0.85rem",
+                        transition: "all 0.2s ease",
+                        flexShrink: 0,
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.backgroundColor = "var(--danger)";
+                        e.currentTarget.style.color = "white";
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                        e.currentTarget.style.color = "var(--danger)";
+                      }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
