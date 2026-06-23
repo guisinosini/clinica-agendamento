@@ -4,30 +4,30 @@
    DESIGN TOKENS - TEMA CLAYMORPHISM PREMIUM
    ============================================ */
 :root {
-  /* Paleta Principal (Inspirada na imagem da Clínica) */
-  --primary: #4a3449; /* Roxo escuro / Ameixa */
-  --primary-hover: #3b283a;
-  --primary-light: #e8dfe6; /* Tom bem suave para fundos de destaque */
-  --primary-mid: #C8B0A6; /* Bege / Rosé Gold da logo */
+  /* Paleta Principal (Original) */
+  --primary: #4F46E5;
+  --primary-hover: #4338CA;
+  --primary-light: #EEF2FF;
+  --primary-mid: #C7D2FE;
 
   /* Cores de Superfície */
-  --bg-color: #f6f3f0; /* Fundo principal off-white quente */
-  --bg-gradient: #f6f3f0;
-  --card-bg: #f6f3f0;
-  --nav-bg: rgba(246, 243, 240, 0.85);
+  --bg-color: #F5F6FA;
+  --bg-gradient: #F5F6FA;
+  --card-bg: #F5F6FA;
+  --nav-bg: rgba(245, 246, 250, 0.85);
 
   /* Tipografia */
-  --text-main: #332432;
-  --text-secondary: #584456;
-  --text-muted: #857283;
-  --text-light: #b0a1af;
+  --text-main: #0F172A;
+  --text-secondary: #334155;
+  --text-muted: #64748B;
+  --text-light: #94A3B8;
 
   /* Status */
   --success: #10B981;
   --danger: #EF4444;
 
-  /* Sombras Claymorphism e Neumorphism */
-  --shadow-dark: #e0d9d4;
+  /* Sombras Claymorphism e Neumorphism adaptadas pro fundo F5F6FA */
+  --shadow-dark: #d6d9e6;
   --shadow-light: #ffffff;
 
   --clay-card: 
@@ -43,12 +43,12 @@
     inset 2px 2px 6px rgba(224, 217, 212, 0.3);
 
   --clay-btn: 
-    4px 4px 10px rgba(74, 52, 73, 0.25),
+    4px 4px 10px rgba(79, 70, 229, 0.25),
     inset -2px -2px 5px rgba(0, 0, 0, 0.15),
     inset 2px 2px 5px rgba(255, 255, 255, 0.2);
 
   --clay-btn-hover: 
-    6px 6px 14px rgba(74, 52, 73, 0.35),
+    6px 6px 14px rgba(79, 70, 229, 0.35),
     inset -2px -2px 5px rgba(0, 0, 0, 0.2),
     inset 2px 2px 5px rgba(255, 255, 255, 0.3);
 

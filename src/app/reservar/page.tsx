@@ -63,7 +63,7 @@ export default function ReservarPage() {
     }, 1500);
   };
 
-  const roomIcons = ["🛋️", "💬", "📋", "🧸", "🤝"];
+
   const selectedRoomObj = rooms.find(r => r.id === selectedRoom);
 
   const formatSelectedDate = (dateStr: string) => {
@@ -118,14 +118,14 @@ export default function ReservarPage() {
           <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-secondary)" }}>Selecione a Sala</h2>
         </div>
         <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.875rem" }}>
-          {rooms.map((room, idx) => {
+          {rooms.map((room) => {
             const isSelected = selectedRoom === room.id;
             return (
               <button
                 key={room.id}
                 onClick={() => { setSelectedRoom(room.id); setSelectedSlots([]); }}
                 style={{
-                  padding: "1.5rem 1.25rem",
+                  padding: "1.5rem",
                   borderRadius: "var(--radius-lg)",
                   border: `2px solid ${isSelected ? "var(--primary)" : "transparent"}`,
                   background: "var(--card-bg)",
@@ -134,26 +134,39 @@ export default function ReservarPage() {
                   boxShadow: isSelected ? "var(--shadow-primary)" : "var(--shadow-sm)",
                   textAlign: "left",
                   transform: isSelected ? "translateY(-3px)" : "none",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  minHeight: "100px",
                 }}
               >
-                <div style={{ fontSize: "1.8rem", marginBottom: "0.75rem" }}>{roomIcons[idx] || "🏥"}</div>
-                <p style={{
-                  fontWeight: 700, fontSize: "0.95rem",
-                  color: isSelected ? "var(--primary)" : "var(--text-main)",
-                }}>
-                  {room.name}
-                </p>
+                <div>
+                  <p style={{
+                    fontWeight: 700, fontSize: "1.05rem",
+                    color: isSelected ? "var(--primary)" : "var(--text-main)",
+                    marginBottom: "0.25rem",
+                  }}>
+                    {room.name}
+                  </p>
+                  {room.description && (
+                    <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: "1.4" }}>
+                      {room.description}
+                    </p>
+                  )}
+                </div>
+                
                 {isSelected && (
                   <div style={{
-                    marginTop: "0.5rem",
+                    marginTop: "1rem",
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: "0.25rem",
-                    fontSize: "0.75rem",
+                    gap: "0.35rem",
+                    fontSize: "0.8rem",
                     color: "var(--primary)",
-                    fontWeight: 600,
+                    fontWeight: 700,
                   }}>
-                    ✓ Selecionada
+                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--primary)" }} />
+                    Selecionada
                   </div>
                 )}
               </button>
