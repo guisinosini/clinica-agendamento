@@ -32,6 +32,7 @@ interface ReservationContextData {
   professional: Professional | null;
   loading: boolean;
   login: (email: string) => Promise<{ success: boolean; message: string }>;
+  register: (name: string, email: string, specialty: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
 }
 
@@ -92,6 +93,43 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) {
       console.error("Erro no login:", err);
       return { success: false, message: "Erro ao realizar o login." };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (name: string, email: string, specialty: string) => {
+    try {
+      setLoading(true);
+      // Verifica se o e-mail já existe
+      const { data: existingUser } = await supabase
+        .from('professionals')
+        .select('id')
+        .eq('email', email.trim().toLowerCase())
+        .maybeSingle();
+
+      if (existingUser) {
+        return { success: false, message: "Este e-mail já está cadastrado." };
+      }
+
+      // Insere o novo profissional
+      const { data, error } = await supabase
+        .from('professionals')
+        .insert([{ name, email: email.trim().toLowerCase(), specialty }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setProfessional({ id: data.id, name: data.name, email: data.email, specialty: data.specialty });
+        localStorage.setItem("@Clinica:email", data.email);
+        return { success: true, message: "Cadastro realizado com sucesso!" };
+      }
+      return { success: false, message: "Erro desconhecido ao cadastrar." };
+    } catch (err) {
+      console.error("Erro no cadastro:", err);
+      return { success: false, message: "Erro de conexão ao tentar cadastrar." };
     } finally {
       setLoading(false);
     }
@@ -163,6 +201,7 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     professional,
     loading,
     login,
+    register,
     logout
   }), [reservations, rooms, professional, loading]);
 

@@ -5,24 +5,40 @@ import Link from "next/link";
 import { useReservation } from "../context/ReservationContext";
 
 export default function Home() {
-  const { professional, loading, login, logout } = useReservation();
+  const { professional, loading, login, register, logout } = useReservation();
+  
+  const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [specialty, setSpecialty] = useState("");
+  
   const [errorMsg, setErrorMsg] = useState("");
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isSubmiting, setIsSubmiting] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
 
-    setIsLoggingIn(true);
+    setIsSubmiting(true);
     setErrorMsg("");
     
-    const result = await login(email);
+    let result;
+    if (isRegistering) {
+      if (!name || !specialty) {
+        setErrorMsg("Preencha todos os campos para se cadastrar.");
+        setIsSubmiting(false);
+        return;
+      }
+      result = await register(name, email, specialty);
+    } else {
+      result = await login(email);
+    }
+
     if (!result.success) {
       setErrorMsg(result.message);
     }
     
-    setIsLoggingIn(false);
+    setIsSubmiting(false);
   };
 
   if (loading) {
@@ -33,11 +49,11 @@ export default function Home() {
     );
   }
 
-  // TELA DE LOGIN (Mostrada se não houver profissional logado)
+  // TELA DE LOGIN / CADASTRO (Mostrada se não houver profissional logado)
   if (!professional) {
     return (
       <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: '1rem' }}>
-        <div className="card" style={{ width: '100%', maxWidth: '400px', padding: '2.5rem 2rem', animation: 'fadeIn 0.4s ease' }}>
+        <div className="card" style={{ width: '100%', maxWidth: '450px', padding: '2.5rem 2rem', animation: 'fadeIn 0.4s ease' }}>
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
             <div style={{ width: '64px', height: '64px', backgroundColor: 'var(--primary)', borderRadius: '16px', margin: '0 auto 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -47,11 +63,52 @@ export default function Home() {
                 <line x1="3" y1="10" x2="21" y2="10"></line>
               </svg>
             </div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-main)' }}>Clínica Agendamentos</h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.5rem' }}>Entre com seu e-mail de profissional para gerenciar suas salas.</p>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-main)' }}>
+              {isRegistering ? "Novo Profissional" : "Clínica Agendamentos"}
+            </h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+              {isRegistering 
+                ? "Preencha seus dados para começar a gerenciar seus horários." 
+                : "Entre com seu e-mail de profissional para gerenciar suas salas."}
+            </p>
           </div>
 
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+            
+            {isRegistering && (
+              <>
+                <div>
+                  <label htmlFor="name" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500 }}>Nome Completo</label>
+                  <input 
+                    id="name"
+                    type="text" 
+                    placeholder="Ex: Dr. João Silva" 
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    style={{ width: '100%', padding: '0.85rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none', fontSize: '1rem', transition: 'border-color 0.2s' }}
+                    required={isRegistering}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="specialty" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500 }}>Especialidade</label>
+                  <input 
+                    id="specialty"
+                    type="text" 
+                    placeholder="Ex: Psicólogo, Nutricionista..." 
+                    value={specialty}
+                    onChange={(e) => setSpecialty(e.target.value)}
+                    style={{ width: '100%', padding: '0.85rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none', fontSize: '1rem', transition: 'border-color 0.2s' }}
+                    required={isRegistering}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
+                  />
+                </div>
+              </>
+            )}
+
             <div>
               <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500 }}>E-mail Cadastrado</label>
               <input 
@@ -60,15 +117,7 @@ export default function Home() {
                 placeholder="dr.joao@clinica.com" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.85rem 1rem',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border-color)',
-                  outline: 'none',
-                  fontSize: '1rem',
-                  transition: 'border-color 0.2s'
-                }}
+                style={{ width: '100%', padding: '0.85rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none', fontSize: '1rem', transition: 'border-color 0.2s' }}
                 required
                 onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
                 onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
@@ -76,7 +125,7 @@ export default function Home() {
             </div>
 
             {errorMsg && (
-              <div style={{ padding: '0.75rem', backgroundColor: '#FEE2E2', color: '#B91C1C', borderRadius: '8px', fontSize: '0.85rem', textAlign: 'center' }}>
+              <div style={{ padding: '0.75rem', backgroundColor: '#FEE2E2', color: '#B91C1C', borderRadius: '8px', fontSize: '0.85rem', textAlign: 'center', animation: 'fadeIn 0.2s' }}>
                 {errorMsg}
               </div>
             )}
@@ -84,12 +133,30 @@ export default function Home() {
             <button 
               type="submit" 
               className="btn" 
-              disabled={isLoggingIn || !email}
-              style={{ padding: '0.85rem', fontWeight: 600, opacity: isLoggingIn ? 0.7 : 1 }}
+              disabled={isSubmiting || !email}
+              style={{ padding: '0.85rem', fontWeight: 600, opacity: isSubmiting ? 0.7 : 1, marginTop: '0.5rem' }}
             >
-              {isLoggingIn ? "Entrando..." : "Acessar Plataforma"}
+              {isSubmiting ? "Aguarde..." : (isRegistering ? "Criar Conta e Acessar" : "Acessar Plataforma")}
             </button>
           </form>
+
+          {/* Botão para alternar entre Login e Cadastro */}
+          <div style={{ textAlign: 'center', marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+              {isRegistering ? "Já tem uma conta?" : "Ainda não tem conta na clínica?"}
+            </p>
+            <button 
+              onClick={() => {
+                setIsRegistering(!isRegistering);
+                setErrorMsg("");
+              }}
+              style={{
+                background: 'none', border: 'none', color: 'var(--primary)', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', marginTop: '0.5rem', textDecoration: 'underline'
+              }}
+            >
+              {isRegistering ? "Fazer Login" : "Cadastre-se como Profissional"}
+            </button>
+          </div>
         </div>
       </div>
     );
