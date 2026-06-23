@@ -11,9 +11,14 @@ export default function AdminDashboard() {
   const { rooms, fetchAllReservations, cancelReservation, addRoom, updateRoom, deleteRoom, loading } = useReservation();
   
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState<"reservations" | "rooms">("reservations");
+  const [activeTab, setActiveTab] = useState<"reservations" | "rooms" | "professionals">("reservations");
   const [professionalsMap, setProfessionalsMap] = useState<Record<string, string>>({});
+  const [professionalsList, setProfessionalsList] = useState<any[]>([]);
   
+  // Filters State
+  const [filterRoom, setFilterRoom] = useState<string>("");
+  const [filterProf, setFilterProf] = useState<string>("");
+
   // Room Form State
   const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
   const [roomId, setRoomId] = useState("");
@@ -29,17 +34,21 @@ export default function AdminDashboard() {
       router.push("/");
     }
 
-    // Fetch professionals to show their names
+    // Fetch professionals to show their names and list them
     if (savedPin === "1234") {
-      supabase.from("professionals").select("id, name").then(({ data }) => {
-        if (data) {
-          const map: Record<string, string> = {};
-          data.forEach(p => map[p.id] = p.name);
-          setProfessionalsMap(map);
-        }
-      });
+      fetchProfessionals();
     }
   }, [router]);
+
+  const fetchProfessionals = async () => {
+    const { data } = await supabase.from("professionals").select("*").order("name");
+    if (data) {
+      setProfessionalsList(data);
+      const map: Record<string, string> = {};
+      data.forEach(p => map[p.id] = p.name);
+      setProfessionalsMap(map);
+    }
+  };
 
   if (loading || !isAdmin) return (
     <div className="loading-screen">
@@ -48,10 +57,16 @@ export default function AdminDashboard() {
     </div>
   );
 
-  const allReservations = fetchAllReservations().sort((a, b) => {
-    if (a.date !== b.date) return a.date.localeCompare(b.date);
-    return a.startTime.localeCompare(b.startTime);
-  });
+  const filteredReservations = fetchAllReservations()
+    .filter(res => {
+      if (filterRoom && res.roomId !== filterRoom) return false;
+      if (filterProf && res.professionalId !== filterProf) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return a.startTime.localeCompare(b.startTime);
+    });
 
   const getRoomName = (id: string) => rooms.find(r => r.id === id)?.name ?? "Sala Desconhecida";
 
@@ -92,6 +107,19 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteProfessional = async (id: string) => {
+    if (confirm("ATENÇÃO: Deletar um profissional irá remover também TODAS as suas reservas! Deseja continuar?")) {
+      const { error } = await supabase.from("professionals").delete().eq("id", id);
+      if (!error) {
+        fetchProfessionals(); // atualiza a lista
+        alert("Profissional removido com sucesso.");
+      } else {
+        alert("Erro ao remover profissional.");
+        console.error(error);
+      }
+    }
+  };
+
   return (
     <div className="container animate-fade" style={{ paddingTop: "1.5rem", paddingBottom: "4rem" }}>
       <header style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
@@ -121,13 +149,48 @@ export default function AdminDashboard() {
         >
           Gerenciar Salas
         </button>
+        <button 
+          onClick={() => setActiveTab("professionals")}
+          className={activeTab === "professionals" ? "btn" : "btn btn-outline"}
+        >
+          Profissionais
+        </button>
       </div>
 
       {activeTab === "reservations" && (
         <div className="card animate-slide">
-          <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem" }}>Todas as Reservas Ativas ({allReservations.length})</h2>
-          {allReservations.length === 0 ? (
-            <p style={{ color: "var(--text-muted)" }}>Nenhuma reserva encontrada no sistema.</p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 700 }}>Todas as Reservas Ativas ({filteredReservations.length})</h2>
+            
+            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+              <select 
+                className="input" 
+                style={{ padding: "0.5rem", width: "auto" }}
+                value={filterProf}
+                onChange={e => setFilterProf(e.target.value)}
+              >
+                <option value="">Todos os Profissionais</option>
+                {Object.entries(professionalsMap).map(([id, name]) => (
+                  <option key={id} value={id}>{name}</option>
+                ))}
+              </select>
+
+              <select 
+                className="input" 
+                style={{ padding: "0.5rem", width: "auto" }}
+                value={filterRoom}
+                onChange={e => setFilterRoom(e.target.value)}
+              >
+                <option value="">Todas as Salas</option>
+                {rooms.map(room => (
+                  <option key={room.id} value={room.id}>{room.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {filteredReservations.length === 0 ? (
+            <p style={{ color: "var(--text-muted)" }}>Nenhuma reserva encontrada com os filtros selecionados.</p>
           ) : (
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
@@ -141,7 +204,7 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {allReservations.map(res => (
+                  {filteredReservations.map(res => (
                     <tr key={res.id} style={{ borderBottom: "1px solid var(--border-color)" }}>
                       <td style={{ padding: "1rem", fontWeight: 600 }}>{res.date.split('-').reverse().join('/')}</td>
                       <td style={{ padding: "1rem" }}>{res.startTime} - {res.endTime}</td>
@@ -232,6 +295,54 @@ export default function AdminDashboard() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {activeTab === "professionals" && (
+        <div className="card animate-slide">
+          <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1.5rem" }}>Profissionais Cadastrados ({professionalsList.length})</h2>
+          
+          {professionalsList.length === 0 ? (
+            <p style={{ color: "var(--text-muted)" }}>Nenhum profissional encontrado.</p>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
+              {professionalsList.map(prof => (
+                <div key={prof.id} style={{ 
+                  padding: "1.25rem", border: "1px solid var(--border-color)", 
+                  borderRadius: "var(--radius-md)", display: "flex", justifyContent: "space-between", alignItems: "center" 
+                }}>
+                  <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                    <div style={{ 
+                      width: "48px", height: "48px", borderRadius: "50%", 
+                      background: "var(--primary-light)", color: "var(--primary)", 
+                      display: "flex", alignItems: "center", justifyContent: "center", 
+                      fontWeight: 700, fontSize: "1.2rem" 
+                    }}>
+                      {prof.avatar_url ? (
+                        <img src={prof.avatar_url} alt={prof.name} style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                      ) : (
+                        prof.name.split(" ").slice(0,2).map((n: string) => n[0]).join("").toUpperCase()
+                      )}
+                    </div>
+                    <div>
+                      <h3 style={{ fontWeight: 700, color: "var(--text-main)", fontSize: "1.05rem" }}>{prof.name}</h3>
+                      <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>{prof.specialty || "Clínico"}</p>
+                      <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>{prof.email}</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => handleDeleteProfessional(prof.id)} 
+                    style={{ 
+                      padding: "0.4rem 0.8rem", backgroundColor: "var(--danger-light)", color: "var(--danger)", 
+                      border: "none", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" 
+                    }}
+                  >
+                    Excluir
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

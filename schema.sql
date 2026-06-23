@@ -58,6 +58,7 @@ CREATE POLICY "Permitir deleção de reservas" ON reservations FOR DELETE USING 
 CREATE POLICY "Leitura pública para profissionais" ON professionals FOR SELECT USING (true);
 CREATE POLICY "Permitir cadastro de profissionais" ON professionals FOR INSERT WITH CHECK (true);
 CREATE POLICY "Permitir atualização de perfil" ON professionals FOR UPDATE USING (true);
+CREATE POLICY "Permitir deleção de profissionais" ON professionals FOR DELETE USING (true);
 
 -- STORAGE: Criar bucket para avatares
 -- Execute no painel do Supabase > Storage > New Bucket:
