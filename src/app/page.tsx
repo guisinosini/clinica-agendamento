@@ -13,6 +13,7 @@ export default function Home() {
   const [specialty, setSpecialty] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [isSubmiting, setIsSubmiting] = useState(false);
+  const [showInstallModal, setShowInstallModal] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -242,14 +243,20 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Ações do Cabeçalho */}
-        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-          <Link href="/perfil" className="btn btn-outline btn-sm">
+          <button onClick={() => setShowInstallModal(true)} className="btn btn-outline btn-sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <span className="hide-mobile">Instalar App</span>
+          </button>
+          
+          <Link href="/perfil" className="btn btn-outline btn-sm" style={{ padding: "0.5rem" }} title="Editar Perfil">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
             </svg>
-            <span className="hide-mobile">Editar Perfil</span>
           </Link>
           <button onClick={logout} className="btn btn-ghost btn-sm">
             Sair
@@ -333,6 +340,51 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      {/* Modal de Instalação (PWA / Add to Home Screen) */}
+      {showInstallModal && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 999, padding: "1rem"
+        }}>
+          <div className="card animate-slide" style={{ maxWidth: "400px", width: "100%", position: "relative" }}>
+            <button 
+              onClick={() => setShowInstallModal(false)}
+              style={{ position: "absolute", top: "1rem", right: "1rem", color: "var(--text-muted)", fontSize: "1.5rem" }}
+            >
+              &times;
+            </button>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "1rem" }}>📱 Instalar Aplicativo</h2>
+            <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", marginBottom: "1.5rem", lineHeight: "1.5" }}>
+              Adicione a Clínica à sua tela inicial para acessar rapidamente, como um aplicativo nativo!
+            </p>
+            
+            <div style={{ background: "var(--primary-light)", padding: "1rem", borderRadius: "var(--radius-md)", marginBottom: "1rem" }}>
+              <h3 style={{ fontWeight: 700, color: "var(--primary)", marginBottom: "0.5rem", fontSize: "0.95rem" }}>🍎 iPhone (Safari)</h3>
+              <ol style={{ fontSize: "0.85rem", color: "var(--primary-hover)", paddingLeft: "1.2rem", lineHeight: "1.6" }}>
+                <li>Toque no ícone de <b>Compartilhar</b> <svg style={{display:"inline", verticalAlign:"middle"}} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> na barra inferior.</li>
+                <li>Role para baixo e toque em <b>Adicionar à Tela de Início</b> <svg style={{display:"inline", verticalAlign:"middle"}} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>.</li>
+                <li>Confirme em <b>Adicionar</b>.</li>
+              </ol>
+            </div>
+
+            <div style={{ background: "var(--bg-color)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+              <h3 style={{ fontWeight: 700, color: "var(--text-main)", marginBottom: "0.5rem", fontSize: "0.95rem" }}>🤖 Android (Chrome)</h3>
+              <ol style={{ fontSize: "0.85rem", color: "var(--text-secondary)", paddingLeft: "1.2rem", lineHeight: "1.6" }}>
+                <li>Toque nos <b>Três pontinhos</b> <svg style={{display:"inline", verticalAlign:"middle"}} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg> no canto superior direito.</li>
+                <li>Selecione <b>Adicionar à tela inicial</b> ou <b>Instalar aplicativo</b>.</li>
+                <li>Confirme em <b>Adicionar</b>.</li>
+              </ol>
+            </div>
+            
+            <button onClick={() => setShowInstallModal(false)} className="btn" style={{ width: "100%", marginTop: "1.5rem" }}>
+              Entendi
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
