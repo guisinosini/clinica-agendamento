@@ -1,0 +1,49 @@
+-- Criação da tabela de Profissionais
+CREATE TABLE professionals (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  specialty TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Criação da tabela de Salas
+CREATE TABLE rooms (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Inserindo as salas padrão
+INSERT INTO rooms (id, name, description) VALUES
+  ('r1', 'Consultório 1', 'Terapia Individual'),
+  ('r2', 'Consultório 2', 'Casal e Família'),
+  ('r3', 'Consultório 3', 'Avaliação Psicológica'),
+  ('r4', 'Consultório 4', 'Infantil (Ludoterapia)'),
+  ('r5', 'Sala de Reunião', 'Reuniões e Grupos');
+
+-- Criação da tabela de Reservas
+CREATE TABLE reservations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  room_id TEXT REFERENCES rooms(id) ON DELETE CASCADE,
+  professional_id UUID REFERENCES professionals(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Otimização: Índice para buscas rápidas de disponibilidade (evita conflitos de horário)
+CREATE INDEX idx_reservations_lookup ON reservations(room_id, date, start_time);
+
+-- RLS (Segurança de Linha)
+ALTER TABLE professionals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reservations ENABLE ROW LEVEL SECURITY;
+
+-- Políticas de segurança (Políticas básicas iniciais)
+CREATE POLICY "Leitura pública para salas" ON rooms FOR SELECT USING (true);
+CREATE POLICY "Leitura pública para reservas" ON reservations FOR SELECT USING (true);
+CREATE POLICY "Permitir inserção de reservas" ON reservations FOR INSERT WITH CHECK (true);
+CREATE POLICY "Permitir deleção de reservas" ON reservations FOR DELETE USING (true);
