@@ -243,6 +243,8 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Ações do Cabeçalho */}
+        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
           <button onClick={() => setShowInstallModal(true)} className="btn btn-outline btn-sm">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
