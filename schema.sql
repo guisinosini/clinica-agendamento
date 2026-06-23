@@ -47,3 +47,7 @@ CREATE POLICY "Leitura pública para salas" ON rooms FOR SELECT USING (true);
 CREATE POLICY "Leitura pública para reservas" ON reservations FOR SELECT USING (true);
 CREATE POLICY "Permitir inserção de reservas" ON reservations FOR INSERT WITH CHECK (true);
 CREATE POLICY "Permitir deleção de reservas" ON reservations FOR DELETE USING (true);
+
+-- Políticas para Profissionais (Necessárias para o Cadastro e Login)
+CREATE POLICY "Leitura pública para profissionais" ON professionals FOR SELECT USING (true);
+CREATE POLICY "Permitir cadastro de profissionais" ON professionals FOR INSERT WITH CHECK (true);
