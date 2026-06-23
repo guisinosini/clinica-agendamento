@@ -136,7 +136,7 @@ export default function AdminDashboard() {
       </header>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}>
+      <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem", flexWrap: "wrap" }}>
         <button 
           onClick={() => setActiveTab("reservations")}
           className={activeTab === "reservations" ? "btn" : "btn btn-outline"}
@@ -239,7 +239,7 @@ export default function AdminDashboard() {
       )}
 
       {activeTab === "rooms" && (
-        <div style={{ display: "grid", gap: "2rem", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
+        <div style={{ display: "grid", gap: "2rem", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
           {/* Lista de Salas */}
           <div className="card animate-slide">
             <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem" }}>Salas Cadastradas ({rooms.length})</h2>

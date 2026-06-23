@@ -356,7 +356,7 @@ export default function ReservarPage() {
           boxShadow: "0 -8px 24px rgba(0,0,0,0.08)",
           display: "flex", justifyContent: "center", zIndex: 50,
         }}>
-          <div style={{ width: "100%", maxWidth: "1200px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+          <div style={{ width: "100%", maxWidth: "1200px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
             <div>
               <p style={{ fontWeight: 700, fontSize: "1rem" }}>
                 {selectedRoomObj?.name} · {selectedSlots.length} hora(s)

@@ -297,7 +297,7 @@ export default function Home() {
             <p style={{ color: "var(--text-muted)" }}>Você não tem agendamentos futuros.</p>
           </div>
         ) : (
-          <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
+          <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "1rem" }}>
             {upcomingReservations.map(res => (
               <div key={res.id} className="card" style={{ padding: "1.25rem", display: "flex", gap: "1rem", alignItems: "center" }}>
                 <div style={{
