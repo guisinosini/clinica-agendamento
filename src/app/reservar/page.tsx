@@ -54,12 +54,11 @@ export default function ReservarPage() {
   const handleConfirm = () => {
     if (!selectedRoom || selectedSlots.length === 0) return;
     
-    // Gerar reservas para cada slot selecionado
-    // Como os slots são de 30 min, precisamos calcular o endTime
+    // Como os slots são de 1 hora, soma 60 min ao startTime
     const newReservations = selectedSlots.map(slot => {
       const [hours, minutes] = slot.split(':').map(Number);
       const dateObj = new Date();
-      dateObj.setHours(hours, minutes + 30, 0); // soma 30 min
+      dateObj.setHours(hours + 1, minutes, 0); // soma 1 hora
       
       const endHours = String(dateObj.getHours()).padStart(2, '0');
       const endMinutes = String(dateObj.getMinutes()).padStart(2, '0');
@@ -181,12 +180,12 @@ export default function ReservarPage() {
             </div>
           </section>
 
-          {/* Passo 3: Escolher os Horários (Slots 30 min) */}
+          {/* Passo 3: Escolher os Horários (1 hora por slot) */}
           <section style={{ marginBottom: '2rem' }}>
             <div className="flex justify-between items-center" style={{ marginBottom: '1rem' }}>
-              <h2 style={{ fontSize: '1.2rem' }}>3. Selecione os Horários (30 min)</h2>
+              <h2 style={{ fontSize: '1.2rem' }}>3. Selecione os Horários</h2>
               <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                {selectedSlots.length} slot(s) escolhidos
+                {selectedSlots.length} hora(s) escolhida(s)
               </span>
             </div>
 
@@ -240,7 +239,7 @@ export default function ReservarPage() {
           <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '1rem', backgroundColor: 'white', borderTop: '1px solid var(--border-color)', boxShadow: '0 -4px 6px -1px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'center', zIndex: 10 }}>
             <div style={{ width: '100%', maxWidth: '1200px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <p style={{ fontWeight: 600 }}>Total: {selectedSlots.length * 30} minutos</p>
+                <p style={{ fontWeight: 600 }}>Total: {selectedSlots.length} hora(s)</p>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                   {selectedRoom && rooms.find(r => r.id === selectedRoom)?.name} | {selectedDate.split('-').reverse().join('/')}
                 </p>
