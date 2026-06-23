@@ -57,7 +57,7 @@ export default function Home() {
         alignItems: "center",
         justifyContent: "center",
         padding: "1rem",
-        background: "var(--bg-color)",
+        background: "transparent",
       }}>
         <div style={{ width: "100%", maxWidth: "440px" }}>
           {/* Logo / Header */}
