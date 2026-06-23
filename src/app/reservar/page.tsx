@@ -132,7 +132,31 @@ export default function ReservarPage() {
           
           {/* Passo 2: Selecionar Data */}
           <section style={{ marginBottom: '2rem' }}>
-            <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>2. Escolha o Dia</h2>
+            <div className="flex justify-between items-center" style={{ marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <h2 style={{ fontSize: '1.2rem' }}>2. Escolha o Dia</h2>
+              <input 
+                type="date" 
+                value={selectedDate}
+                min={NEXT_DAYS[0]}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setSelectedDate(e.target.value);
+                    setSelectedSlots([]);
+                  }
+                }}
+                style={{
+                  padding: '0.6rem 1rem',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--card-bg)',
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                  color: 'var(--text-main)',
+                  cursor: 'pointer',
+                  fontWeight: 500
+                }}
+              />
+            </div>
             <div className="flex" style={{ gap: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
               {NEXT_DAYS.map(date => (
                 <div 
