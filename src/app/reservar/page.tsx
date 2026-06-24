@@ -142,7 +142,7 @@ export default function ReservarPage() {
   };
 
   const selectedRoomObj = rooms.find(r => r.id === selectedRoom);
-  const isMeetingRoom = selectedRoomObj?.name.toLowerCase().includes("reunião");
+  const isMeetingRoom = selectedRoom === "r5";
 
   const formatSelectedDate = (dateStr: string) => {
     const [y, m, d] = dateStr.split("-");
@@ -412,50 +412,56 @@ export default function ReservarPage() {
                   </div>
                 </div>
 
-                {/* Opções de Convite (Apenas Sala de Reunião) */}
-                {isMeetingRoom && allProfessionals.length > 1 && (
+                {/* Opções de Convite (Apenas Sala de Reunião r5) */}
+                {isMeetingRoom && (
                   <div className="animate-fade" style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid var(--border-color)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "1rem" }}>
                       <span style={{ fontSize: "1.2rem" }}>👥</span>
                       <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)" }}>Convidar Colegas (Aparecerá na agenda deles)</h3>
                     </div>
                     
-                    <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "0.75rem" }}>
-                      {allProfessionals.filter(p => p.id !== professional.id).map(p => {
-                        const isInvited = invitedProfessionals.includes(p.id);
-                        return (
-                          <div 
-                            key={p.id}
-                            onClick={() => {
-                              setInvitedProfessionals(prev => 
-                                prev.includes(p.id) ? prev.filter(id => id !== p.id) : [...prev, p.id]
-                              );
-                            }}
-                            style={{ 
-                              padding: "0.75rem 1rem", 
-                              cursor: "pointer", 
-                              display: "flex", 
-                              alignItems: "center", 
-                              gap: "0.75rem",
-                              borderRadius: "var(--radius-sm)",
-                              border: `1.5px solid ${isInvited ? "var(--primary)" : "var(--border-color)"}`,
-                              background: isInvited ? "var(--primary-light)" : "var(--card-bg)",
-                              transition: "all 0.2s ease"
-                            }}
-                          >
-                            <input 
-                              type="checkbox" 
-                              checked={isInvited}
-                              readOnly
-                              style={{ width: "1.1rem", height: "1.1rem", accentColor: "var(--primary)", pointerEvents: "none" }}
-                            />
-                            <div style={{ fontSize: "0.85rem", fontWeight: isInvited ? 700 : 500, color: isInvited ? "var(--primary)" : "var(--text-main)" }}>
-                              {p.name}
+                    {allProfessionals.filter(p => p.id !== professional.id).length === 0 ? (
+                      <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", padding: "1rem", background: "var(--bg-color)", borderRadius: "var(--radius-sm)", textAlign: "center" }}>
+                        Nenhum outro profissional cadastrado no sistema para convidar.
+                      </div>
+                    ) : (
+                      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "0.75rem" }}>
+                        {allProfessionals.filter(p => p.id !== professional.id).map(p => {
+                          const isInvited = invitedProfessionals.includes(p.id);
+                          return (
+                            <div 
+                              key={p.id}
+                              onClick={() => {
+                                setInvitedProfessionals(prev => 
+                                  prev.includes(p.id) ? prev.filter(id => id !== p.id) : [...prev, p.id]
+                                );
+                              }}
+                              style={{ 
+                                padding: "0.75rem 1rem", 
+                                cursor: "pointer", 
+                                display: "flex", 
+                                alignItems: "center", 
+                                gap: "0.75rem",
+                                borderRadius: "var(--radius-sm)",
+                                border: `1.5px solid ${isInvited ? "var(--primary)" : "var(--border-color)"}`,
+                                background: isInvited ? "var(--primary-light)" : "var(--card-bg)",
+                                transition: "all 0.2s ease"
+                              }}
+                            >
+                              <input 
+                                type="checkbox" 
+                                checked={isInvited}
+                                readOnly
+                                style={{ width: "1.1rem", height: "1.1rem", accentColor: "var(--primary)", pointerEvents: "none" }}
+                              />
+                              <div style={{ fontSize: "0.85rem", fontWeight: isInvited ? 700 : 500, color: isInvited ? "var(--primary)" : "var(--text-main)" }}>
+                                {p.name}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
 
