@@ -30,9 +30,10 @@ interface ReservationContextData {
   rooms: Room[];
   professional: Professional | null;
   loading: boolean;
-  login: (email: string) => Promise<{ success: boolean; message: string }>;
-  register: (name: string, email: string, specialty: string) => Promise<{ success: boolean; message: string }>;
+  login: (email: string, password?: string) => Promise<{ success: boolean; message: string }>;
+  register: (name: string, email: string, specialty: string, password?: string) => Promise<{ success: boolean; message: string }>;
   updateProfile: (id: string, name: string, specialty: string, avatarUrl?: string) => Promise<{ success: boolean; message: string }>;
+  updatePassword: (id: string, newPassword: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   // Funções Administrativas
   fetchAllReservations: () => Reservation[]; // Apenas retorna tudo
@@ -92,23 +93,30 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const login = async (email: string) => {
+  const login = async (email: string, password?: string) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      let query = supabase
         .from('professionals')
         .select('*')
-        .eq('email', email.trim().toLowerCase())
-        .maybeSingle();
+        .eq('email', email.trim().toLowerCase());
+        
+      if (password) {
+        query = query.eq('password', password);
+      }
+
+      const { data, error } = await query.maybeSingle();
       
       if (error) throw error;
 
       if (data) {
         setProfessional({ id: data.id, name: data.name, email: data.email, specialty: data.specialty, avatarUrl: data.avatar_url ?? null });
         localStorage.setItem("@Clinica:email", data.email);
+        // Não salvamos a senha no localStorage por segurança
         return { success: true, message: "Login realizado com sucesso!" };
       } else {
-        return { success: false, message: "E-mail não encontrado. Verifique seu cadastro." };
+        return { success: false, message: password ? "E-mail ou senha incorretos." : "E-mail não encontrado." };
       }
     } catch (err) {
       console.error("Erro no login:", err);
@@ -118,7 +126,7 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const register = async (name: string, email: string, specialty: string) => {
+  const register = async (name: string, email: string, specialty: string, password?: string) => {
     try {
       setLoading(true);
       // Verifica se o e-mail já existe
@@ -133,9 +141,12 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
       }
 
       // Insere o novo profissional
+      const payload: any = { name, email: email.trim().toLowerCase(), specialty };
+      if (password) payload.password = password;
+
       const { data, error } = await supabase
         .from('professionals')
-        .insert([{ name, email: email.trim().toLowerCase(), specialty }])
+        .insert([payload])
         .select()
         .single();
 
@@ -182,6 +193,21 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) {
       console.error("Erro ao atualizar perfil:", err);
       return { success: false, message: "Erro ao atualizar o perfil." };
+    }
+  };
+
+  const updatePassword = async (id: string, newPassword: string) => {
+    try {
+      const { error } = await supabase
+        .from('professionals')
+        .update({ password: newPassword })
+        .eq('id', id);
+
+      if (error) throw error;
+      return { success: true, message: "Senha atualizada com sucesso!" };
+    } catch (err) {
+      console.error("Erro ao atualizar senha:", err);
+      return { success: false, message: "Erro ao atualizar a senha." };
     }
   };
 
@@ -270,6 +296,7 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     login,
     register,
     updateProfile,
+    updatePassword,
     logout,
     fetchAllReservations: () => reservations,
     addRoom,

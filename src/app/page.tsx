@@ -9,6 +9,7 @@ export default function Home() {
 
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -24,14 +25,19 @@ export default function Home() {
 
     let result;
     if (isRegistering) {
-      if (!name || !specialty) {
+      if (!name || !specialty || !password) {
         setErrorMsg("Preencha todos os campos para se cadastrar.");
         setIsSubmiting(false);
         return;
       }
-      result = await register(name, email, specialty);
+      result = await register(name, email, specialty, password);
     } else {
-      result = await login(email);
+      if (!password) {
+        setErrorMsg("A senha é obrigatória.");
+        setIsSubmiting(false);
+        return;
+      }
+      result = await login(email, password);
     }
 
     if (!result.success) setErrorMsg(result.message);
@@ -146,6 +152,12 @@ export default function Home() {
                   onChange={(e) => setEmail(e.target.value)} className="input" required />
               </div>
 
+              <div>
+                <label htmlFor="password" className="label">Senha</label>
+                <input id="password" type="password" placeholder="Sua senha" value={password}
+                  onChange={(e) => setPassword(e.target.value)} className="input" required />
+              </div>
+
               {errorMsg && (
                 <div className="animate-fade" style={{
                   padding: "0.75rem 1rem",
@@ -172,7 +184,8 @@ export default function Home() {
               {isRegistering ? "Já tem uma conta?" : "Ainda não tem conta?"}
               {" "}
               <button
-                onClick={() => { setIsRegistering(!isRegistering); setErrorMsg(""); }}
+                type="button"
+                onClick={() => { setIsRegistering(!isRegistering); setErrorMsg(""); setPassword(""); }}
                 style={{ color: "var(--primary)", fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}
               >
                 {isRegistering ? "Fazer Login" : "Cadastre-se"}

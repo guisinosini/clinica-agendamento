@@ -8,10 +8,16 @@ import { supabase } from "../../lib/supabase";
 
 export default function PerfilPage() {
   const router = useRouter();
-  const { professional, loading, updateProfile } = useReservation();
+  const { professional, loading, updateProfile, updatePassword } = useReservation();
 
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
+  
+  // Password states
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordFeedback, setPasswordFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [savingPassword, setSavingPassword] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
@@ -98,6 +104,33 @@ export default function PerfilPage() {
 
     if (result.success) {
       setTimeout(() => router.push("/"), 1500);
+    }
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPassword || !confirmPassword) return;
+
+    if (newPassword !== confirmPassword) {
+      setPasswordFeedback({ type: "error", message: "As senhas não coincidem." });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordFeedback({ type: "error", message: "A senha deve ter no mínimo 6 caracteres." });
+      return;
+    }
+
+    setSavingPassword(true);
+    setPasswordFeedback(null);
+
+    const result = await updatePassword(professional.id, newPassword);
+    setPasswordFeedback({ type: result.success ? "success" : "error", message: result.message });
+    setSavingPassword(false);
+
+    if (result.success) {
+      setNewPassword("");
+      setConfirmPassword("");
     }
   };
 
@@ -250,9 +283,64 @@ export default function PerfilPage() {
           disabled={saving || !name.trim()}
           style={{ width: "100%", justifyContent: "center" }}
         >
-          {uploadingAvatar ? "Enviando foto..." : saving ? "Salvando..." : "Salvar Alterações"}
+          {uploadingAvatar ? "Enviando foto..." : saving ? "Salvando..." : "Salvar Alterações do Perfil"}
         </button>
       </form>
+
+      {/* Seção de Senha */}
+      <div className="card" style={{ marginTop: "2rem", marginBottom: "1.5rem" }}>
+        <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.5rem" }}>
+          Segurança da Conta
+        </h2>
+        <form onSubmit={handlePasswordSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          <div>
+            <label className="label">Nova Senha</label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="input"
+              placeholder="Digite a nova senha"
+            />
+          </div>
+          <div>
+            <label className="label">Confirmar Nova Senha</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="input"
+              placeholder="Digite a senha novamente"
+            />
+          </div>
+
+          {passwordFeedback && (
+            <div
+              className="animate-fade"
+              style={{
+                padding: "0.85rem 1.25rem",
+                borderRadius: "var(--radius-sm)",
+                backgroundColor: passwordFeedback.type === "success" ? "var(--success-light)" : "var(--danger-light)",
+                color: passwordFeedback.type === "success" ? "var(--success)" : "var(--danger)",
+                border: `1px solid ${passwordFeedback.type === "success" ? "#A7F3D0" : "#FECACA"}`,
+                fontWeight: 500,
+                fontSize: "0.9rem",
+              }}
+            >
+              {passwordFeedback.message}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="btn btn-outline"
+            disabled={savingPassword || !newPassword || !confirmPassword}
+            style={{ alignSelf: "flex-start", marginTop: "0.5rem" }}
+          >
+            {savingPassword ? "Atualizando..." : "Definir Nova Senha"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
