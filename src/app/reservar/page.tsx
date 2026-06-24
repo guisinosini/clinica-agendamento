@@ -123,7 +123,6 @@ export default function ReservarPage() {
       }
     }
 
-    addReservations(finalReservations);
     try {
       await addReservations(finalReservations);
       
