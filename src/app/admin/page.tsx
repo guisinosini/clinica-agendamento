@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useReservation } from "../../context/ReservationContext";
+import { useReservation, NEXT_DAYS, TIME_SLOTS } from "../../context/ReservationContext";
 import { supabase } from "../../lib/supabase";
 
 export default function AdminDashboard() {
@@ -11,7 +11,8 @@ export default function AdminDashboard() {
   const { rooms, fetchAllReservations, cancelReservation, addRoom, updateRoom, deleteRoom, loading, addReservations } = useReservation();
   
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState<"reservations" | "rooms" | "professionals" | "new_reservation" | "patients">("reservations");
+  const [activeTab, setActiveTab] = useState<"reservations" | "rooms" | "professionals" | "new_reservation" | "patients" | "disponibilidade">("reservations");
+  const [selectedDispDate, setSelectedDispDate] = useState<string>(NEXT_DAYS[0]);
   const [professionalsMap, setProfessionalsMap] = useState<Record<string, string>>({});
   const [professionalsList, setProfessionalsList] = useState<any[]>([]);
   const [patientsList, setPatientsList] = useState<any[]>([]);
@@ -298,6 +299,12 @@ export default function AdminDashboard() {
           className={activeTab === "patients" ? "btn" : "btn btn-outline"}
         >
           Pacientes
+        </button>
+        <button 
+          onClick={() => setActiveTab("disponibilidade")}
+          className={activeTab === "disponibilidade" ? "btn" : "btn btn-outline"}
+        >
+          Disponibilidade
         </button>
         <button 
           onClick={() => setActiveTab("new_reservation")}
@@ -668,6 +675,70 @@ export default function AdminDashboard() {
           </form>
         </div>
       )}
+
+      {/* DISPONIBILIDADE */}
+      {activeTab === "disponibilidade" && (
+        <section className="animate-slide">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-main)" }}>Grade de Ocupação</h2>
+            <input
+              type="date"
+              value={selectedDispDate}
+              min={NEXT_DAYS[0]}
+              onChange={(e) => { if (e.target.value) setSelectedDispDate(e.target.value); }}
+              className="input"
+              style={{ width: "200px" }}
+            />
+          </div>
+
+          <div className="card" style={{ padding: "0", overflow: "hidden" }}>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
+                <thead>
+                  <tr style={{ background: "var(--primary-light)" }}>
+                    <th style={{ padding: "1rem 1.25rem", borderBottom: "1px solid var(--border-color)", textAlign: "left", width: "90px", position: "sticky", left: 0, zIndex: 2, background: "var(--primary-light)", fontSize: "0.8rem", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase" }}>
+                      Horário
+                    </th>
+                    {rooms.map(room => (
+                      <th key={room.id} style={{ padding: "1rem", borderBottom: "1px solid var(--border-color)", textAlign: "center", fontSize: "0.85rem", fontWeight: 700, color: "var(--text-secondary)" }}>
+                        {room.name}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {TIME_SLOTS.map((slot, slotIdx) => (
+                    <tr key={slot} style={{ borderBottom: "1px solid var(--border-color)", backgroundColor: slotIdx % 2 === 0 ? "var(--bg-color)" : "var(--card-bg)" }}>
+                      <td style={{ padding: "0.75rem 1.25rem", fontWeight: 700, fontSize: "0.875rem", color: "var(--text-secondary)", position: "sticky", left: 0, zIndex: 1, borderRight: "1px solid var(--border-color)", backgroundColor: slotIdx % 2 === 0 ? "var(--bg-color)" : "var(--card-bg)", whiteSpace: "nowrap" }}>
+                        {slot}
+                      </td>
+                      {rooms.map(room => {
+                        // Encontra reserva para esta sala, dia e horário
+                        const res = allReservations.find(r => r.roomId === room.id && r.date === selectedDispDate && r.startTime === slot && (!r.status || r.status === 'agendado'));
+                        
+                        let bg = "var(--bg-color)", color = "var(--text-secondary)", label = "Livre", icon = "✓";
+                        if (res) {
+                          bg = "var(--primary-light)"; color = "var(--primary)"; label = professionalsMap[res.professionalId] || "Ocupado"; icon = "✗";
+                        }
+
+                        return (
+                          <td key={room.id} style={{ padding: "0.5rem", textAlign: "center" }}>
+                            <div style={{ backgroundColor: bg, color, padding: "0.45rem 0.5rem", borderRadius: "var(--radius-sm)", fontSize: "0.75rem", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "0.25rem", minWidth: "90px", justifyContent: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "150px" }} title={label}>
+                              <span>{icon}</span>
+                              <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
+                            </div>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      )}
+
     </div>
   );
 }
