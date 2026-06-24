@@ -9,6 +9,7 @@ import { supabase } from "../../lib/supabase";
 export default function AdminDashboard() {
   const router = useRouter();
   const { rooms, fetchAllReservations, cancelReservation, addRoom, updateRoom, deleteRoom, loading, addReservations } = useReservation();
+  const allReservations = fetchAllReservations();
   
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState<"reservations" | "rooms" | "professionals" | "new_reservation" | "patients" | "disponibilidade">("reservations");
