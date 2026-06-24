@@ -216,6 +216,18 @@ export default function Home() {
     return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
   };
 
+  const getGoogleCalendarUrl = (res: any) => {
+    const dateStr = res.date.replace(/-/g, ""); // YYYYMMDD
+    const startStr = res.startTime.replace(":", "") + "00";
+    const endStr = res.endTime.replace(":", "") + "00";
+    
+    const title = `Consulta: ${res.patientName || "Paciente"}`;
+    const details = `Serviço: ${res.service || "Não informado"}\nSala: ${getRoomName(res.roomId)}`;
+    const location = "Clínica";
+
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${dateStr}T${startStr}/${dateStr}T${endStr}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
+  };
+
   // Estatísticas do Mês
   const currentMonth = new Date().toISOString().slice(0, 7); // "YYYY-MM"
   const thisMonthReservations = reservations.filter(res => 
@@ -385,11 +397,28 @@ export default function Home() {
                     {getRoomName(res.roomId)}
                   </p>
                   {res.service && (
-                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "block", marginTop: "0.15rem" }}>
                       {res.service}
                     </span>
                   )}
                 </div>
+                
+                {/* Botão de Calendário */}
+                <a
+                  href={getGoogleCalendarUrl(res)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-outline"
+                  style={{
+                    padding: "0.5rem",
+                    borderRadius: "var(--radius-sm)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                  title="Adicionar ao Google Calendar"
+                >
+                  🔔
+                </a>
               </div>
             ))}
           </div>

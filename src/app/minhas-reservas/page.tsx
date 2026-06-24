@@ -52,6 +52,18 @@ export default function MinhasReservasPage() {
     return acc;
   }, {});
 
+  const getGoogleCalendarUrl = (res: any) => {
+    const dateStr = res.date.replace(/-/g, ""); // YYYYMMDD
+    const startStr = res.startTime.replace(":", "") + "00";
+    const endStr = res.endTime.replace(":", "") + "00";
+    
+    const title = `Consulta: ${res.patientName || "Paciente"}`;
+    const details = `Serviço: ${res.service || "Não informado"}\nSala: ${getRoomName(res.roomId)}`;
+    const location = "Clínica";
+
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${dateStr}T${startStr}/${dateStr}T${endStr}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
+  };
+
   return (
     <div className="container animate-fade" style={{ paddingTop: "1.5rem", paddingBottom: "4rem" }}>
       {/* Header */}
@@ -152,32 +164,64 @@ export default function MinhasReservasPage() {
                       </div>
                     </div>
 
-                    {/* Botão Cancelar */}
-                    <button
-                      onClick={() => handleCancel(reservation.id)}
-                      style={{
-                        backgroundColor: "transparent",
-                        color: "var(--danger)",
-                        border: "1.5px solid var(--danger)",
-                        padding: "0.5rem 1.1rem",
-                        borderRadius: "var(--radius-sm)",
-                        cursor: "pointer",
-                        fontWeight: 600,
-                        fontSize: "0.85rem",
-                        transition: "all 0.2s ease",
-                        flexShrink: 0,
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.backgroundColor = "var(--danger)";
-                        e.currentTarget.style.color = "white";
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.backgroundColor = "transparent";
-                        e.currentTarget.style.color = "var(--danger)";
-                      }}
-                    >
-                      Cancelar
-                    </button>
+                    {/* Botões Ação */}
+                    <div style={{ display: "flex", gap: "0.5rem", flexShrink: 0, flexWrap: "wrap" }}>
+                      <a
+                        href={getGoogleCalendarUrl(reservation)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          backgroundColor: "transparent",
+                          color: "var(--primary)",
+                          border: "1.5px solid var(--primary)",
+                          padding: "0.5rem 0.85rem",
+                          borderRadius: "var(--radius-sm)",
+                          cursor: "pointer",
+                          fontWeight: 600,
+                          fontSize: "0.85rem",
+                          display: "flex", alignItems: "center", gap: "0.4rem",
+                          transition: "all 0.2s ease",
+                          textDecoration: "none"
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.backgroundColor = "var(--primary)";
+                          e.currentTarget.style.color = "var(--primary-mid)";
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                          e.currentTarget.style.color = "var(--primary)";
+                        }}
+                        title="Adicionar ao Google Calendar"
+                      >
+                        🔔 <span className="hide-mobile">Calendário</span>
+                      </a>
+                      
+                      {/* Botão Cancelar */}
+                      <button
+                        onClick={() => handleCancel(reservation.id)}
+                        style={{
+                          backgroundColor: "transparent",
+                          color: "var(--danger)",
+                          border: "1.5px solid var(--danger)",
+                          padding: "0.5rem 1.1rem",
+                          borderRadius: "var(--radius-sm)",
+                          cursor: "pointer",
+                          fontWeight: 600,
+                          fontSize: "0.85rem",
+                          transition: "all 0.2s ease",
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.backgroundColor = "var(--danger)";
+                          e.currentTarget.style.color = "white";
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                          e.currentTarget.style.color = "var(--danger)";
+                        }}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
