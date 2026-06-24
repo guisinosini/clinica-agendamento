@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useReservation } from "../context/ReservationContext";
 
 export default function Home() {
-  const { professional, loading, login, register, logout, reservations, rooms } = useReservation();
+  const { professional, loading, login, register, logout, reservations, rooms, allProfessionals } = useReservation();
 
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState("");
@@ -84,8 +84,42 @@ export default function Home() {
             <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", marginTop: "0.4rem" }}>
               {isRegistering
                 ? "Preencha seus dados para começar."
-                : "Bem-vindo(a) de volta! Entre para continuar."}
+                : "Gestão de salas de atendimento."}
             </p>
+
+            {!isRegistering && (
+              <div className="animate-fade" style={{ 
+                marginTop: "1.5rem", 
+                display: "inline-flex", 
+                gap: "1.25rem", 
+                justifyContent: "center",
+                flexWrap: "wrap",
+                background: "var(--card-bg)",
+                padding: "0.6rem 1.25rem",
+                borderRadius: "var(--radius-full)",
+                border: "1px solid var(--border-color)",
+                boxShadow: "var(--shadow-sm)",
+                animationDelay: "0.2s"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                  <span style={{ fontSize: "1.1rem", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}>🏢</span>
+                  <span style={{ fontWeight: 700, color: "var(--text-main)" }}>{rooms.length}</span>
+                  <span>Salas</span>
+                </div>
+                <div style={{ width: "1px", background: "var(--border-color)" }} />
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                  <span style={{ fontSize: "1.1rem", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}>👩‍⚕️</span>
+                  <span style={{ fontWeight: 700, color: "var(--text-main)" }}>{allProfessionals?.length || 0}</span>
+                  <span>Profissionais</span>
+                </div>
+                <div style={{ width: "1px", background: "var(--border-color)" }} />
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                  <span style={{ fontSize: "1.1rem", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}>📅</span>
+                  <span style={{ fontWeight: 700, color: "var(--primary)" }}>{reservations.length}</span>
+                  <span>Reservas</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Card do Formulário */}
