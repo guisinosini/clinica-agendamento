@@ -246,6 +246,11 @@ export default function AdminDashboard() {
     setActiveTab("reservations");
   };
 
+  const handleAdminLogout = () => {
+    sessionStorage.removeItem("@Clinica:adminPin");
+    router.push("/");
+  };
+
   return (
     <div className="container animate-fade" style={{ paddingTop: "1.5rem", paddingBottom: "4rem" }}>
       <header style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
@@ -259,6 +264,13 @@ export default function AdminDashboard() {
             Painel Administrativo
           </h1>
         </div>
+        <button 
+          onClick={handleAdminLogout}
+          className="btn btn-outline"
+          style={{ padding: "0.5rem 1rem", borderColor: "var(--danger)", color: "var(--danger)", fontWeight: 600 }}
+        >
+          Sair do Admin
+        </button>
       </header>
 
       {/* Tabs */}
