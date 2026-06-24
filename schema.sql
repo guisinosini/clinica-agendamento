@@ -35,6 +35,7 @@ CREATE TABLE reservations (
   end_time TIME NOT NULL,
   patient_name TEXT,
   service TEXT,
+  status TEXT DEFAULT 'agendado',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

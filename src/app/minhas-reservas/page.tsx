@@ -16,7 +16,7 @@ import {
 import { ptBR } from "date-fns/locale";
 
 export default function ProfessionalAgendaPage() {
-  const { reservations, cancelReservation, rooms, professional, loading } = useReservation();
+  const { reservations, cancelReservation, updateReservationStatus, rooms, professional, loading } = useReservation();
   const router = useRouter();
 
   // Estado da semana/data selecionada
@@ -165,26 +165,58 @@ export default function ProfessionalAgendaPage() {
                 
                 {/* Detalhes */}
                 <div style={{ flex: 1 }}>
-                  <h4 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--primary)", marginBottom: "0.2rem" }}>
-                    {res.patientName || "Paciente Não Informado"}
-                  </h4>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.2rem", flexWrap: "wrap" }}>
+                    <h4 style={{ fontSize: "1.1rem", fontWeight: 700, color: res.status === 'falta' || res.status === 'reagendado' ? "var(--text-muted)" : "var(--primary)" }}>
+                      {res.patientName || "Paciente Não Informado"}
+                    </h4>
+                    {res.status === 'falta' && <span className="badge" style={{ backgroundColor: "var(--danger-light)", color: "var(--danger)", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>Falta</span>}
+                    {res.status === 'reagendado' && <span className="badge" style={{ backgroundColor: "#fef3c7", color: "#b45309", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>Reagendado</span>}
+                  </div>
                   <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>
                     {getRoomName(res.roomId)} {res.service && `• ${res.service}`}
                   </p>
                 </div>
 
                 {/* Ações */}
-                <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <a href={getGoogleCalendarUrl(res)} target="_blank" rel="noopener noreferrer" 
-                    className="btn btn-outline" style={{ padding: "0.5rem", display: "flex", alignItems: "center", justifyContent: "center" }}
-                    title="Adicionar ao Google Calendar">
-                    📅
-                  </a>
-                  <button onClick={() => { if(confirm("Cancelar esta consulta?")) cancelReservation(res.id); }} 
-                    className="btn btn-outline" style={{ padding: "0.5rem", borderColor: "var(--danger)", color: "var(--danger)", display: "flex", alignItems: "center", justifyContent: "center" }}
-                    title="Cancelar Consulta">
-                    ❌
-                  </button>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", justifyContent: "flex-end" }}>
+                  {(!res.status || res.status === 'agendado') ? (
+                    <>
+                      <a href={getGoogleCalendarUrl(res)} target="_blank" rel="noopener noreferrer" 
+                        className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.3rem" }}
+                        title="Adicionar ao Google Calendar">
+                        📅 <span className="hide-mobile">GCal</span>
+                      </a>
+                      
+                      <button onClick={() => { if(confirm("Marcar como falta do paciente?")) updateReservationStatus(res.id, 'falta'); }} 
+                        className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--danger)", color: "var(--danger)", display: "flex", alignItems: "center", gap: "0.3rem" }}
+                        title="Marcar Falta">
+                        ⚠️ <span className="hide-mobile">Falta</span>
+                      </button>
+
+                      <button onClick={() => { 
+                          if(confirm("Deseja reagendar? O status será alterado e você será redirecionado para a tela de agendamento.")) {
+                            updateReservationStatus(res.id, 'reagendado');
+                            router.push('/reservar');
+                          }
+                        }} 
+                        className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "#b45309", color: "#b45309", display: "flex", alignItems: "center", gap: "0.3rem" }}
+                        title="Reagendar Consulta">
+                        🔄 <span className="hide-mobile">Reagendar</span>
+                      </button>
+                      
+                      <button onClick={() => { if(confirm("Deseja realmente excluir e cancelar esta consulta?")) cancelReservation(res.id); }} 
+                        className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--text-muted)", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "0.3rem" }}
+                        title="Cancelar Consulta">
+                        ❌ <span className="hide-mobile">Cancelar</span>
+                      </button>
+                    </>
+                  ) : (
+                     <button onClick={() => { if(confirm("Deseja excluir permanentemente este registro do histórico?")) cancelReservation(res.id); }} 
+                        className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--text-muted)", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "0.3rem" }}
+                        title="Excluir Registro">
+                        🗑️ <span className="hide-mobile">Excluir</span>
+                      </button>
+                  )}
                 </div>
               </div>
             ))}

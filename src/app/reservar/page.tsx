@@ -63,7 +63,7 @@ export default function ReservarPage() {
   const occupiedSlots = useMemo(() => {
     if (!selectedRoom) return [];
     return reservations
-      .filter(res => res.roomId === selectedRoom && res.date === selectedDate)
+      .filter(res => res.roomId === selectedRoom && res.date === selectedDate && (!res.status || res.status === 'agendado'))
       .map(res => res.startTime);
   }, [reservations, selectedRoom, selectedDate]);
 

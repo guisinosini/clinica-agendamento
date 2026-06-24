@@ -27,6 +27,7 @@ interface ReservationContextData {
   reservations: Reservation[];
   addReservations: (newReservations: Omit<Reservation, "id">[]) => Promise<void>;
   cancelReservation: (id: string) => Promise<void>;
+  updateReservationStatus: (id: string, status: string) => Promise<boolean>;
   rooms: Room[];
   professional: Professional | null;
   loading: boolean;
@@ -249,7 +250,8 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
         startTime: r.start_time.substring(0, 5),
         endTime: r.end_time.substring(0, 5),
         patientName: r.patient_name,
-        service: r.service
+        service: r.service,
+        status: r.status || 'agendado'
       })));
     }
   };
@@ -275,6 +277,17 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateReservationStatus = async (id: string, status: string) => {
+    const { error } = await supabase.from('reservations').update({ status }).eq('id', id);
+    if (!error) {
+      setReservations(prev => prev.map(res => res.id === id ? { ...res, status: status as any } : res));
+      return true;
+    } else {
+      console.error("Erro ao atualizar status:", error);
+      return false;
+    }
+  };
+
   const cancelReservation = async (id: string) => {
     const { error } = await supabase.from('reservations').delete().eq('id', id);
 
@@ -290,6 +303,7 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     reservations,
     addReservations,
     cancelReservation,
+    updateReservationStatus,
     rooms,
     professional,
     loading,
