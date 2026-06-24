@@ -15,6 +15,11 @@ export default function ReservarPage() {
   const [patientName, setPatientName] = useState("");
   const [service, setService] = useState("");
   const [feedbackMsg, setFeedbackMsg] = useState<string>("");
+  
+  // Estados para Repetição de Reserva
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceType, setRecurrenceType] = useState<"daily" | "weekly">("weekly");
+  const [recurrenceCount, setRecurrenceCount] = useState<number>(4);
 
   useEffect(() => {
     if (!loading && !professional) router.push("/");
@@ -43,27 +48,58 @@ export default function ReservarPage() {
 
   const handleConfirm = () => {
     if (!selectedRoom || selectedSlots.length === 0) return;
-    const newReservations = selectedSlots.map(slot => {
-      const [hours, minutes] = slot.split(":").map(Number);
-      const d = new Date();
-      d.setHours(hours + 1, minutes, 0);
-      return {
-        roomId: selectedRoom,
-        professionalId: professional.id,
-        date: selectedDate,
-        startTime: slot,
-        endTime: `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`,
-        patientName: patientName || undefined,
-        service: service || undefined
-      };
-    });
-    addReservations(newReservations);
-    setFeedbackMsg("Reserva confirmada com sucesso!");
+
+    let allReservations = [];
+    
+    // Converter selectedDate para lidar com o timezone de forma correta
+    const [sY, sM, sD] = selectedDate.split("-").map(Number);
+    const baseDate = new Date(sY, sM - 1, sD);
+    
+    const totalOccurrences = isRecurring ? recurrenceCount : 1;
+
+    for (let i = 0; i < totalOccurrences; i++) {
+      const currentDate = new Date(baseDate);
+      if (isRecurring && recurrenceType === "daily") {
+        currentDate.setDate(currentDate.getDate() + i);
+      } else if (isRecurring && recurrenceType === "weekly") {
+        currentDate.setDate(currentDate.getDate() + (i * 7));
+      }
+      
+      const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
+      
+      const dailyReservations = selectedSlots.map(slot => {
+        const [hours, minutes] = slot.split(":").map(Number);
+        const d = new Date();
+        d.setHours(hours + 1, minutes, 0); // Presume duração de 1 hora
+        return {
+          roomId: selectedRoom,
+          professionalId: professional.id,
+          date: dateStr,
+          startTime: slot,
+          endTime: `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`,
+          patientName: patientName || undefined,
+          service: service || undefined
+        };
+      });
+
+      allReservations.push(...dailyReservations);
+    }
+
+    addReservations(allReservations);
+    
+    if (totalOccurrences > 1) {
+      setFeedbackMsg(`${totalOccurrences} reservas confirmadas com sucesso!`);
+    } else {
+      setFeedbackMsg("Reserva confirmada com sucesso!");
+    }
+    
     setTimeout(() => {
       setSelectedRoom(null);
       setSelectedSlots([]);
       setPatientName("");
       setService("");
+      setIsRecurring(false);
+      setRecurrenceCount(4);
       setFeedbackMsg("");
       router.push("/minhas-reservas");
     }, 1500);
@@ -339,6 +375,51 @@ export default function ReservarPage() {
                     />
                   </div>
                 </div>
+
+                {/* Opções de Repetição */}
+                <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid var(--border-color)" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "0.6rem", cursor: "pointer", fontWeight: 600, color: "var(--text-main)" }}>
+                    <input 
+                      type="checkbox" 
+                      checked={isRecurring} 
+                      onChange={(e) => setIsRecurring(e.target.checked)}
+                      style={{ width: "1.25rem", height: "1.25rem", accentColor: "var(--primary)", cursor: "pointer" }}
+                    />
+                    🔄 Repetir este agendamento automaticamente
+                  </label>
+                  
+                  {isRecurring && (
+                    <div className="grid animate-fade" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.5rem", marginTop: "1.25rem", background: "var(--bg-color)", padding: "1.25rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+                      <div>
+                        <label className="label">Frequência da Repetição</label>
+                        <select 
+                          className="input" 
+                          value={recurrenceType} 
+                          onChange={(e) => setRecurrenceType(e.target.value as "daily" | "weekly")}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <option value="weekly">Semanalmente (mesmo dia da semana)</option>
+                          <option value="daily">Diariamente (dias consecutivos)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="label">Quantidade de Repetições</label>
+                        <input 
+                          type="number" 
+                          min="2" 
+                          max="50" 
+                          className="input" 
+                          value={recurrenceCount}
+                          onChange={(e) => setRecurrenceCount(Number(e.target.value))}
+                        />
+                        <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.35rem", display: "block" }}>
+                          Total de dias/sessões (já inclui a 1ª data).
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
               </div>
             </section>
           )}
@@ -360,6 +441,7 @@ export default function ReservarPage() {
             <div>
               <p style={{ fontWeight: 700, fontSize: "1rem" }}>
                 {selectedRoomObj?.name} · {selectedSlots.length} hora(s)
+                {isRecurring && <span style={{ color: "var(--primary)", marginLeft: "0.5rem" }}>· {recurrenceCount} Ocorrências</span>}
               </p>
               <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "capitalize" }}>
                 {formatSelectedDate(selectedDate)}
