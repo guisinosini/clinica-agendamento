@@ -8,10 +8,10 @@ import { supabase } from "../../lib/supabase";
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { rooms, fetchAllReservations, cancelReservation, addRoom, updateRoom, deleteRoom, loading } = useReservation();
+  const { rooms, fetchAllReservations, cancelReservation, addRoom, updateRoom, deleteRoom, loading, addReservations } = useReservation();
   
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState<"reservations" | "rooms" | "professionals">("reservations");
+  const [activeTab, setActiveTab] = useState<"reservations" | "rooms" | "professionals" | "new_reservation">("reservations");
   const [professionalsMap, setProfessionalsMap] = useState<Record<string, string>>({});
   const [professionalsList, setProfessionalsList] = useState<any[]>([]);
   
@@ -25,6 +25,15 @@ export default function AdminDashboard() {
   const [roomName, setRoomName] = useState("");
   const [roomDesc, setRoomDesc] = useState("");
 
+  // New Reservation Form State
+  const [newResProfId, setNewResProfId] = useState("");
+  const [newResRoomId, setNewResRoomId] = useState("");
+  const [newResDate, setNewResDate] = useState("");
+  const [newResStart, setNewResStart] = useState("08:00");
+  const [newResEnd, setNewResEnd] = useState("09:00");
+  const [newResPatient, setNewResPatient] = useState("");
+  const [newResService, setNewResService] = useState("");
+
   useEffect(() => {
     // Basic PIN check using sessionStorage
     const savedPin = sessionStorage.getItem("@Clinica:adminPin");
@@ -37,6 +46,7 @@ export default function AdminDashboard() {
     // Fetch professionals to show their names and list them
     if (savedPin === "1234") {
       fetchProfessionals();
+      setNewResDate(new Date().toISOString().split("T")[0]); // Set default date
     }
   }, [router]);
 
@@ -120,6 +130,34 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleAdminCreateReservation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newResProfId || !newResRoomId || !newResDate || !newResStart || !newResEnd) return;
+
+    const conflict = fetchAllReservations().find(r => 
+      r.roomId === newResRoomId && r.date === newResDate && r.startTime === newResStart
+    );
+    if (conflict) {
+      alert("ERRO: Já existe uma reserva para esta sala neste dia e horário inicial.");
+      return;
+    }
+
+    await addReservations([{
+      roomId: newResRoomId,
+      professionalId: newResProfId,
+      date: newResDate,
+      startTime: newResStart,
+      endTime: newResEnd,
+      patientName: newResPatient || undefined,
+      service: newResService || undefined
+    }]);
+
+    alert("Reserva criada com sucesso pelo Administrador!");
+    setNewResPatient("");
+    setNewResService("");
+    setActiveTab("reservations");
+  };
+
   return (
     <div className="container animate-fade" style={{ paddingTop: "1.5rem", paddingBottom: "4rem" }}>
       <header style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
@@ -154,6 +192,12 @@ export default function AdminDashboard() {
           className={activeTab === "professionals" ? "btn" : "btn btn-outline"}
         >
           Profissionais
+        </button>
+        <button 
+          onClick={() => setActiveTab("new_reservation")}
+          className={activeTab === "new_reservation" ? "btn" : "btn btn-outline"}
+        >
+          + Nova Reserva (Admin)
         </button>
       </div>
 
@@ -343,6 +387,59 @@ export default function AdminDashboard() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === "new_reservation" && (
+        <div className="card animate-slide">
+          <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem" }}>Agendar em nome de um Profissional</h2>
+          <form onSubmit={handleAdminCreateReservation} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+              <div>
+                <label className="label">Profissional</label>
+                <select className="input" value={newResProfId} onChange={e => setNewResProfId(e.target.value)} required>
+                  <option value="">Selecione...</option>
+                  {professionalsList.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="label">Sala</label>
+                <select className="input" value={newResRoomId} onChange={e => setNewResRoomId(e.target.value)} required>
+                  <option value="">Selecione...</option>
+                  {rooms.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="label">Data</label>
+                <input type="date" className="input" value={newResDate} onChange={e => setNewResDate(e.target.value)} required />
+              </div>
+              <div style={{ display: "flex", gap: "1rem" }}>
+                <div style={{ flex: 1 }}>
+                  <label className="label">Hora Início</label>
+                  <input type="time" className="input" value={newResStart} onChange={e => setNewResStart(e.target.value)} required />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label className="label">Hora Fim</label>
+                  <input type="time" className="input" value={newResEnd} onChange={e => setNewResEnd(e.target.value)} required />
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+              <div>
+                <label className="label">Nome do Paciente (Opcional)</label>
+                <input className="input" value={newResPatient} onChange={e => setNewResPatient(e.target.value)} placeholder="Ex: Maria da Silva" />
+              </div>
+              <div>
+                <label className="label">Serviço/Detalhes (Opcional)</label>
+                <input className="input" value={newResService} onChange={e => setNewResService(e.target.value)} placeholder="Ex: Terapia de Casal" />
+              </div>
+            </div>
+
+            <button type="submit" className="btn" style={{ marginTop: "1rem", alignSelf: "flex-start" }}>
+              Confirmar Agendamento Admin
+            </button>
+          </form>
         </div>
       )}
     </div>
