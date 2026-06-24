@@ -62,6 +62,53 @@
   --radius-md: 18px;
   --radius-lg: 24px;
   --radius-full: 9999px;
+
+  /* Efeitos de Fundo */
+  --bg-pattern-dot: rgba(200, 204, 220, 0.6);
+}
+
+/* ============================================
+   DESIGN TOKENS - DARK MODE PREMIUM
+   ============================================ */
+[data-theme="dark"] {
+  --primary: #6366F1;
+  --primary-hover: #818CF8;
+  --primary-light: rgba(99, 102, 241, 0.15);
+  --primary-mid: #4F46E5;
+
+  --bg-color: #0F172A;
+  --bg-gradient: #0F172A;
+  --card-bg: #1E293B;
+  --nav-bg: rgba(15, 23, 42, 0.85);
+
+  --text-main: #F8FAFC;
+  --text-secondary: #E2E8F0;
+  --text-muted: #94A3B8;
+  --text-light: #64748B;
+
+  --success: #34D399;
+  --danger: #F87171;
+
+  --shadow-dark: #090e19;
+  --shadow-light: #15203b;
+
+  --clay-card: 
+    10px 10px 20px var(--shadow-dark), 
+    -10px -10px 20px var(--shadow-light),
+    inset -2px -2px 6px rgba(255, 255, 255, 0.05),
+    inset 2px 2px 6px rgba(255, 255, 255, 0.02);
+
+  --clay-card-hover: 
+    12px 12px 24px var(--shadow-dark), 
+    -12px -12px 24px var(--shadow-light),
+    inset -2px -2px 6px rgba(255, 255, 255, 0.08),
+    inset 2px 2px 6px rgba(255, 255, 255, 0.04);
+
+  --clay-input:
+    inset 4px 4px 8px var(--shadow-dark),
+    inset -4px -4px 8px var(--shadow-light);
+
+  --bg-pattern-dot: rgba(255, 255, 255, 0.05);
 }
 
 /* ============================================
@@ -80,7 +127,7 @@ html {
 body {
   background-color: var(--bg-color);
   background-image: 
-    radial-gradient(rgba(200, 204, 220, 0.6) 1.5px, transparent 1.5px),
+    radial-gradient(var(--bg-pattern-dot) 1.5px, transparent 1.5px),
     radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.08) 0px, transparent 50%),
     radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
     radial-gradient(at 100% 100%, rgba(79, 70, 229, 0.08) 0px, transparent 50%),
@@ -91,6 +138,7 @@ body {
   font-family: var(--font-family);
   line-height: 1.6;
   min-height: 100vh;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 a { color: inherit; text-decoration: none; }

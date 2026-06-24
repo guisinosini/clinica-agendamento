@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useReservation } from "@/context/ReservationContext";
@@ -7,6 +8,20 @@ import { useReservation } from "@/context/ReservationContext";
 export default function Navbar() {
   const { professional, logout } = useReservation();
   const pathname = usePathname();
+  const [theme, setTheme] = useState("light");
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("@Clinica:theme") || "light";
+    setTheme(savedTheme);
+    document.documentElement.setAttribute("data-theme", savedTheme);
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "light" ? "dark" : "light";
+    setTheme(nextTheme);
+    localStorage.setItem("@Clinica:theme", nextTheme);
+    document.documentElement.setAttribute("data-theme", nextTheme);
+  };
 
   // Não mostra a navbar na tela de login (página inicial sem autenticação)
   if (!professional) return null;
@@ -64,6 +79,25 @@ export default function Navbar() {
 
         {/* Ações do Usuário */}
         <div className="navbar-actions">
+          {/* Botão Theme Toggle */}
+          <button 
+            onClick={toggleTheme}
+            className="btn btn-outline"
+            style={{ 
+              padding: "0.45rem", 
+              borderRadius: "var(--radius-full)", 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "center",
+              width: "42px",
+              height: "42px",
+              fontSize: "1.2rem"
+            }}
+            title={theme === "light" ? "Mudar para Modo Escuro" : "Mudar para Modo Claro"}
+          >
+            {theme === "light" ? "🌙" : "☀️"}
+          </button>
+
           <Link href="/perfil" title="Editar Perfil">
             <div className="navbar-avatar">
               {professional.avatarUrl ? (
