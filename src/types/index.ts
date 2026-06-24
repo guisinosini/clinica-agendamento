@@ -29,6 +29,9 @@ export type Patient = {
   email?: string;
   phone?: string;
   birthDate?: string;
+  address?: string;
+  guardianName?: string;
+  healthPlan?: string;
   notes?: string;
   created_at?: string;
 };

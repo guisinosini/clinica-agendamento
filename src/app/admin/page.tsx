@@ -41,6 +41,9 @@ export default function AdminDashboard() {
   const [patEmail, setPatEmail] = useState("");
   const [patPhone, setPatPhone] = useState("");
   const [patBirthDate, setPatBirthDate] = useState("");
+  const [patAddress, setPatAddress] = useState("");
+  const [patGuardian, setPatGuardian] = useState("");
+  const [patHealthPlan, setPatHealthPlan] = useState("");
   const [patNotes, setPatNotes] = useState("");
 
   useEffect(() => {
@@ -156,6 +159,9 @@ export default function AdminDashboard() {
       email: patEmail,
       phone: patPhone,
       birthDate: patBirthDate,
+      address: patAddress,
+      guardianName: patGuardian,
+      healthPlan: patHealthPlan,
       notes: patNotes
     };
 
@@ -180,6 +186,9 @@ export default function AdminDashboard() {
     setPatEmail("");
     setPatPhone("");
     setPatBirthDate("");
+    setPatAddress("");
+    setPatGuardian("");
+    setPatHealthPlan("");
     setPatNotes("");
     fetchPatients();
   };
@@ -190,6 +199,9 @@ export default function AdminDashboard() {
     setPatEmail(pat.email || "");
     setPatPhone(pat.phone || "");
     setPatBirthDate(pat.birthDate || "");
+    setPatAddress(pat.address || "");
+    setPatGuardian(pat.guardianName || "");
+    setPatHealthPlan(pat.healthPlan || "");
     setPatNotes(pat.notes || "");
     setActiveTab("patients");
   };
@@ -481,26 +493,54 @@ export default function AdminDashboard() {
             </h2>
             <form onSubmit={handleSavePatient} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div>
-                <label className="label">Nome Completo</label>
+                <label className="label">Nome do Paciente</label>
                 <input className="input" value={patName} onChange={e => setPatName(e.target.value)} required placeholder="Ex: Maria Souza" />
               </div>
-              <div style={{ display: "flex", gap: "1rem" }}>
-                <div style={{ flex: 1 }}>
+              
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                <div style={{ flex: "1 1 150px" }}>
+                  <label className="label">Data de Nascimento</label>
+                  <input type="date" className="input" value={patBirthDate} onChange={e => setPatBirthDate(e.target.value)} />
+                </div>
+                <div style={{ flex: "1 1 150px" }}>
+                  <label className="label">Convênio</label>
+                  <select className="input" value={patHealthPlan} onChange={e => setPatHealthPlan(e.target.value)}>
+                    <option value="">Particular (Sem Convênio)</option>
+                    <option value="Unimed">Unimed</option>
+                    <option value="Prefeitura">Prefeitura</option>
+                    <option value="Lumiar">Lumiar</option>
+                    <option value="Bradesco">Bradesco</option>
+                    <option value="Pró Saúde">Pró Saúde</option>
+                    <option value="São Luiz Saúde">São Luiz Saúde</option>
+                    <option value="KR Saúde">KR Saúde</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="label">Nome do Responsável (se menor de idade)</label>
+                <input className="input" value={patGuardian} onChange={e => setPatGuardian(e.target.value)} placeholder="Ex: João Souza (Pai)" />
+              </div>
+
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                <div style={{ flex: "1 1 200px" }}>
                   <label className="label">Telefone (WhatsApp)</label>
                   <input className="input" value={patPhone} onChange={e => setPatPhone(e.target.value)} placeholder="(11) 99999-9999" />
                 </div>
-                <div style={{ flex: 1 }}>
-                  <label className="label">Data de Nasc.</label>
-                  <input type="date" className="input" value={patBirthDate} onChange={e => setPatBirthDate(e.target.value)} />
+                <div style={{ flex: "1 1 200px" }}>
+                  <label className="label">E-mail</label>
+                  <input type="email" className="input" value={patEmail} onChange={e => setPatEmail(e.target.value)} placeholder="maria@email.com" />
                 </div>
               </div>
+
               <div>
-                <label className="label">E-mail</label>
-                <input type="email" className="input" value={patEmail} onChange={e => setPatEmail(e.target.value)} placeholder="maria@email.com" />
+                <label className="label">Endereço Completo</label>
+                <input className="input" value={patAddress} onChange={e => setPatAddress(e.target.value)} placeholder="Rua, Número, Bairro, Cidade" />
               </div>
+
               <div>
                 <label className="label">Anotações / Observações</label>
-                <textarea className="input" value={patNotes} onChange={e => setPatNotes(e.target.value)} placeholder="Alergias, histórico, etc." rows={3} style={{ resize: "vertical" }} />
+                <textarea className="input" value={patNotes} onChange={e => setPatNotes(e.target.value)} placeholder="Alergias, histórico clínico, etc." rows={3} style={{ resize: "vertical" }} />
               </div>
               <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem" }}>
                 <button type="submit" className="btn" style={{ flex: 1 }}>
@@ -508,7 +548,7 @@ export default function AdminDashboard() {
                 </button>
                 {editingPatientId && (
                   <button type="button" onClick={() => { 
-                    setEditingPatientId(null); setPatName(""); setPatEmail(""); setPatPhone(""); setPatBirthDate(""); setPatNotes(""); 
+                    setEditingPatientId(null); setPatName(""); setPatEmail(""); setPatPhone(""); setPatBirthDate(""); setPatAddress(""); setPatGuardian(""); setPatHealthPlan(""); setPatNotes(""); 
                   }} className="btn btn-outline">
                     Cancelar
                   </button>
@@ -528,11 +568,17 @@ export default function AdminDashboard() {
                   <div key={pat.id} style={{ padding: "1rem", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
                       <div>
-                        <h3 style={{ fontWeight: 700, color: "var(--primary)" }}>{pat.name}</h3>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <h3 style={{ fontWeight: 700, color: "var(--primary)" }}>{pat.name}</h3>
+                          {pat.healthPlan && <span className="badge badge-primary" style={{ fontSize: "0.65rem", padding: "0.1rem 0.4rem" }}>{pat.healthPlan}</span>}
+                        </div>
                         {(pat.phone || pat.email) && (
                           <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>
                             {pat.phone} {pat.phone && pat.email && " • "} {pat.email}
                           </p>
+                        )}
+                        {pat.guardianName && (
+                          <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.1rem" }}>Resp: {pat.guardianName}</p>
                         )}
                       </div>
                       <div style={{ display: "flex", gap: "0.5rem" }}>

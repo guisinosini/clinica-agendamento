@@ -75,6 +75,9 @@ CREATE TABLE patients (
   email TEXT,
   phone TEXT,
   "birthDate" TEXT,
+  address TEXT,
+  "guardianName" TEXT,
+  "healthPlan" TEXT,
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
