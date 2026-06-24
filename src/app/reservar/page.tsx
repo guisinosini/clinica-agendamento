@@ -52,7 +52,7 @@ export default function ReservarPage() {
     );
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!selectedRoom || selectedSlots.length === 0) return;
 
     let allReservations = [];
