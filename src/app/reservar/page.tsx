@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useReservation, NEXT_DAYS, TIME_SLOTS } from "../../context/ReservationContext";
+import { supabase } from "../../lib/supabase";
 
 export default function ReservarPage() {
   const router = useRouter();
@@ -15,6 +16,12 @@ export default function ReservarPage() {
   const [patientName, setPatientName] = useState("");
   const [service, setService] = useState("");
   const [feedbackMsg, setFeedbackMsg] = useState<string>("");
+
+  // Patients Data
+  const [patientsList, setPatientsList] = useState<any[]>([]);
+  const [isNewPatient, setIsNewPatient] = useState(false);
+  const [newPatientName, setNewPatientName] = useState("");
+  const [newPatientPhone, setNewPatientPhone] = useState("");
   
   // Estados para Repetição de Reserva
   const [isRecurring, setIsRecurring] = useState(false);
@@ -29,6 +36,15 @@ export default function ReservarPage() {
 
   useEffect(() => {
     if (!loading && !professional) router.push("/");
+    
+    // Fetch patients list
+    const fetchPatients = async () => {
+      const { data } = await supabase.from("patients").select("id, name, phone").order("name");
+      if (data) setPatientsList(data);
+    };
+    if (professional) {
+      fetchPatients();
+    }
   }, [loading, professional, router]);
 
   if (loading || !professional) return (
@@ -54,6 +70,24 @@ export default function ReservarPage() {
 
   const handleConfirm = async () => {
     if (!selectedRoom || selectedSlots.length === 0) return;
+
+    let finalPatientName = patientName;
+
+    // Se estiver criando paciente novo, cadastra primeiro
+    if (isNewPatient && newPatientName) {
+      const { data, error } = await supabase.from("patients").insert([{
+        name: newPatientName,
+        phone: newPatientPhone
+      }]).select().single();
+
+      if (!error && data) {
+        finalPatientName = data.name;
+        // Atualiza a lista caso precise novamente
+        setPatientsList(prev => [...prev, data].sort((a,b) => a.name.localeCompare(b.name)));
+      } else {
+        finalPatientName = newPatientName; // Fallback
+      }
+    }
 
     let allReservations = [];
     
@@ -84,14 +118,14 @@ export default function ReservarPage() {
           date: dateStr,
           startTime: slot,
           endTime: `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`,
-          patientName: patientName || undefined,
+          patientName: finalPatientName || undefined,
           service: service || undefined
         };
 
         const guestRes = invitedProfessionals.map(guestId => ({
           ...hostRes,
           professionalId: guestId,
-          patientName: patientName ? `${patientName} (Convite)` : `Reunião c/ ${professional.name}`,
+          patientName: finalPatientName ? `${finalPatientName} (Convite)` : `Reunião c/ ${professional.name}`,
           service: service || "Reunião de Equipe"
         }));
 
@@ -445,14 +479,53 @@ export default function ReservarPage() {
               <div className="card" style={{ padding: "2rem" }}>
                 <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem" }}>
                   <div>
-                    <label className="label">Nome do Paciente</label>
-                    <input 
-                      type="text" 
-                      className="input" 
-                      placeholder="Ex: Maria Oliveira" 
-                      value={patientName}
-                      onChange={(e) => setPatientName(e.target.value)}
-                    />
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.2rem" }}>
+                      <label className="label" style={{ marginBottom: 0 }}>Paciente</label>
+                      <button 
+                        type="button" 
+                        onClick={() => setIsNewPatient(!isNewPatient)}
+                        style={{ background: "none", border: "none", color: "var(--primary)", fontSize: "0.8rem", fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}
+                      >
+                        {isNewPatient ? "Escolher da lista" : "+ Novo Paciente"}
+                      </button>
+                    </div>
+
+                    {!isNewPatient ? (
+                      <select 
+                        className="input" 
+                        value={patientName}
+                        onChange={(e) => setPatientName(e.target.value)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <option value="">(Sem paciente / Selecione...)</option>
+                        {patientsList.map(pat => (
+                          <option key={pat.id} value={pat.name}>{pat.name}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="animate-fade" style={{ display: "flex", flexDirection: "column", gap: "0.75rem", background: "var(--bg-color)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+                        <div>
+                          <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "0.2rem", display: "block" }}>Nome do Novo Paciente</label>
+                          <input 
+                            type="text" 
+                            className="input" 
+                            placeholder="Ex: Carlos Silva" 
+                            value={newPatientName}
+                            onChange={(e) => setNewPatientName(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "0.2rem", display: "block" }}>Telefone (Opcional)</label>
+                          <input 
+                            type="text" 
+                            className="input" 
+                            placeholder="(11) 99999-9999" 
+                            value={newPatientPhone}
+                            onChange={(e) => setNewPatientPhone(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="label">Serviço / Procedimento</label>
