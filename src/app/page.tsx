@@ -216,6 +216,25 @@ export default function Home() {
     return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
   };
 
+  // Estatísticas do Mês
+  const currentMonth = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+  const thisMonthReservations = reservations.filter(res => 
+    res.professionalId === professional.id && res.date.startsWith(currentMonth)
+  );
+  
+  const totalHoursThisMonth = thisMonthReservations.length; 
+  const uniquePatients = new Set(thisMonthReservations.map(r => r.patientName).filter(Boolean)).size;
+  const mostUsedRoomId = thisMonthReservations.reduce((acc, curr) => {
+    acc[curr.roomId] = (acc[curr.roomId] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  let topRoomName = "-";
+  if (Object.keys(mostUsedRoomId).length > 0) {
+    const topRoom = Object.entries(mostUsedRoomId).sort((a, b) => b[1] - a[1])[0];
+    topRoomName = getRoomName(topRoom[0]);
+  }
+
   return (
     <div className="container animate-fade" style={{ paddingTop: "2rem", paddingBottom: "4rem" }}>
       {/* Header do Dashboard */}
@@ -295,6 +314,47 @@ export default function Home() {
           </div>
         ))}
       </div>
+
+      {/* Estatísticas do Mês */}
+      <section style={{ marginTop: "3rem" }}>
+        <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "1.25rem", color: "var(--text-main)" }}>
+          Suas Estatísticas (Neste Mês)
+        </h2>
+        <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+          {/* Cartão 1: Horas */}
+          <div className="card animate-fade" style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1.5rem" }}>
+            <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "var(--primary-light)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem", flexShrink: 0 }}>
+              ⏳
+            </div>
+            <div style={{ overflow: "hidden" }}>
+              <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 600, whiteSpace: "nowrap" }}>Horas Agendadas</p>
+              <h3 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-main)" }}>{totalHoursThisMonth}h</h3>
+            </div>
+          </div>
+          
+          {/* Cartão 2: Pacientes */}
+          <div className="card animate-fade" style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1.5rem", animationDelay: "0.1s" }}>
+            <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#d1fae5", color: "#059669", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem", flexShrink: 0 }}>
+              👥
+            </div>
+            <div style={{ overflow: "hidden" }}>
+              <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 600, whiteSpace: "nowrap" }}>Pacientes Únicos</p>
+              <h3 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-main)" }}>{uniquePatients}</h3>
+            </div>
+          </div>
+
+          {/* Cartão 3: Sala */}
+          <div className="card animate-fade" style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1.5rem", animationDelay: "0.2s" }}>
+            <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#fee2e2", color: "#dc2626", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem", flexShrink: 0 }}>
+              🏢
+            </div>
+            <div style={{ overflow: "hidden" }}>
+              <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 600, whiteSpace: "nowrap" }}>Sala Favorita</p>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-main)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={topRoomName}>{topRoomName}</h3>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Próximos Agendamentos */}
       <section style={{ marginTop: "3rem" }}>

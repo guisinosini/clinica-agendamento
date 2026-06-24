@@ -85,10 +85,32 @@ export default function ReservarPage() {
       allReservations.push(...dailyReservations);
     }
 
-    addReservations(allReservations);
+    const conflicts = allReservations.filter(res => 
+      reservations.some(existing => 
+        existing.roomId === res.roomId && 
+        existing.date === res.date && 
+        existing.startTime === res.startTime
+      )
+    );
+
+    let finalReservations = allReservations;
+
+    if (conflicts.length > 0) {
+      const confirmSkip = window.confirm(`Atenção: ${conflicts.length} horário(s) já estão ocupados nestas datas recorrentes. Deseja agendar apenas os horários livres e pular os ocupados?`);
+      if (!confirmSkip) return;
+      
+      finalReservations = allReservations.filter(res => !conflicts.includes(res));
+      
+      if (finalReservations.length === 0) {
+        setFeedbackMsg("❌ Nenhum horário disponível nas datas selecionadas.");
+        return;
+      }
+    }
+
+    addReservations(finalReservations);
     
-    if (totalOccurrences > 1) {
-      setFeedbackMsg(`${totalOccurrences} reservas confirmadas com sucesso!`);
+    if (finalReservations.length > 1) {
+      setFeedbackMsg(`${finalReservations.length} reservas confirmadas com sucesso!`);
     } else {
       setFeedbackMsg("Reserva confirmada com sucesso!");
     }
