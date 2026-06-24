@@ -39,6 +39,7 @@ interface ReservationContextData {
   addRoom: (id: string, name: string, description: string) => Promise<boolean>;
   updateRoom: (id: string, name: string, description: string) => Promise<boolean>;
   deleteRoom: (id: string) => Promise<boolean>;
+  allProfessionals: Professional[];
 }
 
 const ReservationContext = createContext<ReservationContextData>({} as ReservationContextData);
@@ -47,6 +48,7 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [professional, setProfessional] = useState<Professional | null>(null);
+  const [allProfessionals, setAllProfessionals] = useState<Professional[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -74,7 +76,20 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const fetchData = async () => {
-    await Promise.all([fetchRooms(), fetchReservations()]);
+    await Promise.all([fetchRooms(), fetchReservations(), fetchProfessionals()]);
+  };
+
+  const fetchProfessionals = async () => {
+    const { data } = await supabase.from('professionals').select('*').order('name');
+    if (data) {
+      setAllProfessionals(data.map(p => ({
+        id: p.id,
+        name: p.name,
+        email: p.email,
+        specialty: p.specialty,
+        avatarUrl: p.avatar_url ?? null
+      })));
+    }
   };
 
   const login = async (email: string) => {
@@ -259,8 +274,9 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     fetchAllReservations: () => reservations,
     addRoom,
     updateRoom,
-    deleteRoom
-  }), [reservations, rooms, professional, loading]);
+    deleteRoom,
+    allProfessionals
+  }), [reservations, rooms, professional, loading, allProfessionals]);
 
   return (
     <ReservationContext.Provider value={contextValue}>

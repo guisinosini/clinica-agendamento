@@ -7,7 +7,7 @@ import { useReservation, NEXT_DAYS, TIME_SLOTS } from "../../context/Reservation
 
 export default function ReservarPage() {
   const router = useRouter();
-  const { rooms, reservations, addReservations, professional, loading } = useReservation();
+  const { rooms, reservations, addReservations, professional, loading, allProfessionals } = useReservation();
   
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(NEXT_DAYS[0]);
@@ -20,6 +20,9 @@ export default function ReservarPage() {
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceType, setRecurrenceType] = useState<"daily" | "weekly">("weekly");
   const [recurrenceCount, setRecurrenceCount] = useState<number>(4);
+
+  // Convidados
+  const [invitedProfessionals, setInvitedProfessionals] = useState<string[]>([]);
 
   useEffect(() => {
     if (!loading && !professional) router.push("/");
@@ -67,11 +70,12 @@ export default function ReservarPage() {
       
       const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
       
-      const dailyReservations = selectedSlots.map(slot => {
+      const dailyReservations = selectedSlots.flatMap(slot => {
         const [hours, minutes] = slot.split(":").map(Number);
         const d = new Date();
         d.setHours(hours + 1, minutes, 0); // Presume duração de 1 hora
-        return {
+        
+        const hostRes = {
           roomId: selectedRoom,
           professionalId: professional.id,
           date: dateStr,
@@ -80,6 +84,15 @@ export default function ReservarPage() {
           patientName: patientName || undefined,
           service: service || undefined
         };
+
+        const guestRes = invitedProfessionals.map(guestId => ({
+          ...hostRes,
+          professionalId: guestId,
+          patientName: patientName ? `${patientName} (Convite)` : `Reunião c/ ${professional.name}`,
+          service: service || "Reunião de Equipe"
+        }));
+
+        return [hostRes, ...guestRes];
       });
 
       allReservations.push(...dailyReservations);
@@ -122,13 +135,14 @@ export default function ReservarPage() {
       setService("");
       setIsRecurring(false);
       setRecurrenceCount(4);
+      setInvitedProfessionals([]);
       setFeedbackMsg("");
       router.push("/minhas-reservas");
     }, 1500);
   };
 
-
   const selectedRoomObj = rooms.find(r => r.id === selectedRoom);
+  const isMeetingRoom = selectedRoomObj?.name.toLowerCase().includes("reunião");
 
   const formatSelectedDate = (dateStr: string) => {
     const [y, m, d] = dateStr.split("-");
@@ -397,6 +411,53 @@ export default function ReservarPage() {
                     />
                   </div>
                 </div>
+
+                {/* Opções de Convite (Apenas Sala de Reunião) */}
+                {isMeetingRoom && allProfessionals.length > 1 && (
+                  <div className="animate-fade" style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid var(--border-color)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "1rem" }}>
+                      <span style={{ fontSize: "1.2rem" }}>👥</span>
+                      <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)" }}>Convidar Colegas (Aparecerá na agenda deles)</h3>
+                    </div>
+                    
+                    <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "0.75rem" }}>
+                      {allProfessionals.filter(p => p.id !== professional.id).map(p => {
+                        const isInvited = invitedProfessionals.includes(p.id);
+                        return (
+                          <div 
+                            key={p.id}
+                            onClick={() => {
+                              setInvitedProfessionals(prev => 
+                                prev.includes(p.id) ? prev.filter(id => id !== p.id) : [...prev, p.id]
+                              );
+                            }}
+                            style={{ 
+                              padding: "0.75rem 1rem", 
+                              cursor: "pointer", 
+                              display: "flex", 
+                              alignItems: "center", 
+                              gap: "0.75rem",
+                              borderRadius: "var(--radius-sm)",
+                              border: `1.5px solid ${isInvited ? "var(--primary)" : "var(--border-color)"}`,
+                              background: isInvited ? "var(--primary-light)" : "var(--card-bg)",
+                              transition: "all 0.2s ease"
+                            }}
+                          >
+                            <input 
+                              type="checkbox" 
+                              checked={isInvited}
+                              readOnly
+                              style={{ width: "1.1rem", height: "1.1rem", accentColor: "var(--primary)", pointerEvents: "none" }}
+                            />
+                            <div style={{ fontSize: "0.85rem", fontWeight: isInvited ? 700 : 500, color: isInvited ? "var(--primary)" : "var(--text-main)" }}>
+                              {p.name}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Opções de Repetição */}
                 <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid var(--border-color)" }}>
