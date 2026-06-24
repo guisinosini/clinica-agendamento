@@ -22,3 +22,13 @@ export type Reservation = {
   patientName?: string;
   service?: string;
 };
+
+export type Patient = {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  birthDate?: string;
+  notes?: string;
+  created_at?: string;
+};

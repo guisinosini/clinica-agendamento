@@ -11,9 +11,10 @@ export default function AdminDashboard() {
   const { rooms, fetchAllReservations, cancelReservation, addRoom, updateRoom, deleteRoom, loading, addReservations } = useReservation();
   
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState<"reservations" | "rooms" | "professionals" | "new_reservation">("reservations");
+  const [activeTab, setActiveTab] = useState<"reservations" | "rooms" | "professionals" | "new_reservation" | "patients">("reservations");
   const [professionalsMap, setProfessionalsMap] = useState<Record<string, string>>({});
   const [professionalsList, setProfessionalsList] = useState<any[]>([]);
+  const [patientsList, setPatientsList] = useState<any[]>([]);
   
   // Filters State
   const [filterRoom, setFilterRoom] = useState<string>("");
@@ -34,6 +35,14 @@ export default function AdminDashboard() {
   const [newResPatient, setNewResPatient] = useState("");
   const [newResService, setNewResService] = useState("");
 
+  // Patient Form State
+  const [editingPatientId, setEditingPatientId] = useState<string | null>(null);
+  const [patName, setPatName] = useState("");
+  const [patEmail, setPatEmail] = useState("");
+  const [patPhone, setPatPhone] = useState("");
+  const [patBirthDate, setPatBirthDate] = useState("");
+  const [patNotes, setPatNotes] = useState("");
+
   useEffect(() => {
     // Basic PIN check using sessionStorage
     const savedPin = sessionStorage.getItem("@Clinica:adminPin");
@@ -46,6 +55,7 @@ export default function AdminDashboard() {
     // Fetch professionals to show their names and list them
     if (savedPin === "1234") {
       fetchProfessionals();
+      fetchPatients();
       setNewResDate(new Date().toISOString().split("T")[0]); // Set default date
     }
   }, [router]);
@@ -57,6 +67,13 @@ export default function AdminDashboard() {
       const map: Record<string, string> = {};
       data.forEach(p => map[p.id] = p.name);
       setProfessionalsMap(map);
+    }
+  };
+
+  const fetchPatients = async () => {
+    const { data } = await supabase.from("patients").select("*").order("name");
+    if (data) {
+      setPatientsList(data);
     }
   };
 
@@ -130,6 +147,65 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleSavePatient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!patName) return;
+
+    const payload = {
+      name: patName,
+      email: patEmail,
+      phone: patPhone,
+      birthDate: patBirthDate,
+      notes: patNotes
+    };
+
+    if (editingPatientId) {
+      const { error } = await supabase.from("patients").update(payload).eq("id", editingPatientId);
+      if (!error) {
+        alert("Paciente atualizado com sucesso!");
+      } else {
+        alert("Erro ao atualizar paciente.");
+      }
+    } else {
+      const { error } = await supabase.from("patients").insert([payload]);
+      if (!error) {
+        alert("Paciente cadastrado com sucesso!");
+      } else {
+        alert("Erro ao cadastrar paciente.");
+      }
+    }
+
+    setEditingPatientId(null);
+    setPatName("");
+    setPatEmail("");
+    setPatPhone("");
+    setPatBirthDate("");
+    setPatNotes("");
+    fetchPatients();
+  };
+
+  const handleEditPatient = (pat: any) => {
+    setEditingPatientId(pat.id);
+    setPatName(pat.name);
+    setPatEmail(pat.email || "");
+    setPatPhone(pat.phone || "");
+    setPatBirthDate(pat.birthDate || "");
+    setPatNotes(pat.notes || "");
+    setActiveTab("patients");
+  };
+
+  const handleDeletePatient = async (id: string) => {
+    if (confirm("Tem certeza que deseja remover este paciente?")) {
+      const { error } = await supabase.from("patients").delete().eq("id", id);
+      if (!error) {
+        fetchPatients();
+        alert("Paciente removido.");
+      } else {
+        alert("Erro ao remover paciente.");
+      }
+    }
+  };
+
   const handleAdminCreateReservation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newResProfId || !newResRoomId || !newResDate || !newResStart || !newResEnd) return;
@@ -192,6 +268,12 @@ export default function AdminDashboard() {
           className={activeTab === "professionals" ? "btn" : "btn btn-outline"}
         >
           Profissionais
+        </button>
+        <button 
+          onClick={() => setActiveTab("patients")}
+          className={activeTab === "patients" ? "btn" : "btn btn-outline"}
+        >
+          Pacientes
         </button>
         <button 
           onClick={() => setActiveTab("new_reservation")}
@@ -387,6 +469,92 @@ export default function AdminDashboard() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === "patients" && (
+        <div style={{ display: "grid", gap: "2rem", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
+          {/* Form de Nova/Edição Paciente */}
+          <div className="card animate-slide">
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem" }}>
+              {editingPatientId ? "Editar Paciente" : "Novo Paciente"}
+            </h2>
+            <form onSubmit={handleSavePatient} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label className="label">Nome Completo</label>
+                <input className="input" value={patName} onChange={e => setPatName(e.target.value)} required placeholder="Ex: Maria Souza" />
+              </div>
+              <div style={{ display: "flex", gap: "1rem" }}>
+                <div style={{ flex: 1 }}>
+                  <label className="label">Telefone (WhatsApp)</label>
+                  <input className="input" value={patPhone} onChange={e => setPatPhone(e.target.value)} placeholder="(11) 99999-9999" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label className="label">Data de Nasc.</label>
+                  <input type="date" className="input" value={patBirthDate} onChange={e => setPatBirthDate(e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <label className="label">E-mail</label>
+                <input type="email" className="input" value={patEmail} onChange={e => setPatEmail(e.target.value)} placeholder="maria@email.com" />
+              </div>
+              <div>
+                <label className="label">Anotações / Observações</label>
+                <textarea className="input" value={patNotes} onChange={e => setPatNotes(e.target.value)} placeholder="Alergias, histórico, etc." rows={3} style={{ resize: "vertical" }} />
+              </div>
+              <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem" }}>
+                <button type="submit" className="btn" style={{ flex: 1 }}>
+                  {editingPatientId ? "Salvar Alterações" : "Cadastrar Paciente"}
+                </button>
+                {editingPatientId && (
+                  <button type="button" onClick={() => { 
+                    setEditingPatientId(null); setPatName(""); setPatEmail(""); setPatPhone(""); setPatBirthDate(""); setPatNotes(""); 
+                  }} className="btn btn-outline">
+                    Cancelar
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+
+          {/* Lista de Pacientes */}
+          <div className="card animate-slide">
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem" }}>Pacientes ({patientsList.length})</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", maxHeight: "600px", overflowY: "auto" }}>
+              {patientsList.length === 0 ? (
+                <p style={{ color: "var(--text-muted)" }}>Nenhum paciente cadastrado.</p>
+              ) : (
+                patientsList.map(pat => (
+                  <div key={pat.id} style={{ padding: "1rem", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
+                      <div>
+                        <h3 style={{ fontWeight: 700, color: "var(--primary)" }}>{pat.name}</h3>
+                        {(pat.phone || pat.email) && (
+                          <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>
+                            {pat.phone} {pat.phone && pat.email && " • "} {pat.email}
+                          </p>
+                        )}
+                      </div>
+                      <div style={{ display: "flex", gap: "0.5rem" }}>
+                        <button onClick={() => handleEditPatient(pat)} style={{ padding: "0.3rem 0.6rem", backgroundColor: "var(--bg-color)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", fontSize: "0.75rem", fontWeight: 600 }}>
+                          Editar
+                        </button>
+                        <button onClick={() => handleDeletePatient(pat.id)} style={{ padding: "0.3rem 0.6rem", backgroundColor: "var(--danger-light)", color: "var(--danger)", border: "none", borderRadius: "var(--radius-sm)", fontSize: "0.75rem", fontWeight: 600 }}>
+                          Remover
+                        </button>
+                      </div>
+                    </div>
+                    {pat.notes && (
+                      <div style={{ marginTop: "0.5rem", padding: "0.75rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                        <strong>Anotações:</strong> <br/>
+                        {pat.notes}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       )}
 

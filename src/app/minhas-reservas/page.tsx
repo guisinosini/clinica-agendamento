@@ -1,13 +1,27 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useReservation } from "../../context/ReservationContext";
+import { 
+  format, 
+  startOfWeek, 
+  addDays, 
+  subWeeks, 
+  addWeeks, 
+  isSameDay, 
+  isToday 
+} from "date-fns";
+import { ptBR } from "date-fns/locale";
 
-export default function MinhasReservasPage() {
+export default function ProfessionalAgendaPage() {
   const { reservations, cancelReservation, rooms, professional, loading } = useReservation();
   const router = useRouter();
+
+  // Estado da semana/data selecionada
+  const [currentWeekStart, setCurrentWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   useEffect(() => {
     if (!loading && !professional) router.push("/");
@@ -16,219 +30,167 @@ export default function MinhasReservasPage() {
   if (loading || !professional) return (
     <div className="loading-screen">
       <div className="spinner" />
-      <p style={{ color: "var(--text-muted)" }}>Carregando suas reservas...</p>
+      <p style={{ color: "var(--text-muted)" }}>Carregando sua agenda...</p>
     </div>
   );
 
-  const myReservations = reservations
-    .filter((res) => res.professionalId === professional.id)
-    .sort((a, b) => {
-      if (a.date !== b.date) return a.date.localeCompare(b.date);
-      return a.startTime.localeCompare(b.startTime);
-    });
+  // Filtrar apenas reservas do profissional logado
+  const myReservations = reservations.filter((res) => res.professionalId === professional.id);
 
-  const getRoomName = (roomId: string) => rooms.find((r) => r.id === roomId)?.name ?? "Sala Desconhecida";
+  const getRoomName = (roomId: string) => rooms.find((r) => r.id === roomId)?.name ?? "Sala";
 
-  const formatDate = (dateString: string) => {
-    const [year, month, day] = dateString.split("-");
-    const d = new Date(Number(year), Number(month) - 1, Number(day));
-    return d.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+  // Gera os 7 dias da semana atual
+  const weekDays = Array.from({ length: 7 }).map((_, i) => addDays(currentWeekStart, i));
+
+  // Reservas para o dia selecionado
+  const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
+  const dayReservations = myReservations
+    .filter(res => res.date === selectedDateStr)
+    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+  // Navegação de Semanas
+  const handlePrevWeek = () => {
+    setCurrentWeekStart(prev => subWeeks(prev, 1));
+    setSelectedDate(prev => subWeeks(prev, 1));
   };
-
-  const isToday = (dateString: string) => {
-    return dateString === new Date().toISOString().split("T")[0];
+  const handleNextWeek = () => {
+    setCurrentWeekStart(prev => addWeeks(prev, 1));
+    setSelectedDate(prev => addWeeks(prev, 1));
   };
-
-  const handleCancel = (id: string) => {
-    if (confirm("Tem certeza que deseja cancelar esta reserva?")) {
-      cancelReservation(id);
-    }
+  const handleToday = () => {
+    const now = new Date();
+    setCurrentWeekStart(startOfWeek(now, { weekStartsOn: 0 }));
+    setSelectedDate(now);
   };
-
-  // Agrupar por data
-  const grouped = myReservations.reduce<Record<string, typeof myReservations>>((acc, res) => {
-    if (!acc[res.date]) acc[res.date] = [];
-    acc[res.date].push(res);
-    return acc;
-  }, {});
 
   const getGoogleCalendarUrl = (res: any) => {
     const dateStr = res.date.replace(/-/g, ""); // YYYYMMDD
     const startStr = res.startTime.replace(":", "") + "00";
     const endStr = res.endTime.replace(":", "") + "00";
-    
     const title = `Consulta: ${res.patientName || "Paciente"}`;
-    const details = `Serviço: ${res.service || "Não informado"}\nSala: ${getRoomName(res.roomId)}`;
-    const location = "Clínica";
-
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${dateStr}T${startStr}/${dateStr}T${endStr}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
+    const details = `Serviço: ${res.service || ""}\nSala: ${getRoomName(res.roomId)}`;
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${dateStr}T${startStr}/${dateStr}T${endStr}&details=${encodeURIComponent(details)}`;
   };
 
   return (
     <div className="container animate-fade" style={{ paddingTop: "1.5rem", paddingBottom: "4rem" }}>
-      {/* Header */}
-      <header style={{ marginBottom: "2rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.25rem" }}>
+      {/* Cabeçalho */}
+      <header style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           <Link href="/" style={{ color: "var(--text-muted)", display: "flex", alignItems: "center" }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M15 18l-6-6 6-6" />
             </svg>
           </Link>
-          <h1 style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Minhas Reservas</h1>
+          <h1 style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Minha Agenda</h1>
         </div>
-        <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginLeft: "1.75rem" }}>
-          {myReservations.length > 0
-            ? `${myReservations.length} agendamento(s) encontrado(s)`
-            : "Nenhum agendamento futuro"}
-        </p>
+        <Link href="/reservar" className="btn" style={{ fontSize: "0.9rem", padding: "0.5rem 1rem" }}>
+          + Novo Agendamento
+        </Link>
       </header>
 
-      {myReservations.length === 0 ? (
-        <div className="card animate-slide" style={{ textAlign: "center", padding: "4rem 2rem" }}>
-          <div style={{ fontSize: "3.5rem", marginBottom: "1rem" }}>📋</div>
-          <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "0.75rem" }}>Nenhuma reserva encontrada</h3>
-          <p style={{ color: "var(--text-muted)", marginBottom: "2rem", maxWidth: "320px", margin: "0 auto 2rem" }}>
-            Você ainda não tem agendamentos. Que tal reservar uma sala agora?
-          </p>
-          <Link href="/reservar" className="btn">
-            Fazer Nova Reserva
-          </Link>
+      {/* Navegação do Calendário */}
+      <div className="card animate-slide" style={{ padding: "1.5rem", marginBottom: "2rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+          <h2 style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--text-main)", textTransform: "capitalize" }}>
+            {format(currentWeekStart, "MMMM yyyy", { locale: ptBR })}
+          </h2>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button onClick={handleToday} className="btn btn-outline" style={{ padding: "0.4rem 0.8rem", fontSize: "0.85rem" }}>Hoje</button>
+            <button onClick={handlePrevWeek} className="btn btn-outline" style={{ padding: "0.4rem 0.8rem" }}>&lt;</button>
+            <button onClick={handleNextWeek} className="btn btn-outline" style={{ padding: "0.4rem 0.8rem" }}>&gt;</button>
+          </div>
         </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-          {Object.entries(grouped).map(([date, items]) => (
-            <div key={date}>
-              {/* Separador de Data */}
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.875rem" }}>
-                <div style={{
-                  padding: "0.3rem 0.875rem",
-                  borderRadius: "var(--radius-full)",
-                  background: isToday(date)
-                    ? "var(--primary)"
-                    : "var(--primary-light)",
-                  color: isToday(date) ? "var(--primary-mid)" : "var(--primary)",
-                  fontSize: "0.8rem",
-                  fontWeight: 700,
-                  textTransform: "capitalize",
-                  boxShadow: isToday(date) ? "var(--clay-btn)" : "var(--clay-input)",
-                }}>
-                  {isToday(date) ? "📍 Hoje" : formatDate(date)}
+
+        {/* Dias da Semana (Bolinhas) */}
+        <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem", overflowX: "auto", paddingBottom: "0.5rem" }}>
+          {weekDays.map(day => {
+            const isSelected = isSameDay(day, selectedDate);
+            const isDayToday = isToday(day);
+            return (
+              <button
+                key={day.toISOString()}
+                onClick={() => setSelectedDate(day)}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minWidth: "60px",
+                  height: "75px",
+                  borderRadius: "16px",
+                  border: isSelected ? "none" : "1px solid var(--border-color)",
+                  background: isSelected ? "var(--primary)" : "var(--bg-color)",
+                  color: isSelected ? "var(--primary-mid)" : "var(--text-main)",
+                  boxShadow: isSelected ? "0 4px 12px rgba(111, 76, 255, 0.3)" : "none",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease"
+                }}
+              >
+                <span style={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", opacity: isSelected ? 0.9 : 0.6 }}>
+                  {format(day, "eee", { locale: ptBR })}
+                </span>
+                <span style={{ fontSize: "1.4rem", fontWeight: 800, marginTop: "0.2rem" }}>
+                  {format(day, "dd")}
+                </span>
+                {isDayToday && !isSelected && (
+                  <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--primary)", marginTop: "4px" }} />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Lista de Consultas do Dia Selecionado */}
+      <div>
+        <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-secondary)" }}>
+          Compromissos para {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
+        </h3>
+
+        {dayReservations.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "3rem 1rem", border: "2px dashed var(--border-color)", borderRadius: "var(--radius-lg)" }}>
+            <div style={{ fontSize: "2.5rem", marginBottom: "1rem", opacity: 0.5 }}>🛋️</div>
+            <p style={{ color: "var(--text-muted)", fontWeight: 500 }}>Nenhum paciente agendado para este dia.</p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {dayReservations.map(res => (
+              <div key={res.id} className="card animate-slide" style={{ display: "flex", gap: "1rem", alignItems: "center", padding: "1.25rem" }}>
+                {/* Horário */}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: "70px", paddingRight: "1rem", borderRight: "2px solid var(--border-color)" }}>
+                  <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-main)" }}>{res.startTime}</span>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)" }}>{res.endTime}</span>
                 </div>
-                <div style={{ flex: 1, height: "1px", backgroundColor: "var(--border-color)" }} />
+                
+                {/* Detalhes */}
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--primary)", marginBottom: "0.2rem" }}>
+                    {res.patientName || "Paciente Não Informado"}
+                  </h4>
+                  <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>
+                    {getRoomName(res.roomId)} {res.service && `• ${res.service}`}
+                  </p>
+                </div>
+
+                {/* Ações */}
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <a href={getGoogleCalendarUrl(res)} target="_blank" rel="noopener noreferrer" 
+                    className="btn btn-outline" style={{ padding: "0.5rem", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    title="Adicionar ao Google Calendar">
+                    📅
+                  </a>
+                  <button onClick={() => { if(confirm("Cancelar esta consulta?")) cancelReservation(res.id); }} 
+                    className="btn btn-outline" style={{ padding: "0.5rem", borderColor: "var(--danger)", color: "var(--danger)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    title="Cancelar Consulta">
+                    ❌
+                  </button>
+                </div>
               </div>
-
-              {/* Cards de Reserva */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                {items.map((reservation) => (
-                  <div
-                    key={reservation.id}
-                    className="card"
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "1.25rem 1.5rem",
-                      gap: "1rem",
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
-                      {/* Badge de Horário */}
-                      <div style={{
-                        background: "var(--primary)",
-                        color: "var(--primary-mid)",
-                        padding: "0.85rem 1rem",
-                        borderRadius: "var(--radius-md)",
-                        fontWeight: 700,
-                        textAlign: "center",
-                        minWidth: "90px",
-                        boxShadow: "var(--clay-btn)",
-                        flexShrink: 0,
-                      }}>
-                        <div style={{ fontSize: "1.1rem" }}>{reservation.startTime}</div>
-                        <div style={{ fontSize: "0.72rem", opacity: 0.85, marginTop: "0.1rem" }}>até {reservation.endTime}</div>
-                      </div>
-
-                      {/* Info da Reserva */}
-                      <div>
-                        <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.2rem", color: "var(--text-main)" }}>
-                          {reservation.patientName || "Paciente não informado"}
-                        </h3>
-                        <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>
-                          {getRoomName(reservation.roomId)}
-                          {reservation.service && ` • ${reservation.service}`}
-                        </p>
-                        <span className="badge badge-primary" style={{ fontSize: "0.72rem" }}>
-                          1 hora
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Botões Ação */}
-                    <div style={{ display: "flex", gap: "0.5rem", flexShrink: 0, flexWrap: "wrap" }}>
-                      <a
-                        href={getGoogleCalendarUrl(reservation)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          backgroundColor: "transparent",
-                          color: "var(--primary)",
-                          border: "1.5px solid var(--primary)",
-                          padding: "0.5rem 0.85rem",
-                          borderRadius: "var(--radius-sm)",
-                          cursor: "pointer",
-                          fontWeight: 600,
-                          fontSize: "0.85rem",
-                          display: "flex", alignItems: "center", gap: "0.4rem",
-                          transition: "all 0.2s ease",
-                          textDecoration: "none"
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.backgroundColor = "var(--primary)";
-                          e.currentTarget.style.color = "var(--primary-mid)";
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.backgroundColor = "transparent";
-                          e.currentTarget.style.color = "var(--primary)";
-                        }}
-                        title="Adicionar ao Google Calendar"
-                      >
-                        🔔 <span className="hide-mobile">Calendário</span>
-                      </a>
-                      
-                      {/* Botão Cancelar */}
-                      <button
-                        onClick={() => handleCancel(reservation.id)}
-                        style={{
-                          backgroundColor: "transparent",
-                          color: "var(--danger)",
-                          border: "1.5px solid var(--danger)",
-                          padding: "0.5rem 1.1rem",
-                          borderRadius: "var(--radius-sm)",
-                          cursor: "pointer",
-                          fontWeight: 600,
-                          fontSize: "0.85rem",
-                          transition: "all 0.2s ease",
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.backgroundColor = "var(--danger)";
-                          e.currentTarget.style.color = "white";
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.backgroundColor = "transparent";
-                          e.currentTarget.style.color = "var(--danger)";
-                        }}
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

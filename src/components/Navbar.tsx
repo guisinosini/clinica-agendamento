@@ -37,7 +37,7 @@ export default function Navbar() {
     { href: "/", label: "Painel" },
     { href: "/reservar", label: "Nova Reserva" },
     { href: "/disponibilidade", label: "Disponibilidade" },
-    { href: "/minhas-reservas", label: "Minhas Reservas" },
+    { href: "/minhas-reservas", label: "Minha Agenda" },
   ];
 
   return (

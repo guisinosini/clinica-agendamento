@@ -67,3 +67,21 @@ CREATE POLICY "Permitir deleção de profissionais" ON professionals FOR DELETE 
 -- CREATE POLICY "Avatares públicos" ON storage.objects FOR SELECT USING (bucket_id = 'avatars');
 -- CREATE POLICY "Upload de avatares" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'avatars');
 -- CREATE POLICY "Atualizar avatar" ON storage.objects FOR UPDATE USING (bucket_id = 'avatars');
+
+-- Criação da tabela de Pacientes
+CREATE TABLE patients (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  email TEXT,
+  phone TEXT,
+  "birthDate" TEXT,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- RLS para Pacientes
+ALTER TABLE patients ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Leitura pública para pacientes" ON patients FOR SELECT USING (true);
+CREATE POLICY "Permitir inserção de pacientes" ON patients FOR INSERT WITH CHECK (true);
+CREATE POLICY "Permitir atualização de pacientes" ON patients FOR UPDATE USING (true);
+CREATE POLICY "Permitir deleção de pacientes" ON patients FOR DELETE USING (true);
