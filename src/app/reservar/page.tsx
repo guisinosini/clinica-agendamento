@@ -24,6 +24,9 @@ export default function ReservarPage() {
   // Convidados
   const [invitedProfessionals, setInvitedProfessionals] = useState<string[]>([]);
 
+  // Estado de Sucesso
+  const [successReservationData, setSuccessReservationData] = useState<any>(null);
+
   useEffect(() => {
     if (!loading && !professional) router.push("/");
   }, [loading, professional, router]);
@@ -121,24 +124,17 @@ export default function ReservarPage() {
     }
 
     addReservations(finalReservations);
-    
-    if (finalReservations.length > 1) {
-      setFeedbackMsg(`${finalReservations.length} reservas confirmadas com sucesso!`);
-    } else {
-      setFeedbackMsg("Reserva confirmada com sucesso!");
+    try {
+      await addReservations(finalReservations);
+      
+      // Mostrar tela de sucesso usando a primeira reserva real criada pelo dono
+      const hostFirstRes = allReservations.find(r => r.professionalId === professional.id);
+      setSuccessReservationData(hostFirstRes || allReservations[0]);
+      
+    } catch (error) {
+      console.error(error);
+      setFeedbackMsg("Erro ao realizar reserva.");
     }
-    
-    setTimeout(() => {
-      setSelectedRoom(null);
-      setSelectedSlots([]);
-      setPatientName("");
-      setService("");
-      setIsRecurring(false);
-      setRecurrenceCount(4);
-      setInvitedProfessionals([]);
-      setFeedbackMsg("");
-      router.push("/minhas-reservas");
-    }, 1500);
   };
 
   const selectedRoomObj = rooms.find(r => r.id === selectedRoom);
@@ -147,11 +143,68 @@ export default function ReservarPage() {
   const formatSelectedDate = (dateStr: string) => {
     const [y, m, d] = dateStr.split("-");
     const date = new Date(Number(y), Number(m) - 1, Number(d));
-    return date.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+    return date.toLocaleDateString("pt-BR", { weekday: 'long', day: "2-digit", month: "short" });
   };
 
+  if (successReservationData) {
+    const getGoogleCalendarUrl = (res: any) => {
+      if (!res) return "#";
+      const dateStr = res.date.replace(/-/g, ""); // YYYYMMDD
+      const startStr = res.startTime.replace(":", "") + "00";
+      const endStr = res.endTime.replace(":", "") + "00";
+      
+      const title = `Consulta: ${res.patientName || "Paciente"}`;
+      const details = `Serviço: ${res.service || "Não informado"}\nSala: ${getRoomName(res.roomId)}`;
+      const location = "Clínica";
+
+      return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${dateStr}T${startStr}/${dateStr}T${endStr}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
+    };
+
+    return (
+      <div className="container animate-fade" style={{ paddingTop: "4rem", paddingBottom: "4rem", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "70vh" }}>
+        <div style={{ fontSize: "5rem", marginBottom: "1rem", animation: "slideUp 0.5s ease-out" }}>🎉</div>
+        <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "var(--success)", marginBottom: "0.5rem", textAlign: "center" }}>
+          Reserva Concluída!
+        </h1>
+        <p style={{ color: "var(--text-secondary)", fontSize: "1.05rem", marginBottom: "2.5rem", textAlign: "center", maxWidth: "450px", lineHeight: "1.6" }}>
+          Sua sala foi agendada com sucesso. Para garantir que você não vai esquecer, adicione um lembrete direto na sua agenda do celular!
+        </p>
+        
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", width: "100%", maxWidth: "320px" }}>
+          <a
+            href={getGoogleCalendarUrl(successReservationData)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn"
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "1rem" }}
+          >
+            🔔 Adicionar ao Google Agenda
+          </a>
+          
+          <button 
+            onClick={() => {
+              setSuccessReservationData(null);
+              setSelectedRoom(null);
+              setSelectedSlots([]);
+              setPatientName("");
+              setService("");
+              setIsRecurring(false);
+              setRecurrenceCount(4);
+              setInvitedProfessionals([]);
+              router.push("/minhas-reservas");
+            }}
+            className="btn btn-outline"
+            style={{ padding: "1rem" }}
+          >
+            Ver Minhas Reservas
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container animate-fade" style={{ paddingBottom: "8rem", paddingTop: "1.5rem" }}>
+    <div className="container animate-fade" style={{ paddingTop: "1.5rem", paddingBottom: "8rem" }}>
       {/* Header */}
       <header style={{ marginBottom: "2rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.25rem" }}>
