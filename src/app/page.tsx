@@ -79,7 +79,7 @@ export default function Home() {
               </svg>
             </div>
             <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
-              {isRegistering ? "Criar Conta" : "Clínica"}
+              {isRegistering ? "Criar Conta" : "Clínica de Psicologia"}
             </h1>
             <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", marginTop: "0.4rem" }}>
               {isRegistering
@@ -449,7 +449,7 @@ export default function Home() {
             </button>
             <h2 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "1rem" }}>📱 Instalar Aplicativo</h2>
             <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", marginBottom: "1.5rem", lineHeight: "1.5" }}>
-              Adicione a Clínica à sua tela inicial para acessar rapidamente, como um aplicativo nativo!
+              Adicione a Clínica de Psicologia à sua tela inicial para acessar rapidamente, como um aplicativo nativo!
             </p>
             
             <div style={{ background: "var(--primary-light)", padding: "1rem", borderRadius: "var(--radius-md)", marginBottom: "1rem" }}>

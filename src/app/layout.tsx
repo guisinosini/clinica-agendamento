@@ -4,7 +4,7 @@ import { ReservationProvider } from "@/context/ReservationContext";
 import Navbar from "@/components/Navbar";
 
 export const metadata: Metadata = {
-  title: "Clínica — Gestão de Salas",
+  title: "Clínica de Psicologia — Gestão de Salas",
   description: "Sistema de agendamento de salas de atendimento para profissionais de saúde.",
 };
 

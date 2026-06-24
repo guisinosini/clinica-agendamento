@@ -53,7 +53,7 @@ export default function Navbar() {
               <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
           </div>
-          <span className="hide-mobile">Clínica</span>
+          <span className="hide-mobile">Clínica de Psicologia</span>
         </Link>
 
         {/* Links de Navegação */}
