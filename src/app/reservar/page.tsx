@@ -19,9 +19,15 @@ export default function ReservarPage() {
 
   // Patients Data
   const [patientsList, setPatientsList] = useState<any[]>([]);
-  const [isNewPatient, setIsNewPatient] = useState(false);
-  const [newPatientName, setNewPatientName] = useState("");
-  const [newPatientPhone, setNewPatientPhone] = useState("");
+  const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
+  const [newPatName, setNewPatName] = useState("");
+  const [newPatEmail, setNewPatEmail] = useState("");
+  const [newPatPhone, setNewPatPhone] = useState("");
+  const [newPatBirthDate, setNewPatBirthDate] = useState("");
+  const [newPatAddress, setNewPatAddress] = useState("");
+  const [newPatGuardian, setNewPatGuardian] = useState("");
+  const [newPatHealthPlan, setNewPatHealthPlan] = useState("");
+  const [newPatNotes, setNewPatNotes] = useState("");
   
   // Estados para Repetição de Reserva
   const [isRecurring, setIsRecurring] = useState(false);
@@ -71,24 +77,6 @@ export default function ReservarPage() {
   const handleConfirm = async () => {
     if (!selectedRoom || selectedSlots.length === 0) return;
 
-    let finalPatientName = patientName;
-
-    // Se estiver criando paciente novo, cadastra primeiro
-    if (isNewPatient && newPatientName) {
-      const { data, error } = await supabase.from("patients").insert([{
-        name: newPatientName,
-        phone: newPatientPhone
-      }]).select().single();
-
-      if (!error && data) {
-        finalPatientName = data.name;
-        // Atualiza a lista caso precise novamente
-        setPatientsList(prev => [...prev, data].sort((a,b) => a.name.localeCompare(b.name)));
-      } else {
-        finalPatientName = newPatientName; // Fallback
-      }
-    }
-
     let allReservations = [];
     
     // Converter selectedDate para lidar com o timezone de forma correta
@@ -118,14 +106,14 @@ export default function ReservarPage() {
           date: dateStr,
           startTime: slot,
           endTime: `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`,
-          patientName: finalPatientName || undefined,
+          patientName: patientName || undefined,
           service: service || undefined
         };
 
         const guestRes = invitedProfessionals.map(guestId => ({
           ...hostRes,
           professionalId: guestId,
-          patientName: finalPatientName ? `${finalPatientName} (Convite)` : `Reunião c/ ${professional.name}`,
+          patientName: patientName ? `${patientName} (Convite)` : `Reunião c/ ${professional.name}`,
           service: service || "Reunião de Equipe"
         }));
 
@@ -237,6 +225,35 @@ export default function ReservarPage() {
       </div>
     );
   }
+
+  const handleSaveNewPatient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPatName) return;
+
+    const payload = {
+      name: newPatName,
+      email: newPatEmail,
+      phone: newPatPhone,
+      birthDate: newPatBirthDate,
+      address: newPatAddress,
+      guardianName: newPatGuardian,
+      healthPlan: newPatHealthPlan,
+      notes: newPatNotes
+    };
+
+    const { data, error } = await supabase.from("patients").insert([payload]).select().single();
+    if (!error && data) {
+      setPatientsList(prev => [...prev, data].sort((a,b) => a.name.localeCompare(b.name)));
+      setPatientName(data.name); // Seleciona automaticamente o paciente recém-criado
+      setIsPatientModalOpen(false);
+      setFeedbackMsg(`Paciente ${data.name} cadastrado com sucesso!`);
+      // Limpa formulário
+      setNewPatName(""); setNewPatEmail(""); setNewPatPhone(""); setNewPatBirthDate("");
+      setNewPatAddress(""); setNewPatGuardian(""); setNewPatHealthPlan(""); setNewPatNotes("");
+    } else {
+      alert("Erro ao cadastrar paciente. Verifique os dados.");
+    }
+  };
 
   return (
     <div className="container animate-fade" style={{ paddingTop: "1.5rem", paddingBottom: "8rem" }}>
@@ -483,49 +500,24 @@ export default function ReservarPage() {
                       <label className="label" style={{ marginBottom: 0 }}>Paciente</label>
                       <button 
                         type="button" 
-                        onClick={() => setIsNewPatient(!isNewPatient)}
+                        onClick={() => setIsPatientModalOpen(true)}
                         style={{ background: "none", border: "none", color: "var(--primary)", fontSize: "0.8rem", fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}
                       >
-                        {isNewPatient ? "Escolher da lista" : "+ Novo Paciente"}
+                        + Novo Paciente
                       </button>
                     </div>
 
-                    {!isNewPatient ? (
-                      <select 
-                        className="input" 
-                        value={patientName}
-                        onChange={(e) => setPatientName(e.target.value)}
-                        style={{ cursor: "pointer" }}
-                      >
-                        <option value="">(Sem paciente / Selecione...)</option>
-                        {patientsList.map(pat => (
-                          <option key={pat.id} value={pat.name}>{pat.name}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <div className="animate-fade" style={{ display: "flex", flexDirection: "column", gap: "0.75rem", background: "var(--bg-color)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
-                        <div>
-                          <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "0.2rem", display: "block" }}>Nome do Novo Paciente</label>
-                          <input 
-                            type="text" 
-                            className="input" 
-                            placeholder="Ex: Carlos Silva" 
-                            value={newPatientName}
-                            onChange={(e) => setNewPatientName(e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "0.2rem", display: "block" }}>Telefone (Opcional)</label>
-                          <input 
-                            type="text" 
-                            className="input" 
-                            placeholder="(11) 99999-9999" 
-                            value={newPatientPhone}
-                            onChange={(e) => setNewPatientPhone(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    )}
+                    <select 
+                      className="input" 
+                      value={patientName}
+                      onChange={(e) => setPatientName(e.target.value)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <option value="">(Sem paciente / Selecione...)</option>
+                      {patientsList.map(pat => (
+                        <option key={pat.id} value={pat.name}>{pat.name}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="label">Serviço / Procedimento</label>
@@ -670,6 +662,89 @@ export default function ReservarPage() {
             >
               Confirmar Reserva
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE NOVO PACIENTE */}
+      {isPatientModalOpen && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 999, padding: "1rem"
+        }}>
+          <div className="card animate-slide" style={{ width: "100%", maxWidth: "600px", maxHeight: "90vh", overflowY: "auto", position: "relative", padding: "2rem" }}>
+            <button 
+              onClick={() => setIsPatientModalOpen(false)}
+              style={{ position: "absolute", top: "1.5rem", right: "1.5rem", background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}
+            >
+              ✖
+            </button>
+            <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--primary)", marginBottom: "1.5rem" }}>
+              Cadastrar Novo Paciente
+            </h2>
+            
+            <form onSubmit={handleSaveNewPatient} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label className="label">Nome do Paciente</label>
+                <input className="input" value={newPatName} onChange={e => setNewPatName(e.target.value)} required placeholder="Ex: Maria Souza" />
+              </div>
+              
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                <div style={{ flex: "1 1 150px" }}>
+                  <label className="label">Data de Nascimento</label>
+                  <input type="date" className="input" value={newPatBirthDate} onChange={e => setNewPatBirthDate(e.target.value)} />
+                </div>
+                <div style={{ flex: "1 1 150px" }}>
+                  <label className="label">Convênio</label>
+                  <select className="input" value={newPatHealthPlan} onChange={e => setNewPatHealthPlan(e.target.value)}>
+                    <option value="">Particular (Sem Convênio)</option>
+                    <option value="Unimed">Unimed</option>
+                    <option value="Prefeitura">Prefeitura</option>
+                    <option value="Lumiar">Lumiar</option>
+                    <option value="Bradesco">Bradesco</option>
+                    <option value="Pró Saúde">Pró Saúde</option>
+                    <option value="São Luiz Saúde">São Luiz Saúde</option>
+                    <option value="KR Saúde">KR Saúde</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="label">Nome do Responsável (se menor)</label>
+                <input className="input" value={newPatGuardian} onChange={e => setNewPatGuardian(e.target.value)} placeholder="Ex: João Souza (Pai)" />
+              </div>
+
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                <div style={{ flex: "1 1 200px" }}>
+                  <label className="label">Telefone (WhatsApp)</label>
+                  <input className="input" value={newPatPhone} onChange={e => setNewPatPhone(e.target.value)} placeholder="(11) 99999-9999" />
+                </div>
+                <div style={{ flex: "1 1 200px" }}>
+                  <label className="label">E-mail</label>
+                  <input type="email" className="input" value={newPatEmail} onChange={e => setNewPatEmail(e.target.value)} placeholder="maria@email.com" />
+                </div>
+              </div>
+
+              <div>
+                <label className="label">Endereço Completo</label>
+                <input className="input" value={newPatAddress} onChange={e => setNewPatAddress(e.target.value)} placeholder="Rua, Número, Bairro, Cidade" />
+              </div>
+
+              <div>
+                <label className="label">Anotações / Observações</label>
+                <textarea className="input" value={newPatNotes} onChange={e => setNewPatNotes(e.target.value)} placeholder="Alergias, histórico clínico, etc." rows={2} style={{ resize: "vertical" }} />
+              </div>
+              <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+                <button type="submit" className="btn" style={{ flex: 1 }}>
+                  Salvar e Usar na Reserva
+                </button>
+                <button type="button" onClick={() => setIsPatientModalOpen(false)} className="btn btn-outline">
+                  Cancelar
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
