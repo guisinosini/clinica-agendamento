@@ -430,63 +430,47 @@ export default function AdminDashboard() {
         </button>
       </header>
 
-      {/* Tabs */}
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem", flexWrap: "wrap" }}>
-        <button 
-          onClick={() => setActiveTab("dashboard")}
-          className={activeTab === "dashboard" ? "btn" : "btn btn-outline"}
-        >
-          Visão Geral
-        </button>
-        <button 
-          onClick={() => setActiveTab("reservations")}
-          className={activeTab === "reservations" ? "btn" : "btn btn-outline"}
-        >
-          Gerenciar Reservas
-        </button>
-        <button 
-          onClick={() => setActiveTab("rooms")}
-          className={activeTab === "rooms" ? "btn" : "btn btn-outline"}
-        >
-          Gerenciar Salas
-        </button>
-        <button 
-          onClick={() => setActiveTab("professionals")}
-          className={activeTab === "professionals" ? "btn" : "btn btn-outline"}
-        >
-          Profissionais
-        </button>
-        <button 
-          onClick={() => setActiveTab("patients")}
-          className={activeTab === "patients" ? "btn" : "btn btn-outline"}
-        >
-          Pacientes
-        </button>
-        <button 
-          onClick={() => setActiveTab("disponibilidade")}
-          className={activeTab === "disponibilidade" ? "btn" : "btn btn-outline"}
-        >
-          Disponibilidade
-        </button>
-        <button 
-          onClick={() => setActiveTab("relatorios")}
-          className={activeTab === "relatorios" ? "btn" : "btn btn-outline"}
-        >
-          Relatórios
-        </button>
-        <button 
-          onClick={() => setActiveTab("services")}
-          className={activeTab === "services" ? "btn" : "btn btn-outline"}
-        >
-          Serviços
-        </button>
-        <button 
-          onClick={() => setActiveTab("new_reservation")}
-          className={activeTab === "new_reservation" ? "btn" : "btn btn-outline"}
-        >
-          + Nova Reserva (Admin)
-        </button>
-      </div>
+      <style>{`
+        .admin-nav::-webkit-scrollbar { display: none; }
+        .admin-nav { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+      
+      {/* Container de Navegação */}
+      <nav className="admin-nav" style={{ 
+        display: "flex", 
+        gap: "0.5rem", 
+        marginBottom: "2rem", 
+        overflowX: "auto", 
+        paddingBottom: "1rem",
+        alignItems: "center",
+        borderBottom: "1px solid var(--border-color)",
+      }}>
+        {/* Bloco 1: Análise */}
+        <div style={{ display: "flex", gap: "0.5rem", paddingRight: "0.5rem" }}>
+          <button onClick={() => setActiveTab("dashboard")} className={activeTab === "dashboard" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>📊 Visão Geral</button>
+          <button onClick={() => setActiveTab("relatorios")} className={activeTab === "relatorios" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>📈 Relatórios</button>
+          <button onClick={() => setActiveTab("disponibilidade")} className={activeTab === "disponibilidade" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>📅 Grade</button>
+        </div>
+
+        {/* Separador */}
+        <div style={{ minWidth: "1px", height: "24px", backgroundColor: "var(--border-color)", margin: "0 0.5rem" }}></div>
+
+        {/* Bloco 2: Gestão */}
+        <div style={{ display: "flex", gap: "0.5rem", paddingRight: "1rem" }}>
+          <button onClick={() => setActiveTab("reservations")} className={activeTab === "reservations" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>📋 Reservas</button>
+          <button onClick={() => setActiveTab("patients")} className={activeTab === "patients" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>👥 Pacientes</button>
+          <button onClick={() => setActiveTab("professionals")} className={activeTab === "professionals" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>🩺 Equipe</button>
+          <button onClick={() => setActiveTab("services")} className={activeTab === "services" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>🏷️ Serviços</button>
+          <button onClick={() => setActiveTab("rooms")} className={activeTab === "rooms" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>🚪 Salas</button>
+        </div>
+
+        {/* Bloco 3: Ação Rápida (Sempre a direita se houver espaço) */}
+        <div style={{ marginLeft: "auto", paddingLeft: "0.5rem" }}>
+          <button onClick={() => setActiveTab("new_reservation")} className="btn" style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem", backgroundColor: "var(--success)", borderColor: "var(--success)" }}>
+            + Nova Reserva
+          </button>
+        </div>
+      </nav>
 
       {activeTab === "dashboard" && (
         <div className="animate-fade">
