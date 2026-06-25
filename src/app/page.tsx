@@ -433,61 +433,81 @@ export default function Home() {
             <p style={{ color: "var(--text-muted)" }}>Você não tem agendamentos futuros.</p>
           </div>
         ) : (
-          <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "1rem" }}>
+          <div className="grid" style={{ gridTemplateColumns: "1fr", gap: "1rem" }}>
             {upcomingReservations.map(res => (
-              <div key={res.id} className="card" style={{ padding: "1.25rem", display: "flex", gap: "1rem", alignItems: "center" }}>
+              <div key={res.id} className="card" style={{ 
+                padding: "1.25rem", display: "flex", gap: "1.5rem", alignItems: "center", 
+                flexDirection: "row", flexWrap: "wrap" 
+              }}>
+                {/* Data e Hora */}
                 <div style={{
-                  backgroundColor: "var(--primary-light)", color: "var(--primary)",
-                  padding: "0.5rem 0.75rem", borderRadius: "var(--radius-sm)",
-                  textAlign: "center", fontWeight: 700, minWidth: "70px"
+                  backgroundColor: "var(--bg-color)", border: "1px solid var(--border-color)",
+                  padding: "0.75rem 1rem", borderRadius: "var(--radius-md)",
+                  textAlign: "center", minWidth: "90px", display: "flex", flexDirection: "column", gap: "0.2rem",
+                  boxShadow: "inset 0 2px 4px rgba(0,0,0,0.02)"
                 }}>
-                  <div style={{ fontSize: "1.1rem", lineHeight: "1" }}>{formatDate(res.date)}</div>
-                  <div style={{ fontSize: "0.75rem", marginTop: "0.25rem", opacity: 0.8 }}>{res.startTime}</div>
+                  <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--primary)", lineHeight: "1" }}>
+                    {formatDate(res.date).split(' ')[0]}
+                  </div>
+                  <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase" }}>
+                    {formatDate(res.date).split(' ')[1]}
+                  </div>
+                  <div style={{ width: "100%", height: "1px", background: "var(--border-color)", margin: "0.2rem 0" }} />
+                  <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text-main)" }}>
+                    {res.startTime}
+                  </div>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.25rem" }}>
-                    <h3 style={{ fontWeight: 700, fontSize: "1rem", color: "var(--text-main)" }}>
+
+                {/* Info Central */}
+                <div style={{ flex: "1 1 200px", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+                    <h3 style={{ fontWeight: 800, fontSize: "1.15rem", color: "var(--text-main)", margin: 0 }}>
                       {res.patientName || "Paciente não informado"}
                     </h3>
                     {res.status === 'confirmado' && (
-                      <span className="badge" style={{ backgroundColor: "#dcfce7", color: "var(--success, #166534)", fontSize: "0.65rem", padding: "0.15rem 0.4rem" }}>✓ Confirmado</span>
+                      <span className="badge" style={{ backgroundColor: "#dcfce7", color: "var(--success, #166534)", fontSize: "0.7rem", padding: "0.25rem 0.5rem" }}>✓ Paciente Presente</span>
                     )}
                     {(!res.status || res.status === 'agendado') && (
-                      <span className="badge" style={{ backgroundColor: "var(--bg-color)", color: "var(--text-muted)", border: "1px solid var(--border-color)", fontSize: "0.65rem", padding: "0.15rem 0.4rem" }}>⏳ Pendente</span>
+                      <span className="badge" style={{ backgroundColor: "var(--bg-color)", color: "var(--text-muted)", border: "1px solid var(--border-color)", fontSize: "0.7rem", padding: "0.25rem 0.5rem" }}>⏳ Aguardando</span>
                     )}
                     {res.status === 'falta' && (
-                      <span className="badge" style={{ backgroundColor: "var(--danger-light)", color: "var(--danger)", fontSize: "0.65rem", padding: "0.15rem 0.4rem" }}>Falta</span>
+                      <span className="badge" style={{ backgroundColor: "var(--danger-light)", color: "var(--danger)", fontSize: "0.7rem", padding: "0.25rem 0.5rem" }}>Falta</span>
                     )}
                     {res.status === 'reagendado' && (
-                      <span className="badge" style={{ backgroundColor: "#fef3c7", color: "#b45309", fontSize: "0.65rem", padding: "0.15rem 0.4rem" }}>Reagendado</span>
+                      <span className="badge" style={{ backgroundColor: "#fef3c7", color: "#b45309", fontSize: "0.7rem", padding: "0.25rem 0.5rem" }}>Reagendado</span>
                     )}
                   </div>
-                  <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "0.1rem" }}>
-                    {getRoomName(res.roomId)}
-                  </p>
-                  {res.service && (
-                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "block", marginTop: "0.15rem" }}>
-                      {res.service}
+                  
+                  <div style={{ display: "flex", gap: "1.5rem", fontSize: "0.9rem", color: "var(--text-secondary)", alignItems: "center", flexWrap: "wrap" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                      <span style={{ opacity: 0.7 }}>🏢</span> <span style={{ fontWeight: 500 }}>{getRoomName(res.roomId)}</span>
                     </span>
-                  )}
+                    {res.service && (
+                      <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                        <span style={{ opacity: 0.7 }}>🩺</span> <span style={{ fontWeight: 500 }}>{res.service}</span>
+                      </span>
+                    )}
+                  </div>
                 </div>
                 
-                {/* Botão de Calendário */}
-                <a
-                  href={getGoogleCalendarUrl(res)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-outline"
-                  style={{
-                    padding: "0.5rem",
-                    borderRadius: "var(--radius-sm)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                  title="Adicionar ao Google Calendar"
-                >
-                  🔔
-                </a>
+                {/* Ações */}
+                <div style={{ display: "flex", alignItems: "center", paddingLeft: "1rem", borderLeft: "1px solid var(--border-color)" }}>
+                  <a
+                    href={getGoogleCalendarUrl(res)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-outline"
+                    style={{
+                      padding: "0.5rem 1rem",
+                      borderRadius: "var(--radius-sm)",
+                      display: "flex", alignItems: "center", gap: "0.5rem",
+                      fontSize: "0.85rem", fontWeight: 600
+                    }}
+                    title="Adicionar ao Google Calendar"
+                  >
+                    <span>📅</span> <span className="hide-mobile">Agendar Alerta</span>
+                  </a>
+                </div>
               </div>
             ))}
           </div>
