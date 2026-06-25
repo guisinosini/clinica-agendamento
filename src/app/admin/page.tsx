@@ -721,7 +721,12 @@ export default function AdminDashboard() {
             <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
               <div>
                 <label className="label">Nome do Paciente (Opcional)</label>
-                <input className="input" value={newResPatient} onChange={e => setNewResPatient(e.target.value)} placeholder="Ex: Maria da Silva" />
+                <select className="input" value={newResPatient} onChange={e => setNewResPatient(e.target.value)} style={{ cursor: "pointer" }}>
+                  <option value="">(Sem paciente / Selecione...)</option>
+                  {patientsList.map(pat => (
+                    <option key={pat.id} value={pat.name}>{pat.name}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="label">Serviço/Detalhes (Opcional)</label>
