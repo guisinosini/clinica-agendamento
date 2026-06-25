@@ -12,7 +12,7 @@ export default function AdminDashboard() {
   const allReservations = fetchAllReservations();
   
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState<"reservations" | "rooms" | "professionals" | "new_reservation" | "patients" | "disponibilidade">("reservations");
+  const [activeTab, setActiveTab] = useState<"reservations" | "rooms" | "professionals" | "new_reservation" | "patients" | "disponibilidade" | "relatorios">("reservations");
   const [selectedDispDate, setSelectedDispDate] = useState<string>(NEXT_DAYS[0]);
   const [professionalsMap, setProfessionalsMap] = useState<Record<string, string>>({});
   const [professionalsList, setProfessionalsList] = useState<any[]>([]);
@@ -23,6 +23,13 @@ export default function AdminDashboard() {
   const [filterProf, setFilterProf] = useState<string>("");
   const [filterStartDate, setFilterStartDate] = useState<string>("");
   const [filterEndDate, setFilterEndDate] = useState<string>("");
+
+  // Report Filters State
+  const [reportPatient, setReportPatient] = useState("");
+  const [reportProf, setReportProf] = useState("");
+  const [reportHealthPlan, setReportHealthPlan] = useState("");
+  const [reportStartDate, setReportStartDate] = useState("");
+  const [reportEndDate, setReportEndDate] = useState("");
 
   // Room Form State
   const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
@@ -66,6 +73,33 @@ export default function AdminDashboard() {
         return a.startTime.localeCompare(b.startTime);
       });
   }, [allReservations, filterRoom, filterProf, filterStartDate, filterEndDate]);
+
+  const filteredReportData = useMemo(() => {
+    return allReservations
+      .map(res => {
+        const patient = patientsList.find(p => p.name === res.patientName);
+        return {
+          id: res.id,
+          patientName: res.patientName || "Não informado",
+          healthPlan: patient?.healthPlan || "Particular",
+          date: res.date,
+          startTime: res.startTime,
+          status: res.status || 'agendado',
+          processStatus: patient?.status === 'concluido' ? "Concluído" : "Ativo",
+          profId: res.professionalId,
+          profName: professionalsMap[res.professionalId] || "Desconhecido"
+        };
+      })
+      .filter(item => {
+        if (reportPatient && !item.patientName.toLowerCase().includes(reportPatient.toLowerCase())) return false;
+        if (reportProf && item.profId !== reportProf) return false;
+        if (reportHealthPlan && item.healthPlan !== reportHealthPlan && !(reportHealthPlan === "Particular" && !patientsList.find(p => p.name === item.patientName)?.healthPlan)) return false;
+        if (reportStartDate && item.date < reportStartDate) return false;
+        if (reportEndDate && item.date > reportEndDate) return false;
+        return true;
+      })
+      .sort((a, b) => b.date.localeCompare(a.date));
+  }, [allReservations, patientsList, professionalsMap, reportPatient, reportProf, reportHealthPlan, reportStartDate, reportEndDate]);
 
   useEffect(() => {
     // Basic PIN check using sessionStorage
@@ -322,6 +356,12 @@ export default function AdminDashboard() {
           Disponibilidade
         </button>
         <button 
+          onClick={() => setActiveTab("relatorios")}
+          className={activeTab === "relatorios" ? "btn" : "btn btn-outline"}
+        >
+          Relatórios
+        </button>
+        <button 
           onClick={() => setActiveTab("new_reservation")}
           className={activeTab === "new_reservation" ? "btn" : "btn btn-outline"}
         >
@@ -440,6 +480,102 @@ export default function AdminDashboard() {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === "relatorios" && (
+        <div className="card animate-slide">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 700 }}>Relatório de Atendimentos ({filteredReportData.length})</h2>
+          </div>
+
+          {/* Filtros do Relatório */}
+          <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem", marginBottom: "2rem", backgroundColor: "var(--bg-color)", padding: "1.25rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+            <div>
+              <label className="label" style={{ fontSize: "0.85rem" }}>Paciente</label>
+              <select className="input" value={reportPatient} onChange={e => setReportPatient(e.target.value)}>
+                <option value="">Todos</option>
+                {patientsList.map(pat => (
+                  <option key={pat.id} value={pat.name}>{pat.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="label" style={{ fontSize: "0.85rem" }}>Profissional</label>
+              <select className="input" value={reportProf} onChange={e => setReportProf(e.target.value)}>
+                <option value="">Todos</option>
+                {professionalsList.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label" style={{ fontSize: "0.85rem" }}>Convênio</label>
+              <select className="input" value={reportHealthPlan} onChange={e => setReportHealthPlan(e.target.value)}>
+                <option value="">Todos</option>
+                <option value="Particular">Particular</option>
+                {Array.from(new Set(patientsList.map(p => p.healthPlan).filter(Boolean))).map(hp => (
+                  <option key={hp as string} value={hp as string}>{hp as string}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="label" style={{ fontSize: "0.85rem" }}>De</label>
+              <input type="date" className="input" value={reportStartDate} onChange={e => setReportStartDate(e.target.value)} />
+            </div>
+            <div>
+              <label className="label" style={{ fontSize: "0.85rem" }}>Até</label>
+              <input type="date" className="input" value={reportEndDate} onChange={e => setReportEndDate(e.target.value)} />
+            </div>
+          </div>
+
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
+              <thead>
+                <tr style={{ borderBottom: "2px solid var(--border-color)", textAlign: "left", backgroundColor: "var(--bg-color)" }}>
+                  <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Data</th>
+                  <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Paciente</th>
+                  <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Convênio</th>
+                  <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Profissional</th>
+                  <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Status Consulta</th>
+                  <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Processo Paciente</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredReportData.map(item => (
+                  <tr key={item.id} style={{ borderBottom: "1px solid var(--border-color)" }}>
+                    <td style={{ padding: "1rem", fontWeight: 600 }}>
+                      {item.date.split('-').reverse().join('/')} 
+                      <span style={{fontSize:"0.8rem", color:"var(--text-muted)", marginLeft: "0.4rem"}}>{item.startTime}</span>
+                    </td>
+                    <td style={{ padding: "1rem", fontWeight: 700, color: "var(--text-main)" }}>{item.patientName}</td>
+                    <td style={{ padding: "1rem" }}>
+                      <span className={item.healthPlan === "Particular" ? "badge" : "badge badge-primary"}>{item.healthPlan}</span>
+                    </td>
+                    <td style={{ padding: "1rem", fontWeight: 500 }}>{item.profName}</td>
+                    <td style={{ padding: "1rem" }}>
+                      {item.status === 'confirmado' && <span style={{ color: "var(--success)", fontWeight: 700, fontSize: "0.9rem" }}>✓ Confirmado</span>}
+                      {item.status === 'falta' && <span style={{ color: "var(--danger)", fontWeight: 700, fontSize: "0.9rem" }}>✗ Falta</span>}
+                      {item.status === 'reagendado' && <span style={{ color: "#b45309", fontWeight: 700, fontSize: "0.9rem" }}>↻ Reagendado</span>}
+                      {(!item.status || item.status === 'agendado') && <span style={{ color: "var(--text-muted)", fontWeight: 700, fontSize: "0.9rem" }}>⏳ Agendado</span>}
+                    </td>
+                    <td style={{ padding: "1rem" }}>
+                      {item.processStatus === 'Concluído' ? (
+                        <span className="badge" style={{ backgroundColor: "#dcfce7", color: "#166534", fontSize: "0.75rem" }}>Alta (Concluído)</span>
+                      ) : (
+                        <span className="badge" style={{ backgroundColor: "var(--bg-color)", color: "var(--text-muted)", border: "1px solid var(--border-color)", fontSize: "0.75rem" }}>Ativo</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {filteredReportData.length === 0 && (
+                  <tr>
+                    <td colSpan={6} style={{ padding: "2.5rem", textAlign: "center", color: "var(--text-muted)" }}>
+                      Nenhum atendimento corresponde aos filtros selecionados.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
