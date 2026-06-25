@@ -7,11 +7,17 @@ import { useReservation } from "../../context/ReservationContext";
 import { 
   format, 
   startOfWeek, 
+  endOfWeek,
   addDays, 
+  subDays,
   subWeeks, 
   addWeeks, 
   isSameDay, 
-  isToday 
+  isToday,
+  startOfMonth,
+  endOfMonth,
+  addMonths,
+  subMonths
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -20,6 +26,7 @@ export default function ProfessionalAgendaPage() {
   const router = useRouter();
 
   // Estado da semana/data selecionada
+  const [viewMode, setViewMode] = useState<"daily" | "weekly" | "monthly">("daily");
   const [currentWeekStart, setCurrentWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -39,28 +46,78 @@ export default function ProfessionalAgendaPage() {
 
   const getRoomName = (roomId: string) => rooms.find((r) => r.id === roomId)?.name ?? "Sala";
 
-  // Gera os 7 dias da semana atual
+  // Gera os 7 dias da semana atual para a visualização diária
   const weekDays = Array.from({ length: 7 }).map((_, i) => addDays(currentWeekStart, i));
 
-  // Reservas para o dia selecionado
-  const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
-  const dayReservations = myReservations
-    .filter(res => res.date === selectedDateStr)
-    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  // Datas baseadas no viewMode
+  let startDate = selectedDate;
+  let endDate = selectedDate;
+  if (viewMode === "weekly") {
+    startDate = currentWeekStart;
+    endDate = endOfWeek(currentWeekStart, { weekStartsOn: 0 });
+  } else if (viewMode === "monthly") {
+    startDate = startOfMonth(selectedDate);
+    endDate = endOfMonth(selectedDate);
+  }
 
-  // Navegação de Semanas
-  const handlePrevWeek = () => {
-    setCurrentWeekStart(prev => subWeeks(prev, 1));
-    setSelectedDate(prev => subWeeks(prev, 1));
+  const startStr = format(startDate, "yyyy-MM-dd");
+  const endStr = format(endDate, "yyyy-MM-dd");
+
+  const periodReservations = myReservations
+    .filter(res => res.date >= startStr && res.date <= endStr)
+    .sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return a.startTime.localeCompare(b.startTime);
+    });
+
+  // Agrupa reservas por data
+  const groupedReservations = periodReservations.reduce((acc, res) => {
+    if (!acc[res.date]) acc[res.date] = [];
+    acc[res.date].push(res);
+    return acc;
+  }, {} as Record<string, typeof periodReservations>);
+
+  const sortedDates = Object.keys(groupedReservations).sort();
+
+  // Navegação
+  const handlePrev = () => {
+    if (viewMode === "daily") {
+      const newDate = subDays(selectedDate, 1);
+      setSelectedDate(newDate);
+      setCurrentWeekStart(startOfWeek(newDate, { weekStartsOn: 0 }));
+    } else if (viewMode === "weekly") {
+      setCurrentWeekStart(prev => subWeeks(prev, 1));
+      setSelectedDate(prev => subWeeks(prev, 1));
+    } else {
+      const newDate = subMonths(selectedDate, 1);
+      setSelectedDate(newDate);
+      setCurrentWeekStart(startOfWeek(newDate, { weekStartsOn: 0 }));
+    }
   };
-  const handleNextWeek = () => {
-    setCurrentWeekStart(prev => addWeeks(prev, 1));
-    setSelectedDate(prev => addWeeks(prev, 1));
+  const handleNext = () => {
+    if (viewMode === "daily") {
+      const newDate = addDays(selectedDate, 1);
+      setSelectedDate(newDate);
+      setCurrentWeekStart(startOfWeek(newDate, { weekStartsOn: 0 }));
+    } else if (viewMode === "weekly") {
+      setCurrentWeekStart(prev => addWeeks(prev, 1));
+      setSelectedDate(prev => addWeeks(prev, 1));
+    } else {
+      const newDate = addMonths(selectedDate, 1);
+      setSelectedDate(newDate);
+      setCurrentWeekStart(startOfWeek(newDate, { weekStartsOn: 0 }));
+    }
   };
   const handleToday = () => {
     const now = new Date();
-    setCurrentWeekStart(startOfWeek(now, { weekStartsOn: 0 }));
     setSelectedDate(now);
+    setCurrentWeekStart(startOfWeek(now, { weekStartsOn: 0 }));
+  };
+
+  const getHeaderTitle = () => {
+    if (viewMode === "daily") return format(currentWeekStart, "MMMM yyyy", { locale: ptBR });
+    if (viewMode === "weekly") return `Semana de ${format(startDate, "dd/MM", { locale: ptBR })} a ${format(endDate, "dd/MM", { locale: ptBR })}`;
+    if (viewMode === "monthly") return format(startDate, "MMMM yyyy", { locale: ptBR });
   };
 
   const getGoogleCalendarUrl = (res: any) => {
@@ -93,16 +150,27 @@ export default function ProfessionalAgendaPage() {
       <div className="card animate-slide" style={{ padding: "1.5rem", marginBottom: "2rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
           <h2 style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--text-main)", textTransform: "capitalize" }}>
-            {format(currentWeekStart, "MMMM yyyy", { locale: ptBR })}
+            {getHeaderTitle()}
           </h2>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+            <select 
+              className="input" 
+              value={viewMode} 
+              onChange={e => setViewMode(e.target.value as any)}
+              style={{ width: "auto", padding: "0.4rem 0.8rem", height: "100%", fontSize: "0.85rem", cursor: "pointer", marginRight: "0.5rem" }}
+            >
+              <option value="daily">Diário</option>
+              <option value="weekly">Semanal</option>
+              <option value="monthly">Mensal</option>
+            </select>
             <button onClick={handleToday} className="btn btn-outline" style={{ padding: "0.4rem 0.8rem", fontSize: "0.85rem" }}>Hoje</button>
-            <button onClick={handlePrevWeek} className="btn btn-outline" style={{ padding: "0.4rem 0.8rem" }}>&lt;</button>
-            <button onClick={handleNextWeek} className="btn btn-outline" style={{ padding: "0.4rem 0.8rem" }}>&gt;</button>
+            <button onClick={handlePrev} className="btn btn-outline" style={{ padding: "0.4rem 0.8rem" }}>&lt;</button>
+            <button onClick={handleNext} className="btn btn-outline" style={{ padding: "0.4rem 0.8rem" }}>&gt;</button>
           </div>
         </div>
 
-        {/* Dias da Semana (Bolinhas) */}
+        {/* Dias da Semana (Bolinhas) - Só aparece no Diário */}
+        {viewMode === "daily" && (
         <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem", overflowX: "auto", paddingBottom: "0.5rem" }}>
           {weekDays.map(day => {
             const isSelected = isSameDay(day, selectedDate);
@@ -140,23 +208,29 @@ export default function ProfessionalAgendaPage() {
             );
           })}
         </div>
+        )}
       </div>
 
-      {/* Lista de Consultas do Dia Selecionado */}
+      {/* Lista de Consultas Agrupadas */}
       <div>
-        <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-secondary)" }}>
-          Compromissos para {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
-        </h3>
-
-        {dayReservations.length === 0 ? (
+        {sortedDates.length === 0 ? (
           <div style={{ textAlign: "center", padding: "3rem 1rem", border: "2px dashed var(--border-color)", borderRadius: "var(--radius-lg)" }}>
             <div style={{ fontSize: "2.5rem", marginBottom: "1rem", opacity: 0.5 }}>🛋️</div>
-            <p style={{ color: "var(--text-muted)", fontWeight: 500 }}>Nenhum paciente agendado para este dia.</p>
+            <p style={{ color: "var(--text-muted)", fontWeight: 500 }}>Nenhum agendamento encontrado neste período.</p>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            {dayReservations.map(res => (
-              <div key={res.id} className="card animate-slide" style={{ display: "flex", gap: "1rem", alignItems: "center", padding: "1.25rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+            {sortedDates.map(dateStr => {
+              const dateObj = new Date(dateStr + "T00:00:00");
+              return (
+                <div key={dateStr}>
+                  <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-secondary)", textTransform: "capitalize", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <span style={{ display: "inline-block", width: "8px", height: "8px", backgroundColor: "var(--primary)", borderRadius: "50%" }} />
+                    {format(dateObj, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                  </h3>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                    {groupedReservations[dateStr].map(res => (
+                      <div key={res.id} className="card animate-slide" style={{ display: "flex", gap: "1rem", alignItems: "center", padding: "1.25rem" }}>
                 {/* Horário */}
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: "70px", paddingRight: "1rem", borderRight: "2px solid var(--border-color)" }}>
                   <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-main)" }}>{res.startTime}</span>
@@ -220,7 +294,11 @@ export default function ProfessionalAgendaPage() {
                   )}
                 </div>
               </div>
-            ))}
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
