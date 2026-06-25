@@ -69,6 +69,7 @@ export default function AdminDashboard() {
   // Service Form State
   const [serviceName, setServiceName] = useState("");
   const [serviceDesc, setServiceDesc] = useState("");
+  const [serviceDuration, setServiceDuration] = useState("60");
 
   const filteredReservations = useMemo(() => {
     return allReservations
@@ -208,9 +209,10 @@ export default function AdminDashboard() {
   const handleSaveService = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!serviceName) return;
-    await addService(serviceName, serviceDesc);
+    await addService(serviceName, serviceDesc, Number(serviceDuration));
     setServiceName("");
     setServiceDesc("");
+    setServiceDuration("60");
     alert("Serviço cadastrado com sucesso!");
   };
 
@@ -667,8 +669,15 @@ export default function AdminDashboard() {
               {servicesList.map(service => (
                 <div key={service.id} style={{ padding: "1rem", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
-                    <h3 style={{ fontWeight: 700, color: "var(--primary)" }}>{service.name}</h3>
-                    {service.description && <p style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>{service.description}</p>}
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <h3 style={{ fontWeight: 700, color: "var(--primary)" }}>{service.name}</h3>
+                      {service.duration && (
+                        <span className="badge" style={{ backgroundColor: "var(--bg-color)", border: "1px solid var(--border-color)", fontSize: "0.75rem", color: "var(--text-muted)", padding: "0.2rem 0.5rem" }}>
+                          ⏱ {service.duration} min
+                        </span>
+                      )}
+                    </div>
+                    {service.description && <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.3rem" }}>{service.description}</p>}
                   </div>
                   <button onClick={() => handleDeleteService(service.id)} style={{ padding: "0.4rem 0.8rem", backgroundColor: "var(--danger-light)", color: "var(--danger)", border: "none", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}>
                     Excluir
@@ -688,7 +697,11 @@ export default function AdminDashboard() {
               </div>
               <div>
                 <label className="label">Descrição (Opcional)</label>
-                <input className="input" value={serviceDesc} onChange={e => setServiceDesc(e.target.value)} placeholder="Ex: Sessão de 50 minutos..." />
+                <input className="input" value={serviceDesc} onChange={e => setServiceDesc(e.target.value)} placeholder="Ex: Sessão focada em conflitos do casal..." />
+              </div>
+              <div>
+                <label className="label">Duração da Sessão (minutos)</label>
+                <input type="number" min="10" max="480" className="input" value={serviceDuration} onChange={e => setServiceDuration(e.target.value)} required />
               </div>
               <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem" }}>
                 <button type="submit" className="btn" style={{ flex: 1 }}>Criar Serviço</button>

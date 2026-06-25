@@ -44,7 +44,7 @@ interface ReservationContextData {
   allProfessionals: Professional[];
   servicesList: Service[];
   fetchServices: () => Promise<void>;
-  addService: (name: string, description?: string) => Promise<boolean>;
+  addService: (name: string, description?: string, duration?: number) => Promise<boolean>;
   deleteService: (id: string) => Promise<boolean>;
 }
 
@@ -245,8 +245,8 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     if (data) setServicesList(data);
   };
 
-  const addService = async (name: string, description?: string) => {
-    const { error } = await supabase.from('services').insert([{ name, description }]);
+  const addService = async (name: string, description?: string, duration?: number) => {
+    const { error } = await supabase.from('services').insert([{ name, description, duration: duration || 60 }]);
     if (!error) { await fetchServices(); return true; }
     console.error(error); return false;
   };

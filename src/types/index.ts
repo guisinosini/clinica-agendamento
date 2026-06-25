@@ -44,5 +44,6 @@ export type Service = {
   id: string;
   name: string;
   description?: string;
+  duration?: number;
   created_at?: string;
 };
