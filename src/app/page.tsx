@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useReservation } from "../context/ReservationContext";
 
@@ -15,6 +15,25 @@ export default function Home() {
   const [errorMsg, setErrorMsg] = useState("");
   const [isSubmiting, setIsSubmiting] = useState(false);
   const [showInstallModal, setShowInstallModal] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault(); // Previne o prompt automático nativo
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,6 +210,22 @@ export default function Home() {
                 {isRegistering ? "Fazer Login" : "Cadastre-se"}
               </button>
             </p>
+
+            {deferredPrompt && (
+              <button 
+                type="button" 
+                onClick={handleInstallClick} 
+                className="btn btn-outline" 
+                style={{ marginTop: "1rem", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", color: "var(--primary)", borderColor: "var(--primary-light)", backgroundColor: "var(--primary-light)" }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                <span style={{ fontWeight: 700 }}>Instalar App no Celular</span>
+              </button>
+            )}
             
             {/* Acesso Admin Oculto/Discreto */}
             <div style={{ textAlign: "center", marginTop: "1rem" }}>
