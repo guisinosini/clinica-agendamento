@@ -212,6 +212,7 @@ export default function Home() {
               >
                 {isRegistering ? "Fazer Login" : "Cadastre-se"}
               </button>
+            </p>
             <button 
               type="button" 
               onClick={handleInstallClick} 
