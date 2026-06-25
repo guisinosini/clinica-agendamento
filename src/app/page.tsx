@@ -465,10 +465,10 @@ export default function Home() {
                       {res.patientName || "Paciente não informado"}
                     </h3>
                     {res.status === 'confirmado' && (
-                      <span className="badge" style={{ backgroundColor: "#dcfce7", color: "var(--success, #166534)", fontSize: "0.7rem", padding: "0.25rem 0.5rem" }}>✓ Paciente Presente</span>
+                      <span className="badge" style={{ backgroundColor: "#dcfce7", color: "var(--success, #166534)", fontSize: "0.7rem", padding: "0.25rem 0.5rem" }}>✓ Confirmado</span>
                     )}
                     {(!res.status || res.status === 'agendado') && (
-                      <span className="badge" style={{ backgroundColor: "var(--bg-color)", color: "var(--text-muted)", border: "1px solid var(--border-color)", fontSize: "0.7rem", padding: "0.25rem 0.5rem" }}>⏳ Aguardando</span>
+                      <span className="badge" style={{ backgroundColor: "var(--bg-color)", color: "var(--text-muted)", border: "1px solid var(--border-color)", fontSize: "0.7rem", padding: "0.25rem 0.5rem" }}>⏳ Pendente</span>
                     )}
                     {res.status === 'falta' && (
                       <span className="badge" style={{ backgroundColor: "var(--danger-light)", color: "var(--danger)", fontSize: "0.7rem", padding: "0.25rem 0.5rem" }}>Falta</span>
