@@ -21,7 +21,7 @@ export type Reservation = {
   endTime: string; // Ex: "09:00"
   patientName?: string;
   service?: string;
-  status?: "agendado" | "reagendado" | "falta" | "cancelado" | "concluido";
+  status?: "agendado" | "reagendado" | "falta" | "cancelado" | "concluido" | "confirmado";
 };
 
 export type Patient = {
@@ -33,6 +33,8 @@ export type Patient = {
   address?: string;
   guardianName?: string;
   healthPlan?: string;
+  healthPlanNumber?: string;
+  gender?: string;
   notes?: string;
   created_at?: string;
 };
