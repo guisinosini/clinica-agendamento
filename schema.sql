@@ -54,6 +54,7 @@ CREATE POLICY "Permitir atualização de salas" ON rooms FOR UPDATE USING (true)
 CREATE POLICY "Permitir deleção de salas" ON rooms FOR DELETE USING (true);
 CREATE POLICY "Leitura pública para reservas" ON reservations FOR SELECT USING (true);
 CREATE POLICY "Permitir inserção de reservas" ON reservations FOR INSERT WITH CHECK (true);
+CREATE POLICY "Permitir atualização de reservas" ON reservations FOR UPDATE USING (true);
 CREATE POLICY "Permitir deleção de reservas" ON reservations FOR DELETE USING (true);
 
 -- Políticas para Profissionais (Necessárias para o Cadastro e Login)
