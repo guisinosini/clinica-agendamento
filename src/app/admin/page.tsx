@@ -8,11 +8,11 @@ import { supabase } from "../../lib/supabase";
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { rooms, fetchAllReservations, cancelReservation, updateReservationStatus, addRoom, updateRoom, deleteRoom, loading, addReservations } = useReservation();
+  const { rooms, fetchAllReservations, cancelReservation, updateReservationStatus, addRoom, updateRoom, deleteRoom, loading, addReservations, servicesList, addService, deleteService } = useReservation();
   const allReservations = fetchAllReservations();
   
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState<"reservations" | "rooms" | "professionals" | "new_reservation" | "patients" | "disponibilidade" | "relatorios">("reservations");
+  const [activeTab, setActiveTab] = useState<"reservations" | "rooms" | "professionals" | "new_reservation" | "patients" | "disponibilidade" | "relatorios" | "services">("reservations");
   const [selectedDispDate, setSelectedDispDate] = useState<string>(NEXT_DAYS[0]);
   const [professionalsMap, setProfessionalsMap] = useState<Record<string, string>>({});
   const [professionalsList, setProfessionalsList] = useState<any[]>([]);
@@ -65,6 +65,10 @@ export default function AdminDashboard() {
   const [patHealthPlanNumber, setPatHealthPlanNumber] = useState("");
   const [patGender, setPatGender] = useState("");
   const [patNotes, setPatNotes] = useState("");
+
+  // Service Form State
+  const [serviceName, setServiceName] = useState("");
+  const [serviceDesc, setServiceDesc] = useState("");
 
   const filteredReservations = useMemo(() => {
     return allReservations
@@ -198,6 +202,21 @@ export default function AdminDashboard() {
         alert("Erro ao remover profissional.");
         console.error(error);
       }
+    }
+  };
+
+  const handleSaveService = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!serviceName) return;
+    await addService(serviceName, serviceDesc);
+    setServiceName("");
+    setServiceDesc("");
+    alert("Serviço cadastrado com sucesso!");
+  };
+
+  const handleDeleteService = async (id: string) => {
+    if (confirm("Tem certeza que deseja excluir este serviço?")) {
+      await deleteService(id);
     }
   };
 
@@ -407,6 +426,12 @@ export default function AdminDashboard() {
           className={activeTab === "relatorios" ? "btn" : "btn btn-outline"}
         >
           Relatórios
+        </button>
+        <button 
+          onClick={() => setActiveTab("services")}
+          className={activeTab === "services" ? "btn" : "btn btn-outline"}
+        >
+          Serviços
         </button>
         <button 
           onClick={() => setActiveTab("new_reservation")}
@@ -628,6 +653,47 @@ export default function AdminDashboard() {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "services" && (
+        <div style={{ display: "grid", gap: "2rem", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
+          {/* Lista de Serviços */}
+          <div className="card animate-slide">
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem" }}>Serviços Cadastrados ({servicesList.length})</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {servicesList.length === 0 && <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>Nenhum serviço cadastrado.</p>}
+              {servicesList.map(service => (
+                <div key={service.id} style={{ padding: "1rem", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <h3 style={{ fontWeight: 700, color: "var(--primary)" }}>{service.name}</h3>
+                    {service.description && <p style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>{service.description}</p>}
+                  </div>
+                  <button onClick={() => handleDeleteService(service.id)} style={{ padding: "0.4rem 0.8rem", backgroundColor: "var(--danger-light)", color: "var(--danger)", border: "none", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}>
+                    Excluir
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Form de Novo Serviço */}
+          <div className="card animate-slide">
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem" }}>Adicionar Novo Serviço</h2>
+            <form onSubmit={handleSaveService} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label className="label">Nome do Serviço / Procedimento</label>
+                <input className="input" value={serviceName} onChange={e => setServiceName(e.target.value)} required placeholder="Ex: Terapia de Casal" />
+              </div>
+              <div>
+                <label className="label">Descrição (Opcional)</label>
+                <input className="input" value={serviceDesc} onChange={e => setServiceDesc(e.target.value)} placeholder="Ex: Sessão de 50 minutos..." />
+              </div>
+              <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem" }}>
+                <button type="submit" className="btn" style={{ flex: 1 }}>Criar Serviço</button>
+              </div>
+            </form>
           </div>
         </div>
       )}

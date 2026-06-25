@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from "react";
-import { Reservation, Room, Professional } from "../types";
+import { Reservation, Room, Professional, Service } from "../types";
 import { supabase } from "../lib/supabase";
 
 export const getNext7Days = () => {
@@ -42,6 +42,10 @@ interface ReservationContextData {
   updateRoom: (id: string, name: string, description: string) => Promise<boolean>;
   deleteRoom: (id: string) => Promise<boolean>;
   allProfessionals: Professional[];
+  servicesList: Service[];
+  fetchServices: () => Promise<void>;
+  addService: (name: string, description?: string) => Promise<boolean>;
+  deleteService: (id: string) => Promise<boolean>;
 }
 
 const ReservationContext = createContext<ReservationContextData>({} as ReservationContextData);
@@ -51,6 +55,7 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [professional, setProfessional] = useState<Professional | null>(null);
   const [allProfessionals, setAllProfessionals] = useState<Professional[]>([]);
+  const [servicesList, setServicesList] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -78,7 +83,7 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const fetchData = async () => {
-    await Promise.all([fetchRooms(), fetchReservations(), fetchProfessionals()]);
+    await Promise.all([fetchRooms(), fetchReservations(), fetchProfessionals(), fetchServices()]);
   };
 
   const fetchProfessionals = async () => {
@@ -235,6 +240,23 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     console.error(error); return false;
   };
 
+  const fetchServices = async () => {
+    const { data } = await supabase.from('services').select('*').order('name');
+    if (data) setServicesList(data);
+  };
+
+  const addService = async (name: string, description?: string) => {
+    const { error } = await supabase.from('services').insert([{ name, description }]);
+    if (!error) { await fetchServices(); return true; }
+    console.error(error); return false;
+  };
+
+  const deleteService = async (id: string) => {
+    const { error } = await supabase.from('services').delete().eq('id', id);
+    if (!error) { await fetchServices(); return true; }
+    console.error(error); return false;
+  };
+
   const fetchReservations = async () => {
     const { data } = await supabase
       .from('reservations')
@@ -316,8 +338,12 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     addRoom,
     updateRoom,
     deleteRoom,
-    allProfessionals
-  }), [reservations, rooms, professional, loading, allProfessionals]);
+    allProfessionals,
+    servicesList,
+    fetchServices,
+    addService,
+    deleteService
+  }), [reservations, rooms, professional, loading, allProfessionals, servicesList]);
 
   return (
     <ReservationContext.Provider value={contextValue}>

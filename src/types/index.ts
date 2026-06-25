@@ -39,3 +39,10 @@ export type Patient = {
   notes?: string;
   created_at?: string;
 };
+
+export type Service = {
+  id: string;
+  name: string;
+  description?: string;
+  created_at?: string;
+};

@@ -94,3 +94,17 @@ CREATE POLICY "Leitura pública para pacientes" ON patients FOR SELECT USING (tr
 CREATE POLICY "Permitir inserção de pacientes" ON patients FOR INSERT WITH CHECK (true);
 CREATE POLICY "Permitir atualização de pacientes" ON patients FOR UPDATE USING (true);
 CREATE POLICY "Permitir deleção de pacientes" ON patients FOR DELETE USING (true);
+
+-- Criação da tabela de Serviços
+CREATE TABLE services (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  description TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE services ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Leitura pública para serviços" ON services FOR SELECT USING (true);
+CREATE POLICY "Permitir inserção de serviços" ON services FOR INSERT WITH CHECK (true);
+CREATE POLICY "Permitir atualização de serviços" ON services FOR UPDATE USING (true);
+CREATE POLICY "Permitir deleção de serviços" ON services FOR DELETE USING (true);

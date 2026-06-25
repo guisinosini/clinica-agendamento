@@ -8,7 +8,7 @@ import { supabase } from "../../lib/supabase";
 
 export default function ReservarPage() {
   const router = useRouter();
-  const { rooms, reservations, addReservations, professional, loading, allProfessionals } = useReservation();
+  const { rooms, reservations, addReservations, professional, loading, allProfessionals, servicesList } = useReservation();
   
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(NEXT_DAYS[0]);
@@ -532,13 +532,17 @@ export default function ReservarPage() {
                   </div>
                   <div>
                     <label className="label">Serviço / Procedimento</label>
-                    <input 
-                      type="text" 
+                    <select 
                       className="input" 
-                      placeholder="Ex: Terapia de Casal" 
                       value={service}
                       onChange={(e) => setService(e.target.value)}
-                    />
+                      style={{ cursor: "pointer" }}
+                    >
+                      <option value="">(Selecione um serviço...)</option>
+                      {servicesList?.map(svc => (
+                        <option key={svc.id} value={svc.name}>{svc.name}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
