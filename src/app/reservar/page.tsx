@@ -304,7 +304,7 @@ export default function ReservarPage() {
           }}>1</div>
           <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-secondary)" }}>Selecione a Sala</h2>
         </div>
-        <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.875rem" }}>
+        <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem" }}>
           {rooms.map((room) => {
             const isSelected = selectedRoom === room.id;
             return (
@@ -313,47 +313,54 @@ export default function ReservarPage() {
                 onClick={() => { setSelectedRoom(room.id); setSelectedSlots([]); }}
                 style={{
                   padding: "1.5rem",
-                  borderRadius: "var(--radius-lg)",
-                  border: `2px solid ${isSelected ? "var(--primary)" : "transparent"}`,
-                  background: "var(--card-bg)",
+                  borderRadius: "1.5rem",
+                  border: "none",
+                  background: isSelected ? "var(--primary)" : "var(--card-bg)",
                   cursor: "pointer",
-                  transition: "all 0.2s ease",
-                  boxShadow: isSelected ? "var(--shadow-primary)" : "var(--shadow-sm)",
+                  transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                  boxShadow: isSelected 
+                    ? "inset 6px 6px 12px rgba(0,0,0,0.15), inset -6px -6px 12px rgba(255,255,255,0.2)" 
+                    : "var(--clay-btn)",
                   textAlign: "left",
-                  transform: isSelected ? "translateY(-3px)" : "none",
+                  transform: isSelected ? "scale(0.96)" : "none",
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "space-between",
-                  minHeight: "100px",
+                  minHeight: "110px",
                 }}
               >
                 <div>
                   <p style={{
-                    fontWeight: 700, fontSize: "1.05rem",
-                    color: isSelected ? "var(--primary)" : "var(--text-main)",
-                    marginBottom: "0.25rem",
+                    fontWeight: 800, fontSize: "1.1rem",
+                    color: isSelected ? "white" : "var(--text-main)",
+                    marginBottom: "0.35rem",
+                    textShadow: isSelected ? "0 1px 2px rgba(0,0,0,0.1)" : "none",
                   }}>
                     {room.name}
                   </p>
                   {room.description && (
-                    <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: "1.4" }}>
+                    <p style={{ 
+                      fontSize: "0.85rem", 
+                      color: isSelected ? "rgba(255,255,255,0.8)" : "var(--text-muted)", 
+                      lineHeight: "1.4" 
+                    }}>
                       {room.description}
                     </p>
                   )}
                 </div>
                 
                 {isSelected && (
-                  <div style={{
+                  <div className="animate-fade" style={{
                     marginTop: "1rem",
                     display: "inline-flex",
                     alignItems: "center",
                     gap: "0.35rem",
                     fontSize: "0.8rem",
-                    color: "var(--primary)",
+                    color: "white",
                     fontWeight: 700,
                   }}>
-                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--primary)" }} />
-                    Selecionada
+                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "white", boxShadow: "0 0 5px rgba(255,255,255,0.5)" }} />
+                    Reservando
                   </div>
                 )}
               </button>
