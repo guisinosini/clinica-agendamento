@@ -86,8 +86,8 @@ export default function ProfessionalAgendaPage() {
       setSelectedDate(newDate);
       setCurrentWeekStart(startOfWeek(newDate, { weekStartsOn: 0 }));
     } else if (viewMode === "weekly") {
-      setCurrentWeekStart(prev => subWeeks(prev, 1));
-      setSelectedDate(prev => subWeeks(prev, 1));
+      setCurrentWeekStart((prev: Date) => subWeeks(prev, 1));
+      setSelectedDate((prev: Date) => subWeeks(prev, 1));
     } else {
       const newDate = subMonths(selectedDate, 1);
       setSelectedDate(newDate);
@@ -100,8 +100,8 @@ export default function ProfessionalAgendaPage() {
       setSelectedDate(newDate);
       setCurrentWeekStart(startOfWeek(newDate, { weekStartsOn: 0 }));
     } else if (viewMode === "weekly") {
-      setCurrentWeekStart(prev => addWeeks(prev, 1));
-      setSelectedDate(prev => addWeeks(prev, 1));
+      setCurrentWeekStart((prev: Date) => addWeeks(prev, 1));
+      setSelectedDate((prev: Date) => addWeeks(prev, 1));
     } else {
       const newDate = addMonths(selectedDate, 1);
       setSelectedDate(newDate);
