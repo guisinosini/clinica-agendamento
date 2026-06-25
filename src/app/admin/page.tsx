@@ -46,6 +46,13 @@ export default function AdminDashboard() {
   const [newResPatient, setNewResPatient] = useState("");
   const [newResService, setNewResService] = useState("");
 
+  // Reschedule Form State
+  const [reschedulingId, setReschedulingId] = useState<string | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleStart, setRescheduleStart] = useState("");
+  const [rescheduleEnd, setRescheduleEnd] = useState("");
+  const [rescheduleRoom, setRescheduleRoom] = useState("");
+
   // Patient Form State
   const [editingPatientId, setEditingPatientId] = useState<string | null>(null);
   const [patName, setPatName] = useState("");
@@ -296,6 +303,46 @@ export default function AdminDashboard() {
     setActiveTab("reservations");
   };
 
+  const handleRescheduleClick = (res: any) => {
+    setReschedulingId(res.id);
+    setRescheduleDate(res.date);
+    setRescheduleStart(res.startTime);
+    setRescheduleEnd(res.endTime);
+    setRescheduleRoom(res.roomId);
+  };
+
+  const handleRescheduleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reschedulingId || !rescheduleDate || !rescheduleStart || !rescheduleEnd || !rescheduleRoom) return;
+
+    const conflict = allReservations.find(r => 
+      r.id !== reschedulingId && r.roomId === rescheduleRoom && r.date === rescheduleDate && r.startTime === rescheduleStart
+    );
+    if (conflict) {
+      alert("ERRO: Já existe uma reserva para esta sala neste dia e horário inicial.");
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('reservations').update({
+        date: rescheduleDate,
+        start_time: `${rescheduleStart}:00`,
+        end_time: `${rescheduleEnd}:00`,
+        room_id: rescheduleRoom,
+        status: 'reagendado'
+      }).eq('id', reschedulingId);
+
+      if (error) throw error;
+      
+      alert("Reserva reagendada com sucesso!");
+      setReschedulingId(null);
+      window.location.reload(); // Recarrega para buscar os dados atualizados do banco
+    } catch (err) {
+      console.error(err);
+      alert("Ocorreu um erro ao tentar reagendar.");
+    }
+  };
+
   const handleAdminLogout = () => {
     sessionStorage.removeItem("@Clinica:adminPin");
     router.push("/");
@@ -455,7 +502,7 @@ export default function AdminDashboard() {
                         )}
                       </td>
                       <td style={{ padding: "1rem", textAlign: "right" }}>
-                        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", alignItems: "center" }}>
+                        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap" }}>
                           {res.status === 'confirmado' ? (
                             <span style={{ color: "var(--success)", fontWeight: 700, fontSize: "0.85rem" }}>✓ Confirmado</span>
                           ) : (
@@ -463,14 +510,20 @@ export default function AdminDashboard() {
                               onClick={() => updateReservationStatus(res.id, 'confirmado')}
                               style={{ color: "white", backgroundColor: "var(--success)", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
                             >
-                              Confirmar Presença
+                              Confirmar
                             </button>
                           )}
+                          <button 
+                            onClick={() => handleRescheduleClick(res)}
+                            style={{ color: "white", backgroundColor: "#f59e0b", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
+                          >
+                            Reagendar
+                          </button>
                           <button 
                             onClick={() => handleCancelReservation(res.id)}
                             style={{ color: "white", backgroundColor: "var(--danger)", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
                           >
-                            Excluir Forçado
+                            Excluir
                           </button>
                         </div>
                       </td>
@@ -935,10 +988,10 @@ export default function AdminDashboard() {
                         }
 
                         return (
-                          <td key={room.id} style={{ padding: "0.5rem", textAlign: "center" }}>
-                            <div style={{ backgroundColor: bg, color, padding: "0.45rem 0.5rem", borderRadius: "var(--radius-sm)", fontSize: "0.75rem", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "0.25rem", minWidth: "90px", justifyContent: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "150px" }} title={label}>
-                              <span>{icon}</span>
-                              <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
+                          <td key={room.id} style={{ padding: "0", borderRight: "1px solid var(--border-color)" }}>
+                            <div style={{ backgroundColor: bg, color, height: "100%", width: "100%", padding: "0.75rem", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "0.2rem" }}>
+                              <span style={{ fontSize: "1rem", fontWeight: 800 }}>{icon}</span>
+                              <span style={{ fontSize: "0.75rem", fontWeight: 600, textAlign: "center" }}>{label}</span>
                             </div>
                           </td>
                         );
@@ -950,6 +1003,52 @@ export default function AdminDashboard() {
             </div>
           </div>
         </section>
+      )}
+
+      {/* MODAL DE REAGENDAMENTO */}
+      {reschedulingId && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 999, padding: "1rem"
+        }}>
+          <div className="card animate-slide" style={{ maxWidth: "400px", width: "100%", position: "relative", boxShadow: "var(--clay-card-hover)" }}>
+            <button 
+              onClick={() => setReschedulingId(null)}
+              style={{ position: "absolute", top: "1rem", right: "1rem", color: "var(--text-muted)", fontSize: "1.5rem" }}
+            >
+              &times;
+            </button>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "1.5rem", color: "var(--text-main)" }}>Reagendar Sessão</h2>
+            <form onSubmit={handleRescheduleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label className="label">Nova Sala</label>
+                <select className="input" value={rescheduleRoom} onChange={e => setRescheduleRoom(e.target.value)} required>
+                  <option value="">Selecione...</option>
+                  {rooms.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="label">Nova Data</label>
+                <input type="date" className="input" value={rescheduleDate} onChange={e => setRescheduleDate(e.target.value)} required />
+              </div>
+              <div style={{ display: "flex", gap: "1rem" }}>
+                <div style={{ flex: 1 }}>
+                  <label className="label">Início</label>
+                  <input type="time" className="input" value={rescheduleStart} onChange={e => setRescheduleStart(e.target.value)} required />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label className="label">Fim</label>
+                  <input type="time" className="input" value={rescheduleEnd} onChange={e => setRescheduleEnd(e.target.value)} required />
+                </div>
+              </div>
+              <button type="submit" className="btn" style={{ marginTop: "1rem", backgroundColor: "#f59e0b", color: "white" }}>
+                Confirmar Reagendamento
+              </button>
+            </form>
+          </div>
+        </div>
       )}
 
     </div>
