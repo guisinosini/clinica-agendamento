@@ -8,7 +8,7 @@ import { supabase } from "../../lib/supabase";
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { rooms, fetchAllReservations, cancelReservation, updateReservationStatus, addRoom, updateRoom, deleteRoom, loading, addReservations, servicesList, addService, deleteService } = useReservation();
+  const { rooms, fetchAllReservations, cancelReservation, updateReservationStatus, addRoom, updateRoom, deleteRoom, loading, addReservations, servicesList, addService, updateService, deleteService } = useReservation();
   const allReservations = fetchAllReservations();
   
   const [isAdmin, setIsAdmin] = useState(false);
@@ -67,6 +67,7 @@ export default function AdminDashboard() {
   const [patNotes, setPatNotes] = useState("");
 
   // Service Form State
+  const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [serviceName, setServiceName] = useState("");
   const [serviceDesc, setServiceDesc] = useState("");
   const [serviceDuration, setServiceDuration] = useState("60");
@@ -209,11 +210,26 @@ export default function AdminDashboard() {
   const handleSaveService = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!serviceName) return;
-    await addService(serviceName, serviceDesc, Number(serviceDuration));
+
+    if (editingServiceId) {
+      await updateService(editingServiceId, serviceName, serviceDesc, Number(serviceDuration));
+      alert("Serviço atualizado com sucesso!");
+    } else {
+      await addService(serviceName, serviceDesc, Number(serviceDuration));
+      alert("Serviço cadastrado com sucesso!");
+    }
+
+    setEditingServiceId(null);
     setServiceName("");
     setServiceDesc("");
     setServiceDuration("60");
-    alert("Serviço cadastrado com sucesso!");
+  };
+
+  const handleEditService = (service: any) => {
+    setEditingServiceId(service.id);
+    setServiceName(service.name);
+    setServiceDesc(service.description || "");
+    setServiceDuration(service.duration ? String(service.duration) : "60");
   };
 
   const handleDeleteService = async (id: string) => {
@@ -679,9 +695,14 @@ export default function AdminDashboard() {
                     </div>
                     {service.description && <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.3rem" }}>{service.description}</p>}
                   </div>
-                  <button onClick={() => handleDeleteService(service.id)} style={{ padding: "0.4rem 0.8rem", backgroundColor: "var(--danger-light)", color: "var(--danger)", border: "none", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}>
-                    Excluir
-                  </button>
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                    <button onClick={() => handleEditService(service)} style={{ padding: "0.4rem 0.8rem", backgroundColor: "var(--bg-color)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}>
+                      Editar
+                    </button>
+                    <button onClick={() => handleDeleteService(service.id)} style={{ padding: "0.4rem 0.8rem", backgroundColor: "var(--danger-light)", color: "var(--danger)", border: "none", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}>
+                      Excluir
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -689,7 +710,9 @@ export default function AdminDashboard() {
 
           {/* Form de Novo Serviço */}
           <div className="card animate-slide">
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem" }}>Adicionar Novo Serviço</h2>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem" }}>
+              {editingServiceId ? "Editar Serviço" : "Adicionar Novo Serviço"}
+            </h2>
             <form onSubmit={handleSaveService} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div>
                 <label className="label">Nome do Serviço / Procedimento</label>
@@ -704,7 +727,14 @@ export default function AdminDashboard() {
                 <input type="number" min="10" max="480" className="input" value={serviceDuration} onChange={e => setServiceDuration(e.target.value)} required />
               </div>
               <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem" }}>
-                <button type="submit" className="btn" style={{ flex: 1 }}>Criar Serviço</button>
+                <button type="submit" className="btn" style={{ flex: 1 }}>
+                  {editingServiceId ? "Salvar Alterações" : "Criar Serviço"}
+                </button>
+                {editingServiceId && (
+                  <button type="button" onClick={() => { setEditingServiceId(null); setServiceName(""); setServiceDesc(""); setServiceDuration("60"); }} className="btn btn-outline">
+                    Cancelar
+                  </button>
+                )}
               </div>
             </form>
           </div>
