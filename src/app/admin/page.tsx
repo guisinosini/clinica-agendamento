@@ -50,6 +50,21 @@ export default function AdminDashboard() {
   const [patHealthPlan, setPatHealthPlan] = useState("");
   const [patNotes, setPatNotes] = useState("");
 
+  const filteredReservations = useMemo(() => {
+    return allReservations
+      .filter(res => {
+        if (filterRoom && res.roomId !== filterRoom) return false;
+        if (filterProf && res.professionalId !== filterProf) return false;
+        if (filterStartDate && res.date < filterStartDate) return false;
+        if (filterEndDate && res.date > filterEndDate) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        if (a.date !== b.date) return a.date.localeCompare(b.date);
+        return a.startTime.localeCompare(b.startTime);
+      });
+  }, [allReservations, filterRoom, filterProf, filterStartDate, filterEndDate]);
+
   useEffect(() => {
     // Basic PIN check using sessionStorage
     const savedPin = sessionStorage.getItem("@Clinica:adminPin");
@@ -90,21 +105,6 @@ export default function AdminDashboard() {
       <p style={{ color: "var(--text-muted)" }}>Autenticando...</p>
     </div>
   );
-
-  const filteredReservations = useMemo(() => {
-    return allReservations
-      .filter(res => {
-        if (filterRoom && res.roomId !== filterRoom) return false;
-        if (filterProf && res.professionalId !== filterProf) return false;
-        if (filterStartDate && res.date < filterStartDate) return false;
-        if (filterEndDate && res.date > filterEndDate) return false;
-        return true;
-      })
-      .sort((a, b) => {
-        if (a.date !== b.date) return a.date.localeCompare(b.date);
-        return a.startTime.localeCompare(b.startTime);
-      });
-  }, [allReservations, filterRoom, filterProf, filterStartDate, filterEndDate]);
 
   const getRoomName = (id: string) => rooms.find(r => r.id === id)?.name ?? "Sala Desconhecida";
 
