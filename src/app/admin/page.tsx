@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useReservation, NEXT_DAYS, TIME_SLOTS } from "../../context/ReservationContext";
 import { supabase } from "../../lib/supabase";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -12,7 +13,7 @@ export default function AdminDashboard() {
   const allReservations = fetchAllReservations();
   
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState<"reservations" | "rooms" | "professionals" | "new_reservation" | "patients" | "disponibilidade" | "relatorios" | "services">("reservations");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "reservations" | "rooms" | "professionals" | "new_reservation" | "patients" | "disponibilidade" | "relatorios" | "services">("dashboard");
   const [selectedDispDate, setSelectedDispDate] = useState<string>(NEXT_DAYS[0]);
   const [professionalsMap, setProfessionalsMap] = useState<Record<string, string>>({});
   const [professionalsList, setProfessionalsList] = useState<any[]>([]);
@@ -113,6 +114,28 @@ export default function AdminDashboard() {
       })
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [allReservations, patientsList, professionalsMap, reportPatient, reportProf, reportHealthPlan, reportStartDate, reportEndDate]);
+
+  // --- Dashboard Data ---
+  const totalProfissionais = professionalsList.length;
+  const totalPacientes = patientsList.length;
+  const totalAgendados = allReservations.filter(r => r.status !== 'cancelado' && r.status !== 'falta').length;
+  const totalConcluidos = patientsList.filter(p => p.status === 'concluido').length;
+
+  const chartData = useMemo(() => {
+    const profs: Record<string, number> = {};
+    professionalsList.forEach(p => profs[p.id] = 0);
+    allReservations.forEach(r => {
+      if (r.status !== 'cancelado' && r.status !== 'falta') {
+        if (profs[r.professionalId] !== undefined) profs[r.professionalId]++;
+        else profs[r.professionalId] = 1;
+      }
+    });
+
+    return Object.entries(profs).map(([id, count]) => ({
+      name: professionalsMap[id] || "Desconhecido",
+      reservas: count
+    })).sort((a, b) => b.reservas - a.reservas);
+  }, [allReservations, professionalsList, professionalsMap]);
 
   useEffect(() => {
     // Basic PIN check using sessionStorage
@@ -410,6 +433,12 @@ export default function AdminDashboard() {
       {/* Tabs */}
       <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem", flexWrap: "wrap" }}>
         <button 
+          onClick={() => setActiveTab("dashboard")}
+          className={activeTab === "dashboard" ? "btn" : "btn btn-outline"}
+        >
+          Visão Geral
+        </button>
+        <button 
           onClick={() => setActiveTab("reservations")}
           className={activeTab === "reservations" ? "btn" : "btn btn-outline"}
         >
@@ -458,6 +487,44 @@ export default function AdminDashboard() {
           + Nova Reserva (Admin)
         </button>
       </div>
+
+      {activeTab === "dashboard" && (
+        <div className="animate-fade">
+          <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.5rem", marginBottom: "2rem" }}>
+            <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
+              <h3 style={{ fontSize: "0.9rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Profissionais</h3>
+              <p style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--primary)", marginTop: "0.5rem" }}>{totalProfissionais}</p>
+            </div>
+            <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
+              <h3 style={{ fontSize: "0.9rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Pacientes</h3>
+              <p style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--primary)", marginTop: "0.5rem" }}>{totalPacientes}</p>
+            </div>
+            <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
+              <h3 style={{ fontSize: "0.9rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Agendamentos Ativos</h3>
+              <p style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--primary)", marginTop: "0.5rem" }}>{totalAgendados}</p>
+            </div>
+            <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
+              <h3 style={{ fontSize: "0.9rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Processos Concluídos</h3>
+              <p style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--success)", marginTop: "0.5rem" }}>{totalConcluidos}</p>
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: "1.5rem" }}>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1.5rem", color: "var(--text-main)" }}>Reservas por Profissional</h2>
+            <div style={{ width: "100%", height: "400px" }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.5} />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 12, fill: "var(--text-secondary)" }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "var(--text-secondary)" }} />
+                  <Tooltip cursor={{ fill: "var(--bg-color)" }} contentStyle={{ borderRadius: "8px", border: "1px solid var(--border-color)", backgroundColor: "var(--card-bg)" }} />
+                  <Bar dataKey="reservas" fill="var(--primary)" radius={[4, 4, 0, 0]} name="Qtd de Reservas" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      )}
 
       {activeTab === "reservations" && (
         <div className="card animate-slide">
@@ -1040,7 +1107,12 @@ export default function AdminDashboard() {
               </div>
               <div>
                 <label className="label">Serviço/Detalhes (Opcional)</label>
-                <input className="input" value={newResService} onChange={e => setNewResService(e.target.value)} placeholder="Ex: Terapia de Casal" />
+                <select className="input" value={newResService} onChange={e => setNewResService(e.target.value)} style={{ cursor: "pointer" }}>
+                  <option value="">(Selecione um serviço...)</option>
+                  {servicesList?.map(svc => (
+                    <option key={svc.id} value={svc.name}>{svc.name}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
