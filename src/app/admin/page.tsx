@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useReservation, NEXT_DAYS, TIME_SLOTS } from "../../context/ReservationContext";
@@ -21,6 +21,8 @@ export default function AdminDashboard() {
   // Filters State
   const [filterRoom, setFilterRoom] = useState<string>("");
   const [filterProf, setFilterProf] = useState<string>("");
+  const [filterStartDate, setFilterStartDate] = useState<string>("");
+  const [filterEndDate, setFilterEndDate] = useState<string>("");
 
   // Room Form State
   const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
@@ -89,16 +91,20 @@ export default function AdminDashboard() {
     </div>
   );
 
-  const filteredReservations = fetchAllReservations()
-    .filter(res => {
-      if (filterRoom && res.roomId !== filterRoom) return false;
-      if (filterProf && res.professionalId !== filterProf) return false;
-      return true;
-    })
-    .sort((a, b) => {
-      if (a.date !== b.date) return a.date.localeCompare(b.date);
-      return a.startTime.localeCompare(b.startTime);
-    });
+  const filteredReservations = useMemo(() => {
+    return allReservations
+      .filter(res => {
+        if (filterRoom && res.roomId !== filterRoom) return false;
+        if (filterProf && res.professionalId !== filterProf) return false;
+        if (filterStartDate && res.date < filterStartDate) return false;
+        if (filterEndDate && res.date > filterEndDate) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        if (a.date !== b.date) return a.date.localeCompare(b.date);
+        return a.startTime.localeCompare(b.startTime);
+      });
+  }, [allReservations, filterRoom, filterProf, filterStartDate, filterEndDate]);
 
   const getRoomName = (id: string) => rooms.find(r => r.id === id)?.name ?? "Sala Desconhecida";
 
@@ -320,7 +326,28 @@ export default function AdminDashboard() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
             <h2 style={{ fontSize: "1.2rem", fontWeight: 700 }}>Todas as Reservas Ativas ({filteredReservations.length})</h2>
             
-            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <label className="label" style={{ marginBottom: 0, fontSize: "0.85rem" }}>De:</label>
+                <input 
+                  type="date"
+                  className="input" 
+                  style={{ padding: "0.5rem", width: "auto" }}
+                  value={filterStartDate}
+                  onChange={e => setFilterStartDate(e.target.value)}
+                />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <label className="label" style={{ marginBottom: 0, fontSize: "0.85rem" }}>Até:</label>
+                <input 
+                  type="date"
+                  className="input" 
+                  style={{ padding: "0.5rem", width: "auto" }}
+                  value={filterEndDate}
+                  onChange={e => setFilterEndDate(e.target.value)}
+                />
+              </div>
+
               <select 
                 className="input" 
                 style={{ padding: "0.5rem", width: "auto" }}
