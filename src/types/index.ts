@@ -35,6 +35,7 @@ export type Patient = {
   healthPlan?: string;
   healthPlanNumber?: string;
   gender?: string;
+  status?: string;
   notes?: string;
   created_at?: string;
 };

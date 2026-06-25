@@ -243,6 +243,14 @@ export default function Home() {
       btnLabel: "Ver Histórico",
       btnClass: "btn btn-outline",
     },
+    {
+      href: "/meus-pacientes",
+      emoji: "👥",
+      title: "Meus Pacientes",
+      desc: "Visualize sua lista de pacientes e acompanhe os processos.",
+      btnLabel: "Ver Pacientes",
+      btnClass: "btn btn-outline",
+    },
   ];
 
   // Listagem de próximos agendamentos
@@ -437,10 +445,24 @@ export default function Home() {
                   <div style={{ fontSize: "0.75rem", marginTop: "0.25rem", opacity: 0.8 }}>{res.startTime}</div>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <h3 style={{ fontWeight: 700, fontSize: "1rem", color: "var(--text-main)" }}>
-                    {res.patientName || "Paciente não informado"}
-                  </h3>
-                  <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.25rem" }}>
+                    <h3 style={{ fontWeight: 700, fontSize: "1rem", color: "var(--text-main)" }}>
+                      {res.patientName || "Paciente não informado"}
+                    </h3>
+                    {res.status === 'confirmado' && (
+                      <span className="badge" style={{ backgroundColor: "#dcfce7", color: "var(--success, #166534)", fontSize: "0.65rem", padding: "0.15rem 0.4rem" }}>✓ Confirmado</span>
+                    )}
+                    {(!res.status || res.status === 'agendado') && (
+                      <span className="badge" style={{ backgroundColor: "var(--bg-color)", color: "var(--text-muted)", border: "1px solid var(--border-color)", fontSize: "0.65rem", padding: "0.15rem 0.4rem" }}>⏳ Pendente</span>
+                    )}
+                    {res.status === 'falta' && (
+                      <span className="badge" style={{ backgroundColor: "var(--danger-light)", color: "var(--danger)", fontSize: "0.65rem", padding: "0.15rem 0.4rem" }}>Falta</span>
+                    )}
+                    {res.status === 'reagendado' && (
+                      <span className="badge" style={{ backgroundColor: "#fef3c7", color: "#b45309", fontSize: "0.65rem", padding: "0.15rem 0.4rem" }}>Reagendado</span>
+                    )}
+                  </div>
+                  <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "0.1rem" }}>
                     {getRoomName(res.roomId)}
                   </p>
                   {res.service && (
