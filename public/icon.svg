@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Fundo Azul Claro -->
+  <rect width="512" height="512" rx="128" fill="#eff6ff" />
+  
+  <!-- Cruz Médica Azul -->
+  <path d="M216 120h80v96h96v80h-96v96h-80v-96h-96v-80h96z" fill="#3b82f6" />
+</svg>
