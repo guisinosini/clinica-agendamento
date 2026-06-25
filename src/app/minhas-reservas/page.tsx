@@ -171,6 +171,7 @@ export default function ProfessionalAgendaPage() {
                     </h4>
                     {res.status === 'falta' && <span className="badge" style={{ backgroundColor: "var(--danger-light)", color: "var(--danger)", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>Falta</span>}
                     {res.status === 'reagendado' && <span className="badge" style={{ backgroundColor: "#fef3c7", color: "#b45309", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>Reagendado</span>}
+                    {res.status === 'confirmado' && <span className="badge" style={{ backgroundColor: "#dcfce7", color: "var(--success, #166534)", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>✓ Confirmado</span>}
                   </div>
                   <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>
                     {getRoomName(res.roomId)} {res.service && `• ${res.service}`}
@@ -179,7 +180,7 @@ export default function ProfessionalAgendaPage() {
 
                 {/* Ações */}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", justifyContent: "flex-end" }}>
-                  {(!res.status || res.status === 'agendado') ? (
+                  {(!res.status || res.status === 'agendado' || res.status === 'confirmado') ? (
                     <>
                       <a href={getGoogleCalendarUrl(res)} target="_blank" rel="noopener noreferrer" 
                         className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.3rem" }}

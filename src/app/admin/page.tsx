@@ -8,7 +8,7 @@ import { supabase } from "../../lib/supabase";
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { rooms, fetchAllReservations, cancelReservation, addRoom, updateRoom, deleteRoom, loading, addReservations } = useReservation();
+  const { rooms, fetchAllReservations, cancelReservation, updateReservationStatus, addRoom, updateRoom, deleteRoom, loading, addReservations } = useReservation();
   const allReservations = fetchAllReservations();
   
   const [isAdmin, setIsAdmin] = useState(false);
@@ -415,12 +415,24 @@ export default function AdminDashboard() {
                         )}
                       </td>
                       <td style={{ padding: "1rem", textAlign: "right" }}>
-                        <button 
-                          onClick={() => handleCancelReservation(res.id)}
-                          style={{ color: "white", backgroundColor: "var(--danger)", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600 }}
-                        >
-                          Excluir Forçado
-                        </button>
+                        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", alignItems: "center" }}>
+                          {res.status === 'confirmado' ? (
+                            <span style={{ color: "var(--success)", fontWeight: 700, fontSize: "0.85rem" }}>✓ Confirmado</span>
+                          ) : (
+                            <button 
+                              onClick={() => updateReservationStatus(res.id, 'confirmado')}
+                              style={{ color: "white", backgroundColor: "var(--success)", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
+                            >
+                              Confirmar Presença
+                            </button>
+                          )}
+                          <button 
+                            onClick={() => handleCancelReservation(res.id)}
+                            style={{ color: "white", backgroundColor: "var(--danger)", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
+                          >
+                            Excluir Forçado
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
