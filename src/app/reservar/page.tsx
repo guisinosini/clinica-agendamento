@@ -27,6 +27,8 @@ export default function ReservarPage() {
   const [newPatAddress, setNewPatAddress] = useState("");
   const [newPatGuardian, setNewPatGuardian] = useState("");
   const [newPatHealthPlan, setNewPatHealthPlan] = useState("");
+  const [newPatHealthPlanNumber, setNewPatHealthPlanNumber] = useState("");
+  const [newPatGender, setNewPatGender] = useState("");
   const [newPatNotes, setNewPatNotes] = useState("");
   
   // Estados para Repetição de Reserva
@@ -238,6 +240,8 @@ export default function ReservarPage() {
       address: newPatAddress,
       guardianName: newPatGuardian,
       healthPlan: newPatHealthPlan,
+      healthPlanNumber: newPatHealthPlanNumber,
+      gender: newPatGender,
       notes: newPatNotes
     };
 
@@ -249,7 +253,7 @@ export default function ReservarPage() {
       setFeedbackMsg(`Paciente ${data.name} cadastrado com sucesso!`);
       // Limpa formulário
       setNewPatName(""); setNewPatEmail(""); setNewPatPhone(""); setNewPatBirthDate("");
-      setNewPatAddress(""); setNewPatGuardian(""); setNewPatHealthPlan(""); setNewPatNotes("");
+      setNewPatAddress(""); setNewPatGuardian(""); setNewPatHealthPlan(""); setNewPatHealthPlanNumber(""); setNewPatGender(""); setNewPatNotes("");
     } else {
       alert("Erro ao cadastrar paciente. Verifique os dados.");
     }
@@ -697,6 +701,19 @@ export default function ReservarPage() {
                   <input type="date" className="input" value={newPatBirthDate} onChange={e => setNewPatBirthDate(e.target.value)} />
                 </div>
                 <div style={{ flex: "1 1 150px" }}>
+                  <label className="label">Sexo</label>
+                  <select className="input" value={newPatGender} onChange={e => setNewPatGender(e.target.value)}>
+                    <option value="">Selecione...</option>
+                    <option value="Feminino">Feminino</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Outro">Outro</option>
+                    <option value="Prefere não informar">Prefere não informar</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                <div style={{ flex: "1 1 150px" }}>
                   <label className="label">Convênio</label>
                   <select className="input" value={newPatHealthPlan} onChange={e => setNewPatHealthPlan(e.target.value)}>
                     <option value="">Particular (Sem Convênio)</option>
@@ -709,6 +726,12 @@ export default function ReservarPage() {
                     <option value="KR Saúde">KR Saúde</option>
                   </select>
                 </div>
+                {newPatHealthPlan && (
+                  <div style={{ flex: "1 1 150px" }}>
+                    <label className="label">Nº da Carteirinha</label>
+                    <input className="input" value={newPatHealthPlanNumber} onChange={e => setNewPatHealthPlanNumber(e.target.value)} placeholder="Apenas se tiver convênio" />
+                  </div>
+                )}
               </div>
 
               <div>

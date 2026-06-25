@@ -48,6 +48,8 @@ export default function AdminDashboard() {
   const [patAddress, setPatAddress] = useState("");
   const [patGuardian, setPatGuardian] = useState("");
   const [patHealthPlan, setPatHealthPlan] = useState("");
+  const [patHealthPlanNumber, setPatHealthPlanNumber] = useState("");
+  const [patGender, setPatGender] = useState("");
   const [patNotes, setPatNotes] = useState("");
 
   const filteredReservations = useMemo(() => {
@@ -170,6 +172,8 @@ export default function AdminDashboard() {
       address: patAddress,
       guardianName: patGuardian,
       healthPlan: patHealthPlan,
+      healthPlanNumber: patHealthPlanNumber,
+      gender: patGender,
       notes: patNotes
     };
 
@@ -197,6 +201,8 @@ export default function AdminDashboard() {
     setPatAddress("");
     setPatGuardian("");
     setPatHealthPlan("");
+    setPatHealthPlanNumber("");
+    setPatGender("");
     setPatNotes("");
     fetchPatients();
   };
@@ -210,6 +216,8 @@ export default function AdminDashboard() {
     setPatAddress(pat.address || "");
     setPatGuardian(pat.guardianName || "");
     setPatHealthPlan(pat.healthPlan || "");
+    setPatHealthPlanNumber(pat.healthPlanNumber || "");
+    setPatGender(pat.gender || "");
     setPatNotes(pat.notes || "");
     setActiveTab("patients");
   };
@@ -550,6 +558,19 @@ export default function AdminDashboard() {
                   <input type="date" className="input" value={patBirthDate} onChange={e => setPatBirthDate(e.target.value)} />
                 </div>
                 <div style={{ flex: "1 1 150px" }}>
+                  <label className="label">Sexo</label>
+                  <select className="input" value={patGender} onChange={e => setPatGender(e.target.value)}>
+                    <option value="">Selecione...</option>
+                    <option value="Feminino">Feminino</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Outro">Outro</option>
+                    <option value="Prefere não informar">Prefere não informar</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                <div style={{ flex: "1 1 150px" }}>
                   <label className="label">Convênio</label>
                   <select className="input" value={patHealthPlan} onChange={e => setPatHealthPlan(e.target.value)}>
                     <option value="">Particular (Sem Convênio)</option>
@@ -562,6 +583,12 @@ export default function AdminDashboard() {
                     <option value="KR Saúde">KR Saúde</option>
                   </select>
                 </div>
+                {patHealthPlan && (
+                  <div style={{ flex: "1 1 150px" }}>
+                    <label className="label">Nº da Carteirinha</label>
+                    <input className="input" value={patHealthPlanNumber} onChange={e => setPatHealthPlanNumber(e.target.value)} placeholder="Apenas se tiver convênio" />
+                  </div>
+                )}
               </div>
 
               <div>
@@ -595,7 +622,7 @@ export default function AdminDashboard() {
                 </button>
                 {editingPatientId && (
                   <button type="button" onClick={() => { 
-                    setEditingPatientId(null); setPatName(""); setPatEmail(""); setPatPhone(""); setPatBirthDate(""); setPatAddress(""); setPatGuardian(""); setPatHealthPlan(""); setPatNotes(""); 
+                    setEditingPatientId(null); setPatName(""); setPatEmail(""); setPatPhone(""); setPatBirthDate(""); setPatAddress(""); setPatGuardian(""); setPatHealthPlan(""); setPatHealthPlanNumber(""); setPatGender(""); setPatNotes(""); 
                   }} className="btn btn-outline">
                     Cancelar
                   </button>
@@ -615,9 +642,14 @@ export default function AdminDashboard() {
                   <div key={pat.id} style={{ padding: "1rem", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
                       <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
                           <h3 style={{ fontWeight: 700, color: "var(--primary)" }}>{pat.name}</h3>
-                          {pat.healthPlan && <span className="badge badge-primary" style={{ fontSize: "0.65rem", padding: "0.1rem 0.4rem" }}>{pat.healthPlan}</span>}
+                          {pat.gender && <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>({pat.gender})</span>}
+                          {pat.healthPlan && (
+                            <span className="badge badge-primary" style={{ fontSize: "0.65rem", padding: "0.1rem 0.4rem" }}>
+                              {pat.healthPlan} {pat.healthPlanNumber ? `- Nº: ${pat.healthPlanNumber}` : ''}
+                            </span>
+                          )}
                         </div>
                         {(pat.phone || pat.email) && (
                           <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>

@@ -80,6 +80,8 @@ CREATE TABLE patients (
   address TEXT,
   "guardianName" TEXT,
   "healthPlan" TEXT,
+  "healthPlanNumber" TEXT,
+  gender TEXT,
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
