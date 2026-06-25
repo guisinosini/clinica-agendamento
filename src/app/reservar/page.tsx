@@ -55,19 +55,19 @@ export default function ReservarPage() {
     }
   }, [loading, professional, router]);
 
-  if (loading || !professional) return (
-    <div className="loading-screen">
-      <div className="spinner" />
-      <p style={{ color: "var(--text-muted)" }}>Carregando salas...</p>
-    </div>
-  );
-
   const occupiedSlots = useMemo(() => {
     if (!selectedRoom) return [];
     return reservations
       .filter(res => res.roomId === selectedRoom && res.date === selectedDate && (!res.status || res.status === 'agendado'))
       .map(res => res.startTime);
   }, [reservations, selectedRoom, selectedDate]);
+
+  if (loading || !professional) return (
+    <div className="loading-screen">
+      <div className="spinner" />
+      <p style={{ color: "var(--text-muted)" }}>Carregando salas...</p>
+    </div>
+  );
 
   const handleSlotClick = (slot: string) => {
     if (occupiedSlots.includes(slot)) return;
