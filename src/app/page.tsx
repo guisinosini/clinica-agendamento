@@ -226,6 +226,7 @@ export default function Home() {
       desc: "Selecione uma sala, escolha o dia e garanta seus horários de atendimento.",
       btnLabel: "Acessar Salas",
       btnClass: "btn",
+      bgColor: "#eff6ff",
     },
     {
       href: "/disponibilidade",
@@ -234,6 +235,7 @@ export default function Home() {
       desc: "Veja o panorama de toda a clínica e saiba quais horários estão livres.",
       btnLabel: "Ver Calendário",
       btnClass: "btn btn-outline",
+      bgColor: "#f0fdf4",
     },
     {
       href: "/minhas-reservas",
@@ -242,6 +244,7 @@ export default function Home() {
       desc: "Acompanhe e gerencie todos os seus agendamentos futuros.",
       btnLabel: "Ver Histórico",
       btnClass: "btn btn-outline",
+      bgColor: "#fffbeb",
     },
     {
       href: "/meus-pacientes",
@@ -250,6 +253,7 @@ export default function Home() {
       desc: "Visualize sua lista de pacientes e acompanhe os processos.",
       btnLabel: "Ver Pacientes",
       btnClass: "btn btn-outline",
+      bgColor: "#fdf4ff",
     },
   ];
 
@@ -353,29 +357,35 @@ export default function Home() {
       </header>
 
       {/* Cards do Dashboard */}
-      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
+      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
         {dashboardCards.map((card) => (
           <div
             key={card.href}
             className="card card-hover"
-            style={{ display: "flex", flexDirection: "column" }}
+            style={{ 
+              display: "flex", 
+              flexDirection: "column", 
+              padding: "1.25rem",
+              backgroundColor: card.bgColor,
+              border: "1px solid rgba(0,0,0,0.03)"
+            }}
           >
             <div style={{
-              width: "56px", height: "56px",
+              width: "42px", height: "42px",
               backgroundColor: "var(--bg-color)",
               borderRadius: "var(--radius-md)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: "1.6rem",
-              marginBottom: "1.25rem",
+              fontSize: "1.2rem",
+              marginBottom: "0.75rem",
               boxShadow: "var(--clay-input)",
             }}>
               {card.emoji}
             </div>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "0.65rem" }}>{card.title}</h2>
-            <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", lineHeight: "1.6", flexGrow: 1, marginBottom: "1.5rem" }}>
+            <h2 style={{ fontSize: "1.05rem", fontWeight: 700, marginBottom: "0.5rem" }}>{card.title}</h2>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", lineHeight: "1.4", flexGrow: 1, marginBottom: "1rem" }}>
               {card.desc}
             </p>
-            <Link href={card.href} className={card.btnClass} style={{ textAlign: "center" }}>
+            <Link href={card.href} className={card.btnClass} style={{ textAlign: "center", fontSize: "0.85rem", padding: "0.5rem" }}>
               {card.btnLabel}
             </Link>
           </div>
