@@ -251,7 +251,7 @@ export default function MeusPacientesPage() {
                         className="btn"
                         style={{ flex: 1, padding: "0.5rem", fontSize: "0.85rem", backgroundColor: "var(--success)", borderColor: "var(--success)" }}
                       >
-                        ✓ Alta Médica
+                        ✓ Concluir Processo
                       </button>
                     </div>
                   </div>
