@@ -14,6 +14,7 @@ export default function MeusPacientesPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [printingPatient, setPrintingPatient] = useState<Patient | null>(null);
 
   useEffect(() => {
     if (!loading && !professional) router.push("/");
@@ -80,6 +81,87 @@ export default function MeusPacientesPage() {
       <p style={{ color: "var(--text-muted)" }}>Carregando seus pacientes...</p>
     </div>
   );
+
+  // ─── TELA DE IMPRESSÃO DE RELATÓRIO ──────────────────────────────
+  if (printingPatient) {
+    const patReservations = reservations
+      .filter(r => r.patientName === printingPatient.name && r.professionalId === professional?.id)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    return (
+      <div style={{ backgroundColor: "#fff", minHeight: "100vh", position: "fixed", top: 0, left: 0, width: "100%", zIndex: 9999, padding: "2rem", overflowY: "auto" }}>
+        <style>{`
+          @media print {
+            body * { visibility: hidden; }
+            #print-section, #print-section * { visibility: visible; }
+            #print-section { position: absolute; left: 0; top: 0; width: 100%; padding: 0; }
+            .no-print { display: none !important; }
+          }
+        `}</style>
+        
+        <div className="no-print" style={{ display: "flex", gap: "1rem", marginBottom: "2rem", justifyContent: "center" }}>
+          <button onClick={() => setPrintingPatient(null)} className="btn btn-outline">⬅️ Voltar</button>
+          <button onClick={() => window.print()} className="btn">🖨️ Imprimir Agora</button>
+        </div>
+
+        <div id="print-section" style={{ color: "#000", fontFamily: "sans-serif", maxWidth: "800px", margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "2rem", borderBottom: "2px solid #eee", paddingBottom: "1rem" }}>
+            <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", margin: 0 }}>Relatório de Atendimentos</h1>
+            <p style={{ fontSize: "1rem", margin: "0.5rem 0 0 0" }}>Clínica de Psicologia</p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "2rem", padding: "1rem", backgroundColor: "#f9f9f9", borderRadius: "8px", border: "1px solid #eee" }}>
+            <div>
+              <p style={{ margin: "0 0 0.5rem 0" }}><strong>Paciente:</strong> {printingPatient.name}</p>
+              {printingPatient.birthDate && <p style={{ margin: "0 0 0.5rem 0" }}><strong>Nascimento:</strong> {new Date(printingPatient.birthDate + "T00:00:00").toLocaleDateString("pt-BR")}</p>}
+              <p style={{ margin: 0 }}><strong>Convênio:</strong> {printingPatient.healthPlan || "Particular"}</p>
+              {printingPatient.guardianName && <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.85rem" }}><strong>Resp:</strong> {printingPatient.guardianName}</p>}
+            </div>
+            <div>
+              <p style={{ margin: "0 0 0.5rem 0" }}><strong>Profissional:</strong> {professional?.name}</p>
+              <p style={{ margin: "0 0 0.5rem 0" }}><strong>Especialidade:</strong> {professional?.specialty || "Não informada"}</p>
+              <p style={{ margin: 0 }}><strong>Data do Relatório:</strong> {new Date().toLocaleDateString("pt-BR")}</p>
+            </div>
+          </div>
+
+          <h2 style={{ fontSize: "1.2rem", fontWeight: "bold", marginBottom: "1rem", borderBottom: "1px solid #eee", paddingBottom: "0.5rem" }}>Histórico de Sessões</h2>
+          
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
+            <thead>
+              <tr style={{ backgroundColor: "#f0f0f0", textAlign: "left" }}>
+                <th style={{ padding: "0.75rem", borderBottom: "2px solid #ddd" }}>Data</th>
+                <th style={{ padding: "0.75rem", borderBottom: "2px solid #ddd" }}>Horário</th>
+                <th style={{ padding: "0.75rem", borderBottom: "2px solid #ddd" }}>Serviço / Detalhe</th>
+                <th style={{ padding: "0.75rem", borderBottom: "2px solid #ddd" }}>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {patReservations.length === 0 ? (
+                <tr><td colSpan={4} style={{ padding: "1rem", textAlign: "center" }}>Nenhum agendamento encontrado.</td></tr>
+              ) : (
+                patReservations.map((res) => {
+                  const dataFormatada = new Date(res.date + "T00:00:00").toLocaleDateString("pt-BR");
+                  return (
+                    <tr key={res.id} style={{ borderBottom: "1px solid #eee" }}>
+                      <td style={{ padding: "0.75rem" }}>{dataFormatada}</td>
+                      <td style={{ padding: "0.75rem" }}>{res.startTime} - {res.endTime}</td>
+                      <td style={{ padding: "0.75rem" }}>{res.service || "Sessão Padrão"}</td>
+                      <td style={{ padding: "0.75rem", textTransform: "capitalize" }}>{res.status || "agendado"}</td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+          <div style={{ marginTop: "5rem", textAlign: "center", fontSize: "0.8rem", color: "#666" }}>
+            <p style={{ marginBottom: "0.2rem" }}>____________________________________________________</p>
+            <p style={{ margin: "0 0 0.2rem 0", fontWeight: "bold", color: "#000", fontSize: "1rem" }}>{professional?.name}</p>
+            <p style={{ margin: 0 }}>Assinatura do Profissional</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Filtragem e Separação
   const filteredPatients = patients.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -156,13 +238,22 @@ export default function MeusPacientesPage() {
                       )}
                     </div>
 
-                    <button 
-                      onClick={() => handleConcludeProcess(pat.id, pat.name)}
-                      className="btn"
-                      style={{ width: "100%", backgroundColor: "var(--success)", borderColor: "var(--success)" }}
-                    >
-                      ✓ Concluir Processo
-                    </button>
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <button 
+                        onClick={() => setPrintingPatient(pat)}
+                        className="btn btn-outline"
+                        style={{ flex: 1, padding: "0.5rem", fontSize: "0.85rem" }}
+                      >
+                        📄 Relatório
+                      </button>
+                      <button 
+                        onClick={() => handleConcludeProcess(pat.id, pat.name)}
+                        className="btn"
+                        style={{ flex: 1, padding: "0.5rem", fontSize: "0.85rem", backgroundColor: "var(--success)", borderColor: "var(--success)" }}
+                      >
+                        ✓ Alta Médica
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -195,6 +286,14 @@ export default function MeusPacientesPage() {
                         </div>
                       )}
                     </div>
+                    
+                    <button 
+                      onClick={() => setPrintingPatient(pat)}
+                      className="btn btn-outline"
+                      style={{ width: "100%", padding: "0.5rem", marginTop: "1rem", fontSize: "0.85rem" }}
+                    >
+                      📄 Gerar Relatório
+                    </button>
                   </div>
                 ))}
               </div>
