@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useReservation } from "../context/ReservationContext";
+import { supabase } from "../lib/supabase";
 
 export default function Home() {
   const { professional, loading, login, register, logout, reservations, rooms, allProfessionals } = useReservation();
@@ -16,6 +17,7 @@ export default function Home() {
   const [isSubmiting, setIsSubmiting] = useState(false);
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [patientsCount, setPatientsCount] = useState<number>(0);
 
   useEffect(() => {
     const handler = (e: any) => {
@@ -23,6 +25,13 @@ export default function Home() {
       setDeferredPrompt(e);
     };
     window.addEventListener('beforeinstallprompt', handler);
+
+    const fetchPatientsCount = async () => {
+      const { count } = await supabase.from('patients').select('*', { count: 'exact', head: true });
+      if (count !== null) setPatientsCount(count);
+    };
+    fetchPatientsCount();
+
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
@@ -139,6 +148,12 @@ export default function Home() {
                   <span style={{ fontSize: "1.1rem", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}>👩‍⚕️</span>
                   <span style={{ fontWeight: 700, color: "var(--text-main)" }}>{allProfessionals?.length || 0}</span>
                   <span>Profissionais</span>
+                </div>
+                <div style={{ width: "1px", background: "var(--border-color)" }} />
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                  <span style={{ fontSize: "1.1rem", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}>👥</span>
+                  <span style={{ fontWeight: 700, color: "var(--text-main)" }}>{patientsCount}</span>
+                  <span>Pacientes</span>
                 </div>
                 <div style={{ width: "1px", background: "var(--border-color)" }} />
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
