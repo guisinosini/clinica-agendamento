@@ -31,6 +31,7 @@ export default function AdminDashboard() {
   const [reportHealthPlan, setReportHealthPlan] = useState("");
   const [reportStartDate, setReportStartDate] = useState("");
   const [reportEndDate, setReportEndDate] = useState("");
+  const [reportStatus, setReportStatus] = useState("");
 
   // Room Form State
   const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
@@ -110,10 +111,11 @@ export default function AdminDashboard() {
         if (reportHealthPlan && item.healthPlan !== reportHealthPlan && !(reportHealthPlan === "Particular" && !patientsList.find(p => p.name === item.patientName)?.healthPlan)) return false;
         if (reportStartDate && item.date < reportStartDate) return false;
         if (reportEndDate && item.date > reportEndDate) return false;
+        if (reportStatus && item.status !== reportStatus) return false;
         return true;
       })
       .sort((a, b) => b.date.localeCompare(a.date));
-  }, [allReservations, patientsList, professionalsMap, reportPatient, reportProf, reportHealthPlan, reportStartDate, reportEndDate]);
+  }, [allReservations, patientsList, professionalsMap, reportPatient, reportProf, reportHealthPlan, reportStartDate, reportEndDate, reportStatus]);
 
   // --- Dashboard Data ---
   const totalProfissionais = professionalsList.length;
@@ -665,6 +667,16 @@ export default function AdminDashboard() {
             <div>
               <label className="label" style={{ fontSize: "0.85rem" }}>Até</label>
               <input type="date" className="input" value={reportEndDate} onChange={e => setReportEndDate(e.target.value)} />
+            </div>
+            <div>
+              <label className="label" style={{ fontSize: "0.85rem" }}>Status</label>
+              <select className="input" value={reportStatus} onChange={e => setReportStatus(e.target.value)}>
+                <option value="">Todos</option>
+                <option value="agendado">Agendado</option>
+                <option value="confirmado">Confirmado</option>
+                <option value="falta">Falta</option>
+                <option value="reagendado">Reagendado</option>
+              </select>
             </div>
           </div>
 
