@@ -15,6 +15,7 @@ export default function MeusPacientesPage() {
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [printingPatient, setPrintingPatient] = useState<Patient | null>(null);
+  const [viewingPatient, setViewingPatient] = useState<Patient | null>(null);
 
   useEffect(() => {
     if (!loading && !professional) router.push("/");
@@ -220,7 +221,13 @@ export default function MeusPacientesPage() {
                   <div key={pat.id} className="card animate-slide" style={{ padding: "1.5rem", display: "flex", flexDirection: "column" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
                       <div>
-                        <h3 style={{ fontWeight: 800, fontSize: "1.1rem", color: "var(--text-main)", marginBottom: "0.2rem" }}>{pat.name}</h3>
+                        <h3 
+                          onClick={() => setViewingPatient(pat)}
+                          style={{ fontWeight: 800, fontSize: "1.1rem", color: "var(--primary)", marginBottom: "0.2rem", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: "4px", textDecorationColor: "var(--primary-light)" }}
+                          title="Ver cadastro do paciente"
+                        >
+                          {pat.name}
+                        </h3>
                         {pat.healthPlan && (
                           <span className="badge badge-primary" style={{ fontSize: "0.7rem", padding: "0.15rem 0.4rem" }}>
                             {pat.healthPlan} {pat.healthPlanNumber ? `- ${pat.healthPlanNumber}` : ""}
@@ -271,7 +278,13 @@ export default function MeusPacientesPage() {
                   <div key={pat.id} className="card animate-slide" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", opacity: 0.8 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
                       <div>
-                        <h3 style={{ fontWeight: 800, fontSize: "1.1rem", color: "var(--text-main)", marginBottom: "0.2rem", textDecoration: "line-through", textDecorationColor: "var(--border-color)" }}>{pat.name}</h3>
+                        <h3 
+                          onClick={() => setViewingPatient(pat)}
+                          style={{ fontWeight: 800, fontSize: "1.1rem", color: "var(--primary)", marginBottom: "0.2rem", textDecoration: "line-through underline", textDecorationColor: "var(--border-color)", cursor: "pointer", textUnderlineOffset: "4px" }}
+                          title="Ver cadastro do paciente"
+                        >
+                          {pat.name}
+                        </h3>
                         <span className="badge" style={{ backgroundColor: "#dcfce7", color: "#166534", fontSize: "0.7rem", padding: "0.15rem 0.4rem", display: "inline-flex", alignItems: "center", gap: "0.2rem" }}>
                           ✓ Alta Médica
                         </span>
@@ -299,6 +312,74 @@ export default function MeusPacientesPage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Modal de Detalhes do Paciente */}
+      {viewingPatient && (
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }} onClick={() => setViewingPatient(null)}>
+          <div className="card animate-slide" style={{ maxWidth: "500px", width: "100%", maxHeight: "90vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
+            <button 
+              onClick={() => setViewingPatient(null)}
+              style={{ position: "absolute", top: "1rem", right: "1rem", background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}
+            >
+              ✕
+            </button>
+            <h2 style={{ fontSize: "1.4rem", fontWeight: 800, marginBottom: "0.5rem", color: "var(--primary)" }}>{viewingPatient.name}</h2>
+            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
+              <span className="badge" style={{ backgroundColor: "var(--bg-color)", border: "1px solid var(--border-color)" }}>
+                {viewingPatient.status === 'concluido' ? '✓ Alta' : 'Em Tratamento'}
+              </span>
+              {viewingPatient.healthPlan && (
+                <span className="badge badge-primary">
+                  {viewingPatient.healthPlan} {viewingPatient.healthPlanNumber ? `- ${viewingPatient.healthPlanNumber}` : ""}
+                </span>
+              )}
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {(viewingPatient.email || viewingPatient.phone) && (
+                <div style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)" }}>
+                  <h4 style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Contato</h4>
+                  {viewingPatient.phone && <p style={{ fontSize: "0.95rem", margin: "0 0 0.3rem 0" }}><strong>Telefone:</strong> {viewingPatient.phone}</p>}
+                  {viewingPatient.email && <p style={{ fontSize: "0.95rem", margin: 0 }}><strong>E-mail:</strong> {viewingPatient.email}</p>}
+                </div>
+              )}
+
+              {(viewingPatient.birthDate || viewingPatient.gender) && (
+                <div style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)" }}>
+                  <h4 style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Dados Pessoais</h4>
+                  {viewingPatient.birthDate && <p style={{ fontSize: "0.95rem", margin: "0 0 0.3rem 0" }}><strong>Nascimento:</strong> {new Date(viewingPatient.birthDate + "T00:00:00").toLocaleDateString("pt-BR")}</p>}
+                  {viewingPatient.gender && <p style={{ fontSize: "0.95rem", margin: 0 }}><strong>Gênero:</strong> {viewingPatient.gender}</p>}
+                </div>
+              )}
+
+              {viewingPatient.guardianName && (
+                <div style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)" }}>
+                  <h4 style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Responsável</h4>
+                  <p style={{ fontSize: "0.95rem", margin: 0 }}>{viewingPatient.guardianName}</p>
+                </div>
+              )}
+
+              {viewingPatient.address && (
+                <div style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)" }}>
+                  <h4 style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Endereço</h4>
+                  <p style={{ fontSize: "0.95rem", margin: 0 }}>{viewingPatient.address}</p>
+                </div>
+              )}
+
+              {viewingPatient.notes && (
+                <div style={{ padding: "1rem", backgroundColor: "var(--primary-light)", borderRadius: "var(--radius-sm)" }}>
+                  <h4 style={{ fontSize: "0.8rem", color: "var(--primary)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Anotações da Clínica</h4>
+                  <p style={{ fontSize: "0.9rem", margin: 0, color: "var(--text-main)", whiteSpace: "pre-wrap" }}>{viewingPatient.notes}</p>
+                </div>
+              )}
+            </div>
+
+            <button onClick={() => setViewingPatient(null)} className="btn" style={{ width: "100%", marginTop: "1.5rem" }}>
+              Fechar Cadastro
+            </button>
+          </div>
         </div>
       )}
     </div>
