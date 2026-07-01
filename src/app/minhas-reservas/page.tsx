@@ -293,11 +293,18 @@ export default function ProfessionalAgendaPage() {
                       </button>
                     </>
                   ) : (
-                     <button onClick={() => { if(confirm("Deseja excluir permanentemente este registro do histórico?")) cancelReservation(res.id); }} 
+                    <>
+                      <button onClick={() => { if(confirm("Deseja desfazer o status atual e retornar para 'Agendado'?")) updateReservationStatus(res.id, 'agendado'); }} 
+                        className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--primary)", color: "var(--primary)", display: "flex", alignItems: "center", gap: "0.3rem" }}
+                        title="Desfazer Status / Editar">
+                        ↩️ <span className="hide-mobile">Desfazer</span>
+                      </button>
+                      <button onClick={() => { if(confirm("Deseja excluir permanentemente este registro do histórico?")) cancelReservation(res.id); }} 
                         className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--text-muted)", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "0.3rem" }}
                         title="Excluir Registro">
                         🗑️ <span className="hide-mobile">Excluir</span>
                       </button>
+                    </>
                   )}
                 </div>
               </div>
