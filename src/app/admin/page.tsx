@@ -456,6 +456,51 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleExportBackup = () => {
+    let htmlContent = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="utf-8" />
+        <style>table { border-collapse: collapse; margin-bottom: 20px; } th, td { border: 1px solid #000; padding: 5px; text-align: left; }</style>
+      </head>
+      <body>`;
+
+    // 1. Pacientes
+    htmlContent += `<h2>Pacientes</h2><table><thead><tr><th style="background-color: #f2f2f2;">Nome</th><th style="background-color: #f2f2f2;">Email</th><th style="background-color: #f2f2f2;">Telefone</th><th style="background-color: #f2f2f2;">Nascimento</th><th style="background-color: #f2f2f2;">Convênio</th><th style="background-color: #f2f2f2;">Status</th><th style="background-color: #f2f2f2;">Anotações</th></tr></thead><tbody>`;
+    patientsList.forEach(p => {
+      htmlContent += `<tr><td>${p.name}</td><td>${p.email || ''}</td><td>${p.phone || ''}</td><td>${p.birthDate ? new Date(p.birthDate + "T00:00:00").toLocaleDateString("pt-BR") : ''}</td><td>${p.healthPlan || ''} ${p.healthPlanNumber || ''}</td><td>${p.status || 'Ativo'}</td><td>${p.notes || ''}</td></tr>`;
+    });
+    htmlContent += `</tbody></table><br/>`;
+
+    // 2. Agendamentos
+    htmlContent += `<h2>Agendamentos (Histórico)</h2><table><thead><tr><th style="background-color: #f2f2f2;">Data</th><th style="background-color: #f2f2f2;">Início</th><th style="background-color: #f2f2f2;">Fim</th><th style="background-color: #f2f2f2;">Paciente</th><th style="background-color: #f2f2f2;">Profissional</th><th style="background-color: #f2f2f2;">Serviço</th><th style="background-color: #f2f2f2;">Sala</th><th style="background-color: #f2f2f2;">Status</th></tr></thead><tbody>`;
+    allReservations.forEach(r => {
+      const profName = professionalsMap[r.professionalId] || 'Desconhecido';
+      const roomName = rooms.find(rm => rm.id === r.roomId)?.name || 'Desconhecida';
+      const dataFormatada = new Date(r.date + "T00:00:00").toLocaleDateString("pt-BR");
+      htmlContent += `<tr><td>${dataFormatada}</td><td>${r.startTime}</td><td>${r.endTime}</td><td>${r.patientName || ''}</td><td>${profName}</td><td>${r.service || ''}</td><td>${roomName}</td><td style="text-transform: capitalize;">${r.status || 'Agendado'}</td></tr>`;
+    });
+    htmlContent += `</tbody></table><br/>`;
+
+    // 3. Profissionais
+    htmlContent += `<h2>Profissionais</h2><table><thead><tr><th style="background-color: #f2f2f2;">Nome</th><th style="background-color: #f2f2f2;">Especialidade</th><th style="background-color: #f2f2f2;">Email</th></tr></thead><tbody>`;
+    professionalsList.forEach(p => {
+      htmlContent += `<tr><td>${p.name}</td><td>${p.specialty || ''}</td><td>${p.email || ''}</td></tr>`;
+    });
+    htmlContent += `</tbody></table><br/>`;
+
+    htmlContent += `</body></html>`;
+
+    const blob = new Blob([htmlContent], { type: "application/vnd.ms-excel;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `backup_clinica_${new Date().toISOString().split('T')[0]}.xls`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="container animate-fade" style={{ paddingTop: "1.5rem", paddingBottom: "4rem" }}>
       <header style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
@@ -505,9 +550,14 @@ export default function AdminDashboard() {
             <button onClick={() => setActiveTab("relatorios")} className={activeTab === "relatorios" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>📈 Relatórios</button>
             <button onClick={() => setActiveTab("disponibilidade")} className={activeTab === "disponibilidade" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>📅 Grade</button>
           </div>
-          <button onClick={() => setActiveTab("new_reservation")} className="btn" style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem", backgroundColor: "var(--success)", borderColor: "var(--success)" }}>
-            + Nova Reserva
-          </button>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            <button onClick={handleExportBackup} className="btn btn-outline" style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem", borderColor: "var(--primary)", color: "var(--primary)" }}>
+              💾 Fazer Backup Geral
+            </button>
+            <button onClick={() => setActiveTab("new_reservation")} className="btn" style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem", backgroundColor: "var(--success)", borderColor: "var(--success)" }}>
+              + Nova Reserva
+            </button>
+          </div>
         </div>
 
         {/* Linha 2: Gestão */}
