@@ -47,7 +47,7 @@ export default function ReservarPage() {
     
     // Fetch patients list
     const fetchPatients = async () => {
-      const { data } = await supabase.from("patients").select("id, name, phone").order("name");
+      const { data } = await supabase.from("patients").select("id, name, phone, birthDate").order("name");
       if (data) setPatientsList(data);
     };
     if (professional) {
@@ -525,9 +525,18 @@ export default function ReservarPage() {
                       style={{ cursor: "pointer" }}
                     >
                       <option value="">(Sem paciente / Selecione...)</option>
-                      {patientsList.map(pat => (
-                        <option key={pat.id} value={pat.name}>{pat.name}</option>
-                      ))}
+                      {patientsList.map(pat => {
+                        let ageStr = "";
+                        if (pat.birthDate) {
+                          const birthDate = new Date(pat.birthDate);
+                          const today = new Date();
+                          let age = today.getFullYear() - birthDate.getFullYear();
+                          const m = today.getMonth() - birthDate.getMonth();
+                          if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+                          if (age >= 0) ageStr = ` (${age} anos)`;
+                        }
+                        return <option key={pat.id} value={pat.name}>{pat.name}{ageStr}</option>;
+                      })}
                     </select>
                   </div>
                   <div>

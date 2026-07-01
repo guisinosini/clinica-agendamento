@@ -1172,9 +1172,18 @@ export default function AdminDashboard() {
                 <label className="label">Nome do Paciente (Opcional)</label>
                 <select className="input" value={newResPatient} onChange={e => setNewResPatient(e.target.value)} style={{ cursor: "pointer" }}>
                   <option value="">(Sem paciente / Selecione...)</option>
-                  {patientsList.map(pat => (
-                    <option key={pat.id} value={pat.name}>{pat.name}</option>
-                  ))}
+                  {patientsList.map(pat => {
+                    let ageStr = "";
+                    if (pat.birthDate) {
+                      const birthDate = new Date(pat.birthDate);
+                      const today = new Date();
+                      let age = today.getFullYear() - birthDate.getFullYear();
+                      const m = today.getMonth() - birthDate.getMonth();
+                      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+                      if (age >= 0) ageStr = ` (${age} anos)`;
+                    }
+                    return <option key={pat.id} value={pat.name}>{pat.name}{ageStr}</option>;
+                  })}
                 </select>
               </div>
               <div>
