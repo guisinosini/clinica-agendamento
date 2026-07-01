@@ -47,3 +47,24 @@ export type Service = {
   duration?: number;
   created_at?: string;
 };
+
+export type Task = {
+  id: string;
+  title: string;
+  description?: string;
+  due_date?: string;
+  created_by: string; // ID do profissional que criou
+  created_at?: string;
+};
+
+export type TaskAssignment = {
+  id: string;
+  task_id: string;
+  professional_id: string; // ID do profissional que recebeu a tarefa
+  status: 'pendente' | 'concluida';
+  viewed: boolean;
+  completed_at?: string;
+  created_at?: string;
+  task?: Task; // Relação para quando fizermos JOIN
+  professional?: Professional; // Relação para quem atribuiu/recebeu
+};

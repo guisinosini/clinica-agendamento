@@ -305,6 +305,15 @@ export default function Home() {
       btnClass: "btn btn-outline",
       bgColor: "#fdf4ff",
     },
+    {
+      href: "/tarefas",
+      emoji: "✅",
+      title: "Minhas Tarefas",
+      desc: "Gerencie tarefas atribuídas a você ou crie novas para a equipe.",
+      btnLabel: "Ver Tarefas",
+      btnClass: "btn btn-outline",
+      bgColor: "#fff7ed",
+    },
   ];
 
   // Listagem de próximos agendamentos

@@ -13,7 +13,7 @@ export default function AdminDashboard() {
   const allReservations = fetchAllReservations();
   
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "reservations" | "rooms" | "professionals" | "new_reservation" | "patients" | "disponibilidade" | "relatorios" | "services">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "reservations" | "rooms" | "professionals" | "new_reservation" | "patients" | "disponibilidade" | "relatorios" | "services" | "tarefas">("dashboard");
   const [selectedDispDate, setSelectedDispDate] = useState<string>(NEXT_DAYS[0]);
   const [professionalsMap, setProfessionalsMap] = useState<Record<string, string>>({});
   const [professionalsList, setProfessionalsList] = useState<any[]>([]);
@@ -73,6 +73,28 @@ export default function AdminDashboard() {
   const [serviceName, setServiceName] = useState("");
   const [serviceDesc, setServiceDesc] = useState("");
   const [serviceDuration, setServiceDuration] = useState("60");
+
+  // Admin Tasks State
+  const [adminTasks, setAdminTasks] = useState<any[]>([]);
+  const [loadingAdminTasks, setLoadingAdminTasks] = useState(false);
+
+  const fetchAdminTasks = async () => {
+    setLoadingAdminTasks(true);
+    const { data: assignmentsData, error } = await supabase
+      .from('task_assignments')
+      .select(`*, task:tasks(*), professional:professionals(*)`);
+    
+    if (!error && assignmentsData) {
+      setAdminTasks(assignmentsData);
+    }
+    setLoadingAdminTasks(false);
+  };
+
+  useEffect(() => {
+    if (activeTab === "tarefas") {
+      fetchAdminTasks();
+    }
+  }, [activeTab]);
 
   const filteredReservations = useMemo(() => {
     return allReservations
@@ -410,6 +432,18 @@ export default function AdminDashboard() {
     router.push("/");
   };
 
+  const handleDeleteTaskAssignment = async (assignmentId: string) => {
+    if (confirm("Tem certeza que deseja excluir esta atribuição de tarefa?")) {
+      const { error } = await supabase.from('task_assignments').delete().eq('id', assignmentId);
+      if (!error) {
+        alert("Atribuição de tarefa excluída com sucesso!");
+        fetchAdminTasks();
+      } else {
+        alert("Erro ao excluir tarefa.");
+      }
+    }
+  };
+
   return (
     <div className="container animate-fade" style={{ paddingTop: "1.5rem", paddingBottom: "4rem" }}>
       <header style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
@@ -435,6 +469,12 @@ export default function AdminDashboard() {
       <style>{`
         .admin-nav::-webkit-scrollbar { display: none; }
         .admin-nav { -ms-overflow-style: none; scrollbar-width: none; }
+        @media print {
+          body * { visibility: hidden; }
+          .print-section, .print-section * { visibility: visible; }
+          .print-section { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
+          .print-hidden { display: none !important; }
+        }
       `}</style>
       
       {/* Container de Navegação */}
@@ -465,6 +505,7 @@ export default function AdminDashboard() {
           <button onClick={() => setActiveTab("professionals")} className={activeTab === "professionals" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>🩺 Equipe</button>
           <button onClick={() => setActiveTab("services")} className={activeTab === "services" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>🏷️ Serviços</button>
           <button onClick={() => setActiveTab("rooms")} className={activeTab === "rooms" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>🚪 Salas</button>
+          <button onClick={() => setActiveTab("tarefas")} className={activeTab === "tarefas" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>✅ Tarefas</button>
         </div>
       </nav>
 
@@ -627,13 +668,21 @@ export default function AdminDashboard() {
       )}
 
       {activeTab === "relatorios" && (
-        <div className="card animate-slide">
+        <div className="card animate-slide print-section">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
             <h2 style={{ fontSize: "1.2rem", fontWeight: 700 }}>Relatório de Atendimentos ({filteredReportData.length})</h2>
+            <button 
+              onClick={() => window.print()}
+              className="btn btn-outline print-hidden"
+              style={{ padding: "0.5rem 1rem", borderRadius: "2rem", display: "flex", alignItems: "center", gap: "0.5rem" }}
+            >
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"></path><path d="M6 14h12v8H6z"></path></svg>
+              Imprimir
+            </button>
           </div>
 
           {/* Filtros do Relatório */}
-          <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem", marginBottom: "2rem", backgroundColor: "var(--bg-color)", padding: "1.25rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+          <div className="grid print-hidden" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem", marginBottom: "2rem", backgroundColor: "var(--bg-color)", padding: "1.25rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
             <div>
               <label className="label" style={{ fontSize: "0.85rem" }}>Paciente</label>
               <select className="input" value={reportPatient} onChange={e => setReportPatient(e.target.value)}>
@@ -1174,6 +1223,73 @@ export default function AdminDashboard() {
             </div>
           </div>
         </section>
+      )}
+
+      {/* ADMIN TAREFAS */}
+      {activeTab === "tarefas" && (
+        <div className="card animate-slide">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 700 }}>Gestão Global de Tarefas ({adminTasks.length})</h2>
+            <button onClick={fetchAdminTasks} className="btn btn-outline btn-sm">↻ Atualizar</button>
+          </div>
+          
+          {loadingAdminTasks ? (
+            <div style={{ textAlign: "center", padding: "2rem" }}>
+              <div className="spinner" style={{ margin: "0 auto 1rem" }} />
+              <p style={{ color: "var(--text-muted)" }}>Carregando tarefas...</p>
+            </div>
+          ) : adminTasks.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "3rem", color: "var(--text-muted)" }}>
+              <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🍃</div>
+              <p>Nenhuma tarefa atribuída no sistema.</p>
+            </div>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "800px" }}>
+                <thead>
+                  <tr style={{ borderBottom: "2px solid var(--border-color)", textAlign: "left", backgroundColor: "var(--bg-color)" }}>
+                    <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Tarefa</th>
+                    <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Atribuído Para</th>
+                    <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Status</th>
+                    <th style={{ padding: "1rem", color: "var(--text-secondary)", textAlign: "right" }}>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {adminTasks.map(assignment => (
+                    <tr key={assignment.id} style={{ borderBottom: "1px solid var(--border-color)" }}>
+                      <td style={{ padding: "1rem" }}>
+                        <div style={{ fontWeight: 700, color: "var(--text-main)" }}>{assignment.task?.title || "Sem Título"}</div>
+                        {assignment.task?.due_date && (
+                          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>
+                            Prazo: {new Date(assignment.task.due_date + "T00:00:00").toLocaleDateString('pt-BR')}
+                          </div>
+                        )}
+                      </td>
+                      <td style={{ padding: "1rem", fontWeight: 500, color: "var(--primary)" }}>
+                        {assignment.professional?.name || "Desconhecido"}
+                      </td>
+                      <td style={{ padding: "1rem" }}>
+                        {assignment.status === 'concluida' ? (
+                          <span className="badge" style={{ backgroundColor: "#dcfce7", color: "var(--success, #166534)", fontSize: "0.75rem" }}>✓ Concluída</span>
+                        ) : (
+                          <span className="badge" style={{ backgroundColor: "var(--bg-color)", color: "var(--text-muted)", border: "1px solid var(--border-color)", fontSize: "0.75rem" }}>⏳ Pendente</span>
+                        )}
+                      </td>
+                      <td style={{ padding: "1rem", textAlign: "right" }}>
+                        <button 
+                          onClick={() => handleDeleteTaskAssignment(assignment.id)}
+                          style={{ color: "white", backgroundColor: "var(--danger)", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
+                        >
+                          Excluir
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       )}
 
       {/* MODAL DE REAGENDAMENTO */}

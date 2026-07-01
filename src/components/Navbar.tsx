@@ -38,6 +38,7 @@ export default function Navbar() {
     { href: "/reservar", label: "Nova Reserva" },
     { href: "/disponibilidade", label: "Disponibilidade" },
     { href: "/minhas-reservas", label: "Minha Agenda" },
+    { href: "/tarefas", label: "Tarefas" },
   ];
 
   return (
