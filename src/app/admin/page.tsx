@@ -646,28 +646,38 @@ export default function AdminDashboard() {
                       </td>
                       <td style={{ padding: "1rem", textAlign: "right" }}>
                         <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap" }}>
-                          {res.status === 'confirmado' ? (
-                            <span style={{ color: "var(--success)", fontWeight: 700, fontSize: "0.85rem" }}>✓ Confirmado</span>
+                          {res.status === 'realizado' ? (
+                            <span style={{ color: "var(--success)", fontWeight: 700, fontSize: "0.85rem" }}>✅ Realizado</span>
+                          ) : res.status === 'falta' ? (
+                            <span style={{ color: "var(--danger)", fontWeight: 700, fontSize: "0.85rem" }}>❌ Falta</span>
+                          ) : res.status === 'cancelado' ? (
+                            <span style={{ color: "var(--text-muted)", fontWeight: 700, fontSize: "0.85rem" }}>🚫 Cancelado</span>
                           ) : (
-                            <button 
-                              onClick={() => updateReservationStatus(res.id, 'confirmado')}
-                              style={{ color: "white", backgroundColor: "var(--success)", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
-                            >
-                              Confirmar
-                            </button>
+                            <>
+                              {res.status === 'confirmado' ? (
+                                <span style={{ color: "var(--success)", fontWeight: 700, fontSize: "0.85rem" }}>✓ Confirmado</span>
+                              ) : (
+                                <button 
+                                  onClick={() => updateReservationStatus(res.id, 'confirmado')}
+                                  style={{ color: "white", backgroundColor: "var(--success)", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
+                                >
+                                  Confirmar
+                                </button>
+                              )}
+                              <button 
+                                onClick={() => handleRescheduleClick(res)}
+                                style={{ color: "white", backgroundColor: "#f59e0b", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
+                              >
+                                Reagendar
+                              </button>
+                              <button 
+                                onClick={() => handleCancelReservation(res.id)}
+                                style={{ color: "white", backgroundColor: "var(--danger)", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
+                              >
+                                Excluir
+                              </button>
+                            </>
                           )}
-                          <button 
-                            onClick={() => handleRescheduleClick(res)}
-                            style={{ color: "white", backgroundColor: "#f59e0b", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
-                          >
-                            Reagendar
-                          </button>
-                          <button 
-                            onClick={() => handleCancelReservation(res.id)}
-                            style={{ color: "white", backgroundColor: "var(--danger)", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
-                          >
-                            Excluir
-                          </button>
                         </div>
                       </td>
                     </tr>
