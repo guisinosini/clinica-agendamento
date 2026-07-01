@@ -43,8 +43,7 @@ export default function AdminDashboard() {
   const [newResProfId, setNewResProfId] = useState("");
   const [newResRoomId, setNewResRoomId] = useState("");
   const [newResDate, setNewResDate] = useState("");
-  const [newResStart, setNewResStart] = useState("08:00");
-  const [newResEnd, setNewResEnd] = useState("09:00");
+  const [newResSlots, setNewResSlots] = useState<string[]>([]);
   const [newResPatient, setNewResPatient] = useState("");
   const [newResService, setNewResService] = useState("");
 
@@ -52,7 +51,6 @@ export default function AdminDashboard() {
   const [reschedulingId, setReschedulingId] = useState<string | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState("");
   const [rescheduleStart, setRescheduleStart] = useState("");
-  const [rescheduleEnd, setRescheduleEnd] = useState("");
   const [rescheduleRoom, setRescheduleRoom] = useState("");
 
   // Patient Form State
@@ -77,6 +75,20 @@ export default function AdminDashboard() {
   // Admin Tasks State
   const [adminTasks, setAdminTasks] = useState<any[]>([]);
   const [loadingAdminTasks, setLoadingAdminTasks] = useState(false);
+
+  const occupiedAdminNewResSlots = useMemo(() => {
+    if (!newResRoomId || !newResDate) return [];
+    return allReservations
+      .filter(res => res.roomId === newResRoomId && res.date === newResDate && (!res.status || res.status === 'agendado' || res.status === 'confirmado' || res.status === 'realizado'))
+      .map(res => res.startTime);
+  }, [allReservations, newResRoomId, newResDate]);
+
+  const occupiedAdminRescheduleSlots = useMemo(() => {
+    if (!rescheduleRoom || !rescheduleDate) return [];
+    return allReservations
+      .filter(res => res.roomId === rescheduleRoom && res.date === rescheduleDate && res.id !== reschedulingId && (!res.status || res.status === 'agendado' || res.status === 'confirmado' || res.status === 'realizado'))
+      .map(res => res.startTime);
+  }, [allReservations, rescheduleRoom, rescheduleDate, reschedulingId]);
 
   const fetchAdminTasks = async () => {
     setLoadingAdminTasks(true);
@@ -361,57 +373,57 @@ export default function AdminDashboard() {
 
   const handleAdminCreateReservation = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newResProfId || !newResRoomId || !newResDate || !newResStart || !newResEnd) return;
+    if (!newResProfId || !newResRoomId || !newResDate || newResSlots.length === 0) return;
 
-    const conflict = fetchAllReservations().find(r => 
-      r.roomId === newResRoomId && r.date === newResDate && r.startTime === newResStart
-    );
-    if (conflict) {
-      alert("ERRO: Já existe uma reserva para esta sala neste dia e horário inicial.");
-      return;
+    const allNewReservations = newResSlots.map(slot => {
+      const [hours, minutes] = slot.split(":").map(Number);
+      const d = new Date();
+      d.setHours(hours + 1, minutes, 0); 
+      return {
+        roomId: newResRoomId,
+        professionalId: newResProfId,
+        date: newResDate,
+        startTime: slot,
+        endTime: `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`,
+        patientName: newResPatient || undefined,
+        service: newResService || undefined
+      };
+    });
+
+    try {
+      await addReservations(allNewReservations);
+      alert("Reserva(s) criada(s) com sucesso pelo Administrador!");
+      setNewResPatient("");
+      setNewResService("");
+      setNewResSlots([]);
+      setActiveTab("reservations");
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao criar reserva.");
     }
-
-    await addReservations([{
-      roomId: newResRoomId,
-      professionalId: newResProfId,
-      date: newResDate,
-      startTime: newResStart,
-      endTime: newResEnd,
-      patientName: newResPatient || undefined,
-      service: newResService || undefined
-    }]);
-
-    alert("Reserva criada com sucesso pelo Administrador!");
-    setNewResPatient("");
-    setNewResService("");
-    setActiveTab("reservations");
   };
 
   const handleRescheduleClick = (res: any) => {
     setReschedulingId(res.id);
     setRescheduleDate(res.date);
     setRescheduleStart(res.startTime);
-    setRescheduleEnd(res.endTime);
     setRescheduleRoom(res.roomId);
   };
 
   const handleRescheduleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!reschedulingId || !rescheduleDate || !rescheduleStart || !rescheduleEnd || !rescheduleRoom) return;
+    if (!reschedulingId || !rescheduleDate || !rescheduleStart || !rescheduleRoom) return;
 
-    const conflict = allReservations.find(r => 
-      r.id !== reschedulingId && r.roomId === rescheduleRoom && r.date === rescheduleDate && r.startTime === rescheduleStart
-    );
-    if (conflict) {
-      alert("ERRO: Já existe uma reserva para esta sala neste dia e horário inicial.");
-      return;
-    }
+    const [hours, minutes] = rescheduleStart.split(":").map(Number);
+    const d = new Date();
+    d.setHours(hours + 1, minutes, 0);
+    const calculatedEnd = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 
     try {
       const { error } = await supabase.from('reservations').update({
         date: rescheduleDate,
         start_time: `${rescheduleStart}:00`,
-        end_time: `${rescheduleEnd}:00`,
+        end_time: `${calculatedEnd}:00`,
         room_id: rescheduleRoom,
         status: 'reagendado'
       }).eq('id', reschedulingId);
@@ -420,7 +432,7 @@ export default function AdminDashboard() {
       
       alert("Reserva reagendada com sucesso!");
       setReschedulingId(null);
-      window.location.reload(); // Recarrega para buscar os dados atualizados do banco
+      window.location.reload(); 
     } catch (err) {
       console.error(err);
       alert("Ocorreu um erro ao tentar reagendar.");
@@ -1120,19 +1132,40 @@ export default function AdminDashboard() {
               </div>
               <div>
                 <label className="label">Data</label>
-                <input type="date" className="input" value={newResDate} onChange={e => setNewResDate(e.target.value)} required />
-              </div>
-              <div style={{ display: "flex", gap: "1rem" }}>
-                <div style={{ flex: 1 }}>
-                  <label className="label">Hora Início</label>
-                  <input type="time" className="input" value={newResStart} onChange={e => setNewResStart(e.target.value)} required />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label className="label">Hora Fim</label>
-                  <input type="time" className="input" value={newResEnd} onChange={e => setNewResEnd(e.target.value)} required />
-                </div>
+                <input type="date" className="input" value={newResDate} onChange={e => { setNewResDate(e.target.value); setNewResSlots([]); }} required />
               </div>
             </div>
+
+            {newResRoomId && newResDate && (
+              <div className="animate-fade" style={{ marginTop: "0.5rem" }}>
+                <label className="label">Horários Disponíveis (Pode selecionar múltiplos)</label>
+                <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: "0.5rem" }}>
+                  {TIME_SLOTS.map(slot => {
+                    const isOccupied = occupiedAdminNewResSlots.includes(slot);
+                    const isSelected = newResSlots.includes(slot);
+                    return (
+                      <button
+                        key={slot}
+                        type="button"
+                        disabled={isOccupied}
+                        onClick={() => setNewResSlots(prev => prev.includes(slot) ? prev.filter(s => s !== slot) : [...prev, slot].sort())}
+                        style={{
+                          padding: "0.6rem", borderRadius: "var(--radius-sm)", fontWeight: 600, fontSize: "0.85rem",
+                          border: "1px solid",
+                          borderColor: isOccupied ? "var(--border-color)" : isSelected ? "var(--primary)" : "var(--border-color)",
+                          background: isOccupied ? "var(--primary-light)" : isSelected ? "var(--primary)" : "var(--bg-color)",
+                          color: isOccupied ? "var(--text-light)" : isSelected ? "var(--primary-mid)" : "var(--text-secondary)",
+                          cursor: isOccupied ? "not-allowed" : "pointer",
+                          textDecoration: isOccupied ? "line-through" : "none"
+                        }}
+                      >
+                        {slot}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             
             <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
               <div>
@@ -1320,16 +1353,36 @@ export default function AdminDashboard() {
                 <label className="label">Nova Data</label>
                 <input type="date" className="input" value={rescheduleDate} onChange={e => setRescheduleDate(e.target.value)} required />
               </div>
-              <div style={{ display: "flex", gap: "1rem" }}>
-                <div style={{ flex: 1 }}>
-                  <label className="label">Início</label>
-                  <input type="time" className="input" value={rescheduleStart} onChange={e => setRescheduleStart(e.target.value)} required />
+              {rescheduleDate && rescheduleRoom && (
+                <div className="animate-fade">
+                  <label className="label">Escolha o novo horário</label>
+                  <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: "0.4rem", maxHeight: "200px", overflowY: "auto", padding: "0.5rem", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)" }}>
+                    {TIME_SLOTS.map(slot => {
+                      const isOccupied = occupiedAdminRescheduleSlots.includes(slot);
+                      const isSelected = rescheduleStart === slot;
+                      return (
+                        <button
+                          key={slot}
+                          type="button"
+                          disabled={isOccupied}
+                          onClick={() => setRescheduleStart(slot)}
+                          style={{
+                            padding: "0.5rem", borderRadius: "var(--radius-sm)", fontWeight: 600, fontSize: "0.85rem",
+                            border: "1px solid",
+                            borderColor: isOccupied ? "var(--border-color)" : isSelected ? "var(--primary)" : "var(--border-color)",
+                            background: isOccupied ? "var(--primary-light)" : isSelected ? "var(--primary)" : "var(--bg-color)",
+                            color: isOccupied ? "var(--text-light)" : isSelected ? "white" : "var(--text-secondary)",
+                            cursor: isOccupied ? "not-allowed" : "pointer",
+                            textDecoration: isOccupied ? "line-through" : "none"
+                          }}
+                        >
+                          {slot}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <label className="label">Fim</label>
-                  <input type="time" className="input" value={rescheduleEnd} onChange={e => setRescheduleEnd(e.target.value)} required />
-                </div>
-              </div>
+              )}
               <button type="submit" className="btn" style={{ marginTop: "1rem", backgroundColor: "#f59e0b", color: "white" }}>
                 Confirmar Reagendamento
               </button>
