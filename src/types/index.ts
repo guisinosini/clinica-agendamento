@@ -21,7 +21,7 @@ export type Reservation = {
   endTime: string; // Ex: "09:00"
   patientName?: string;
   service?: string;
-  status?: "agendado" | "reagendado" | "falta" | "cancelado" | "concluido" | "confirmado";
+  status?: "agendado" | "reagendado" | "falta" | "cancelado" | "concluido" | "confirmado" | "realizado";
 };
 
 export type Patient = {
