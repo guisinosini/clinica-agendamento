@@ -1299,7 +1299,7 @@ export default function AdminDashboard() {
                         )}
                       </td>
                       <td style={{ padding: "1rem", fontWeight: 500, color: "var(--primary)" }}>
-                        {assignment.professional?.name || "Desconhecido"}
+                        {assignment.professional_id === null ? "⚙️ Administração" : (assignment.professional?.name || "Desconhecido")}
                       </td>
                       <td style={{ padding: "1rem" }}>
                         {assignment.status === 'concluida' ? (

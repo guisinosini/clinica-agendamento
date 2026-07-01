@@ -9,6 +9,7 @@ export default function Navbar() {
   const { professional, logout } = useReservation();
   const pathname = usePathname();
   const [theme, setTheme] = useState("light");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("@Clinica:theme") || "light";
@@ -80,6 +81,23 @@ export default function Navbar() {
 
         {/* Ações do Usuário */}
         <div className="navbar-actions">
+          {/* Botão Hamburger (Mobile) */}
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="btn btn-outline hide-desktop"
+            style={{ 
+              padding: "0", 
+              borderRadius: "var(--radius-sm)", 
+              width: "42px", height: "42px", 
+              display: "flex", alignItems: "center", justifyContent: "center", 
+              fontSize: "1.4rem",
+              boxShadow: "var(--clay-btn)"
+            }}
+            title="Menu"
+          >
+            {isMobileMenuOpen ? "✖" : "☰"}
+          </button>
+
           {/* Botão Theme Toggle */}
           <button 
             onClick={toggleTheme}
@@ -121,6 +139,49 @@ export default function Navbar() {
           </button>
         </div>
       </div>
+
+      {/* Menu Mobile Expandido */}
+      {isMobileMenuOpen && (
+        <div className="hide-desktop animate-slide" style={{
+          position: "absolute",
+          top: "70px", left: 0, right: 0,
+          background: "var(--card-bg)",
+          boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+          padding: "1.5rem 1rem",
+          display: "flex", flexDirection: "column", gap: "0.75rem",
+          borderBottom: "1px solid var(--primary-light)",
+          zIndex: 99
+        }}>
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setIsMobileMenuOpen(false)}
+              style={{
+                padding: "1rem",
+                borderRadius: "var(--radius-md)",
+                fontSize: "1.05rem",
+                fontWeight: 600,
+                color: pathname === link.href ? "var(--primary)" : "var(--text-secondary)",
+                backgroundColor: pathname === link.href ? "var(--primary-light)" : "var(--bg-color)",
+                border: pathname === link.href ? "2px solid var(--primary-mid)" : "2px solid transparent",
+                display: "flex",
+                alignItems: "center",
+                boxShadow: pathname === link.href ? "var(--clay-btn)" : "var(--clay-input)"
+              }}
+            >
+              {link.label}
+            </Link>
+          ))}
+          <button
+            onClick={() => { logout(); setIsMobileMenuOpen(false); }}
+            className="btn"
+            style={{ marginTop: "1rem", width: "100%", backgroundColor: "var(--danger)", color: "white" }}
+          >
+            Sair da Conta
+          </button>
+        </div>
+      )}
     </nav>
   );
 }

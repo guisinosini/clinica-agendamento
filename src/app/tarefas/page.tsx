@@ -110,7 +110,7 @@ export default function TarefasPage() {
                   dueDate: task.due_date,
                   createdBy: task.created_by,
                   assignedTo: assignment.professional_id,
-                  assignedToName: assignment.professional?.name || 'Desconhecido',
+                  assignedToName: assignment.professional_id ? (assignment.professional?.name || 'Desconhecido') : 'Administração',
                   status: assignment.status,
                   viewed: assignment.viewed,
                   type: 'atribuidas',
@@ -170,9 +170,9 @@ export default function TarefasPage() {
       // 2. Inserir Assignments
       const assignments = selectedProfs.map(profId => ({
         task_id: taskData.id,
-        professional_id: profId,
+        professional_id: profId === 'admin' ? null : profId,
         status: 'pendente',
-        viewed: profId === professional.id // Se for pra mim, já vi
+        viewed: profId === professional.id 
       }));
 
       const { error: assignErr } = await supabase.from('task_assignments').insert(assignments);
@@ -406,7 +406,18 @@ export default function TarefasPage() {
 
               <div>
                 <label className="label">Atribuir para:</label>
-                <div style={{ display: "grid", gap: "0.5rem", maxHeight: "120px", overflowY: "auto", border: "1px solid var(--border-color)", padding: "0.5rem", borderRadius: "var(--radius-md)" }}>
+                <div style={{ display: "grid", gap: "0.5rem", maxHeight: "150px", overflowY: "auto", border: "1px solid var(--border-color)", padding: "0.5rem", borderRadius: "var(--radius-md)" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.9rem", fontWeight: 700, color: "var(--danger)" }}>
+                    <input 
+                      type="checkbox"
+                      checked={selectedProfs.includes('admin')}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedProfs([...selectedProfs, 'admin']);
+                        else setSelectedProfs(selectedProfs.filter(id => id !== 'admin'));
+                      }}
+                    />
+                    ⚙️ Administração
+                  </label>
                   {allProfessionals.map(prof => (
                     <label key={prof.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.9rem" }}>
                       <input 
