@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useReservation, NEXT_DAYS, TIME_SLOTS } from "../../context/ReservationContext";
 
 export default function DisponibilidadePage() {
-  const { rooms, reservations, professional, loading } = useReservation();
+  const { rooms, reservations, professional, loading, allProfessionals } = useReservation();
   const [selectedDate, setSelectedDate] = useState<string>(NEXT_DAYS[0]);
   const router = useRouter();
 
@@ -27,16 +27,25 @@ export default function DisponibilidadePage() {
     return date.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
   };
 
+  const professionalsMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    allProfessionals.forEach(p => m[p.id] = p.name);
+    return m;
+  }, [allProfessionals]);
+
   // Mapeamento O(1) das reservas para o dia selecionado
   const reservationsMap = useMemo(() => {
-    const map = new Map<string, { mine: boolean }>();
+    const map = new Map<string, { mine: boolean, profName?: string }>();
     reservations.forEach(res => {
       if (res.date === selectedDate && (!res.status || res.status === 'agendado' || res.status === 'confirmado' || res.status === 'realizado')) {
-        map.set(`${res.roomId}-${res.startTime}`, { mine: res.professionalId === professional.id });
+        map.set(`${res.roomId}-${res.startTime}`, { 
+          mine: res.professionalId === professional.id,
+          profName: professionalsMap[res.professionalId] || "Profissional"
+        });
       }
     });
     return map;
-  }, [reservations, selectedDate, professional.id]);
+  }, [reservations, selectedDate, professional.id, professionalsMap]);
 
   // Estatísticas do dia
   const stats = useMemo(() => {
@@ -171,7 +180,7 @@ export default function DisponibilidadePage() {
 
                     let bg = "var(--bg-color)", color = "var(--text-secondary)", label = "Livre", icon = "✓";
                     if (occupied && mine) { bg = "var(--primary)"; color = "var(--primary-mid)"; label = "Sua Reserva"; icon = "📌"; }
-                    if (occupied && !mine) { bg = "var(--primary-light)"; color = "var(--primary)"; label = "Ocupado"; icon = "✗"; }
+                    if (occupied && !mine) { bg = "var(--primary-light)"; color = "var(--primary)"; label = data?.profName || "Ocupado"; icon = "✗"; }
 
                     return (
                       <td key={room.id} style={{ padding: "0.5rem", textAlign: "center" }}>
