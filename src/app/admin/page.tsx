@@ -1242,7 +1242,7 @@ export default function AdminDashboard() {
                       </td>
                       {rooms.map(room => {
                         // Encontra reserva para esta sala, dia e horário
-                        const res = allReservations.find(r => r.roomId === room.id && r.date === selectedDispDate && r.startTime === slot && (!r.status || r.status === 'agendado'));
+                        const res = allReservations.find(r => r.roomId === room.id && r.date === selectedDispDate && r.startTime === slot && (!r.status || r.status === 'agendado' || r.status === 'confirmado' || r.status === 'realizado'));
                         
                         let bg = "var(--bg-color)", color = "var(--text-secondary)", label = "Livre", icon = "✓";
                         if (res) {

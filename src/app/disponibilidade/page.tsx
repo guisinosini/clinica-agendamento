@@ -31,7 +31,7 @@ export default function DisponibilidadePage() {
   const reservationsMap = useMemo(() => {
     const map = new Map<string, { mine: boolean }>();
     reservations.forEach(res => {
-      if (res.date === selectedDate) {
+      if (res.date === selectedDate && (!res.status || res.status === 'agendado' || res.status === 'confirmado' || res.status === 'realizado')) {
         map.set(`${res.roomId}-${res.startTime}`, { mine: res.professionalId === professional.id });
       }
     });
