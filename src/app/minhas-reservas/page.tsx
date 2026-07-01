@@ -240,12 +240,13 @@ export default function ProfessionalAgendaPage() {
                 {/* Detalhes */}
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.2rem", flexWrap: "wrap" }}>
-                    <h4 style={{ fontSize: "1.1rem", fontWeight: 700, color: res.status === 'falta' || res.status === 'reagendado' ? "var(--text-muted)" : "var(--primary)" }}>
+                    <h4 style={{ fontSize: "1.1rem", fontWeight: 700, color: res.status === 'falta' || res.status === 'reagendado' || res.status === 'realizado' ? "var(--text-muted)" : "var(--primary)" }}>
                       {res.patientName || "Paciente Não Informado"}
                     </h4>
                     {res.status === 'falta' && <span className="badge" style={{ backgroundColor: "var(--danger-light)", color: "var(--danger)", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>Falta</span>}
                     {res.status === 'reagendado' && <span className="badge" style={{ backgroundColor: "#fef3c7", color: "#b45309", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>Reagendado</span>}
                     {res.status === 'confirmado' && <span className="badge" style={{ backgroundColor: "#dcfce7", color: "var(--success, #166534)", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>✓ Confirmado</span>}
+                    {res.status === 'realizado' && <span className="badge" style={{ backgroundColor: "#dcfce7", color: "var(--success, #166534)", border: "1px solid var(--success, #166534)", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>✅ Realizado</span>}
                   </div>
                   <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>
                     {getRoomName(res.roomId)} {res.service && `• ${res.service}`}
@@ -262,6 +263,12 @@ export default function ProfessionalAgendaPage() {
                         📅 <span className="hide-mobile">GCal</span>
                       </a>
                       
+                      <button onClick={() => { if(confirm("Marcar este atendimento como finalizado/realizado?")) updateReservationStatus(res.id, 'realizado'); }} 
+                        className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--success, #166534)", color: "var(--success, #166534)", display: "flex", alignItems: "center", gap: "0.3rem" }}
+                        title="Atendimento Realizado">
+                        ✅ <span className="hide-mobile">Realizado</span>
+                      </button>
+
                       <button onClick={() => { if(confirm("Marcar como falta do paciente?")) updateReservationStatus(res.id, 'falta'); }} 
                         className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--danger)", color: "var(--danger)", display: "flex", alignItems: "center", gap: "0.3rem" }}
                         title="Marcar Falta">

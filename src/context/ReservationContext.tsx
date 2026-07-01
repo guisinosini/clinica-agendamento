@@ -268,7 +268,7 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     const { data } = await supabase
       .from('reservations')
       .select('*')
-      .gte('date', NEXT_DAYS[0]);
+      .order('date', { ascending: false });
     
     if (data) {
       setReservations(data.map(r => ({
