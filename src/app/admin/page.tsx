@@ -76,6 +76,14 @@ export default function AdminDashboard() {
   const [adminTasks, setAdminTasks] = useState<any[]>([]);
   const [loadingAdminTasks, setLoadingAdminTasks] = useState(false);
 
+  // New Admin Task Modal State
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDesc, setNewTaskDesc] = useState("");
+  const [newTaskDueDate, setNewTaskDueDate] = useState("");
+  const [selectedTaskProfs, setSelectedTaskProfs] = useState<string[]>([]);
+  const [submittingTask, setSubmittingTask] = useState(false);
+
   const occupiedAdminNewResSlots = useMemo(() => {
     if (!newResRoomId || !newResDate) return [];
     return allReservations
@@ -453,6 +461,55 @@ export default function AdminDashboard() {
       } else {
         alert("Erro ao excluir tarefa.");
       }
+    }
+  };
+
+  const handleCreateAdminTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTaskTitle || selectedTaskProfs.length === 0) {
+      alert("Preencha o título e selecione pelo menos um destinatário.");
+      return;
+    }
+
+    setSubmittingTask(true);
+    try {
+      // 1. Inserir Tarefa
+      const { data: taskData, error: taskErr } = await supabase
+        .from('tasks')
+        .insert({
+          title: newTaskTitle,
+          description: newTaskDesc,
+          due_date: newTaskDueDate || null,
+          created_by: null // admin
+        })
+        .select()
+        .single();
+
+      if (taskErr || !taskData) throw taskErr;
+
+      // 2. Inserir Assignments
+      const assignments = selectedTaskProfs.map(profId => ({
+        task_id: taskData.id,
+        professional_id: profId === 'admin' ? null : profId,
+        status: 'pendente',
+        viewed: profId === 'admin' // Se for pro próprio admin, já marca como lida
+      }));
+
+      const { error: assignErr } = await supabase.from('task_assignments').insert(assignments);
+      if (assignErr) throw assignErr;
+
+      // Sucesso
+      setShowTaskModal(false);
+      setNewTaskTitle("");
+      setNewTaskDesc("");
+      setNewTaskDueDate("");
+      setSelectedTaskProfs([]);
+      fetchAdminTasks();
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao criar tarefa.");
+    } finally {
+      setSubmittingTask(false);
     }
   };
 
@@ -1332,7 +1389,10 @@ export default function AdminDashboard() {
         <div className="card animate-slide">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
             <h2 style={{ fontSize: "1.2rem", fontWeight: 700 }}>Gestão Global de Tarefas ({adminTasks.length})</h2>
-            <button onClick={fetchAdminTasks} className="btn btn-outline btn-sm">↻ Atualizar</button>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button onClick={fetchAdminTasks} className="btn btn-outline btn-sm">↻ Atualizar</button>
+              <button onClick={() => setShowTaskModal(true)} className="btn btn-sm">➕ Nova Tarefa</button>
+            </div>
           </div>
           
           {loadingAdminTasks ? (
@@ -1455,6 +1515,97 @@ export default function AdminDashboard() {
               <button type="submit" className="btn" style={{ marginTop: "1rem", backgroundColor: "#f59e0b", color: "white" }}>
                 Confirmar Reagendamento
               </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL NOVA TAREFA (ADMIN) */}
+      {showTaskModal && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
+          display: "flex",
+          zIndex: 999, padding: "1rem", overflowY: "auto"
+        }}>
+          <div className="card animate-slide" style={{ margin: "auto", width: "100%", maxWidth: "500px", padding: "1.25rem" }}>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "1.25rem" }}>Atribuir Nova Tarefa</h2>
+            <form onSubmit={handleCreateAdminTask} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              
+              <div>
+                <label className="label">Título da Tarefa</label>
+                <input 
+                  type="text" 
+                  className="input" 
+                  value={newTaskTitle} 
+                  onChange={e => setNewTaskTitle(e.target.value)}
+                  required
+                  placeholder="Ex: Atualizar prontuários"
+                />
+              </div>
+
+              <div>
+                <label className="label">Comentário / Descrição</label>
+                <textarea 
+                  className="input" 
+                  value={newTaskDesc} 
+                  onChange={e => setNewTaskDesc(e.target.value)}
+                  rows={3}
+                  placeholder="Detalhes adicionais da tarefa..."
+                />
+              </div>
+
+              <div>
+                <label className="label">Prazo (Opcional)</label>
+                <input 
+                  type="date" 
+                  className="input" 
+                  value={newTaskDueDate} 
+                  onChange={e => setNewTaskDueDate(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="label">Atribuir para:</label>
+                <div style={{ display: "grid", gap: "0.5rem", maxHeight: "150px", overflowY: "auto", border: "1px solid var(--border-color)", padding: "0.5rem", borderRadius: "var(--radius-md)" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.9rem", fontWeight: 700, color: "var(--danger)" }}>
+                    <input 
+                      type="checkbox"
+                      checked={selectedTaskProfs.includes('admin')}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedTaskProfs([...selectedTaskProfs, 'admin']);
+                        else setSelectedTaskProfs(selectedTaskProfs.filter(id => id !== 'admin'));
+                      }}
+                    />
+                    ⚙️ Administração
+                  </label>
+                  {professionalsList.map(prof => (
+                    <label key={prof.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.9rem" }}>
+                      <input 
+                        type="checkbox"
+                        checked={selectedTaskProfs.includes(prof.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedTaskProfs([...selectedTaskProfs, prof.id]);
+                          else setSelectedTaskProfs(selectedTaskProfs.filter(id => id !== prof.id));
+                        }}
+                      />
+                      {prof.name}
+                    </label>
+                  ))}
+                </div>
+                <div style={{ marginTop: "0.5rem", display: "flex", gap: "0.5rem" }}>
+                   <button type="button" onClick={() => setSelectedTaskProfs(professionalsList.map(p => p.id))} className="badge badge-primary" style={{ cursor: "pointer" }}>Todos os Profissionais</button>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+                <button type="button" onClick={() => setShowTaskModal(false)} className="btn btn-outline" style={{ flex: 1 }}>
+                  Cancelar
+                </button>
+                <button type="submit" disabled={submittingTask} className="btn" style={{ flex: 1 }}>
+                  {submittingTask ? "Salvando..." : "Criar Tarefa"}
+                </button>
+              </div>
             </form>
           </div>
         </div>
