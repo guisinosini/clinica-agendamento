@@ -21,6 +21,8 @@ type CombinedTask = {
   viewed: boolean;
   type: 'minhas' | 'recebidas' | 'atribuidas';
   assignmentId?: string;
+  priority?: 'baixa' | 'media' | 'alta';
+  comment?: string;
 };
 
 export default function TarefasPage() {
@@ -33,9 +35,14 @@ export default function TarefasPage() {
 
   // Modal states
   const [showModal, setShowModal] = useState(false);
-  const [newTask, setNewTask] = useState({ title: '', description: '', dueDate: '' });
+  const [newTask, setNewTask] = useState({ title: '', description: '', dueDate: '', priority: 'media' });
   const [selectedProfs, setSelectedProfs] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  // Filters
+  const [filterPriority, setFilterPriority] = useState('');
+  const [filterAssignedBy, setFilterAssignedBy] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
 
   useEffect(() => {
     if (!loading && !professional) {
@@ -91,6 +98,8 @@ export default function TarefasPage() {
             viewed: assignment.viewed,
             type: isMine ? 'minhas' : 'recebidas',
             createdByName: allProfessionals.find(p => p.id === task.created_by)?.name || 'Desconhecido',
+            priority: task.priority || 'media',
+            comment: assignment.comment || '',
           });
         });
       }
@@ -115,6 +124,8 @@ export default function TarefasPage() {
                   viewed: assignment.viewed,
                   type: 'atribuidas',
                   createdByName: professional.name,
+                  priority: task.priority || 'media',
+                  comment: assignment.comment || '',
                 });
               }
             });
@@ -160,6 +171,7 @@ export default function TarefasPage() {
           title: newTask.title,
           description: newTask.description,
           due_date: newTask.dueDate || null,
+          priority: newTask.priority,
           created_by: professional.id
         })
         .select()
@@ -180,7 +192,7 @@ export default function TarefasPage() {
 
       // Sucesso
       setShowModal(false);
-      setNewTask({ title: '', description: '', dueDate: '' });
+      setNewTask({ title: '', description: '', dueDate: '', priority: 'media' });
       setSelectedProfs([]);
       fetchTasks();
     } catch (err) {
@@ -215,7 +227,21 @@ export default function TarefasPage() {
     }
   };
 
-  const filteredTasks = tasks.filter(t => t.type === activeTab);
+  const handleCommentChange = async (assignmentId: string, comment: string) => {
+    setTasks(prev => prev.map(t => t.id === assignmentId ? { ...t, comment } : t));
+    try {
+      await supabase.from('task_assignments').update({ comment }).eq('id', assignmentId);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const filteredTasks = tasks.filter(t => t.type === activeTab).filter(t => {
+    if (filterPriority && t.priority !== filterPriority) return false;
+    if (filterAssignedBy && t.createdBy !== filterAssignedBy) return false;
+    if (filterStatus && t.status !== filterStatus) return false;
+    return true;
+  });
 
   if (loading || loadingTasks) return (
     <div className="loading-screen">
@@ -284,6 +310,38 @@ export default function TarefasPage() {
         })}
       </div>
 
+      {/* Filters */}
+      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem", marginBottom: "2rem", backgroundColor: "var(--bg-color)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+        <div>
+          <label className="label" style={{ fontSize: "0.85rem", marginBottom: "0.2rem" }}>Prioridade</label>
+          <select className="input" style={{ padding: "0.4rem" }} value={filterPriority} onChange={e => setFilterPriority(e.target.value)}>
+            <option value="">Todas</option>
+            <option value="alta">Alta</option>
+            <option value="media">Média</option>
+            <option value="baixa">Baixa</option>
+          </select>
+        </div>
+        {activeTab === 'recebidas' && (
+          <div>
+            <label className="label" style={{ fontSize: "0.85rem", marginBottom: "0.2rem" }}>Atribuído por</label>
+            <select className="input" style={{ padding: "0.4rem" }} value={filterAssignedBy} onChange={e => setFilterAssignedBy(e.target.value)}>
+              <option value="">Todos</option>
+              {Array.from(new Set(tasks.filter(t => t.type === 'recebidas').map(t => t.createdBy))).map(id => (
+                <option key={id as string} value={id as string}>{id === null ? "Admin" : (allProfessionals.find(p => p.id === id)?.name || "Desconhecido")}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        <div>
+          <label className="label" style={{ fontSize: "0.85rem", marginBottom: "0.2rem" }}>Status</label>
+          <select className="input" style={{ padding: "0.4rem" }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+            <option value="">Todos</option>
+            <option value="pendente">Pendente</option>
+            <option value="concluida">Concluída</option>
+          </select>
+        </div>
+      </div>
+
       {/* Task List */}
       <div className="grid" style={{ gridTemplateColumns: "1fr", gap: "1rem" }}>
         {filteredTasks.length === 0 ? (
@@ -327,11 +385,16 @@ export default function TarefasPage() {
                   }}>
                     {task.title}
                   </h3>
-                  {task.dueDate && (
-                    <span className="badge" style={{ backgroundColor: "var(--bg-color)", border: "1px solid var(--border-color)", fontSize: "0.75rem" }}>
-                      📅 Prazo: {new Date(task.dueDate + "T00:00:00").toLocaleDateString('pt-BR')}
-                    </span>
-                  )}
+                  <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                    {task.priority === 'alta' && <span className="badge" style={{ backgroundColor: "#fee2e2", color: "#991b1b", fontSize: "0.7rem" }}>Alta</span>}
+                    {task.priority === 'media' && <span className="badge" style={{ backgroundColor: "#fef3c7", color: "#92400e", fontSize: "0.7rem" }}>Média</span>}
+                    {task.priority === 'baixa' && <span className="badge" style={{ backgroundColor: "#dcfce7", color: "#166534", fontSize: "0.7rem" }}>Baixa</span>}
+                    {task.dueDate && (
+                      <span className="badge" style={{ backgroundColor: "var(--bg-color)", border: "1px solid var(--border-color)", fontSize: "0.75rem" }}>
+                        📅 Prazo: {new Date(task.dueDate + "T00:00:00").toLocaleDateString('pt-BR')}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 
                 {task.description && (
@@ -352,6 +415,21 @@ export default function TarefasPage() {
                       </span>
                     </span>
                   )}
+                </div>
+
+                <div style={{ marginTop: "1rem" }}>
+                  <textarea 
+                    placeholder="Adicionar um comentário ou observação..."
+                    style={{ 
+                      width: "100%", padding: "0.75rem", borderRadius: "var(--radius-sm)", 
+                      border: "1px solid var(--border-color)", backgroundColor: "var(--bg-color)",
+                      fontSize: "0.85rem", resize: "vertical", minHeight: "60px",
+                      fontFamily: "inherit"
+                    }}
+                    value={task.comment || ""}
+                    onChange={(e) => setTasks(prev => prev.map(t => t.id === task.id ? { ...t, comment: e.target.value } : t))}
+                    onBlur={(e) => handleCommentChange(task.id, e.target.value)}
+                  />
                 </div>
               </div>
             </div>
@@ -402,6 +480,19 @@ export default function TarefasPage() {
                   value={newTask.dueDate} 
                   onChange={e => setNewTask({...newTask, dueDate: e.target.value})}
                 />
+              </div>
+
+              <div>
+                <label className="label">Prioridade</label>
+                <select 
+                  className="input" 
+                  value={newTask.priority} 
+                  onChange={e => setNewTask({...newTask, priority: e.target.value})}
+                >
+                  <option value="baixa">Baixa</option>
+                  <option value="media">Média</option>
+                  <option value="alta">Alta</option>
+                </select>
               </div>
 
               <div>

@@ -53,6 +53,7 @@ export type Task = {
   title: string;
   description?: string;
   due_date?: string;
+  priority?: 'baixa' | 'media' | 'alta';
   created_by: string; // ID do profissional que criou
   created_at?: string;
 };
@@ -63,6 +64,7 @@ export type TaskAssignment = {
   professional_id: string; // ID do profissional que recebeu a tarefa
   status: 'pendente' | 'concluida';
   viewed: boolean;
+  comment?: string;
   completed_at?: string;
   created_at?: string;
   task?: Task; // Relação para quando fizermos JOIN

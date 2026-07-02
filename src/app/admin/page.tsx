@@ -81,8 +81,23 @@ export default function AdminDashboard() {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDesc, setNewTaskDesc] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState("");
+  const [newTaskPriority, setNewTaskPriority] = useState("media");
   const [selectedTaskProfs, setSelectedTaskProfs] = useState<string[]>([]);
   const [submittingTask, setSubmittingTask] = useState(false);
+
+  // Admin Task Filters
+  const [filterAdminTaskPriority, setFilterAdminTaskPriority] = useState("");
+  const [filterAdminTaskAssignedBy, setFilterAdminTaskAssignedBy] = useState("");
+  const [filterAdminTaskStatus, setFilterAdminTaskStatus] = useState("");
+
+  const handleAdminCommentChange = async (assignmentId: string, comment: string) => {
+    setAdminTasks(prev => prev.map(t => t.id === assignmentId ? { ...t, comment } : t));
+    try {
+      await supabase.from('task_assignments').update({ comment }).eq('id', assignmentId);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const occupiedAdminNewResSlots = useMemo(() => {
     if (!newResRoomId || !newResDate) return [];
@@ -115,6 +130,15 @@ export default function AdminDashboard() {
       fetchAdminTasks();
     }
   }, [activeTab]);
+
+  const filteredAdminTasks = useMemo(() => {
+    return adminTasks.filter(t => {
+      if (filterAdminTaskPriority && t.task?.priority !== filterAdminTaskPriority && !(filterAdminTaskPriority === 'media' && !t.task?.priority)) return false;
+      if (filterAdminTaskAssignedBy && t.task?.created_by !== filterAdminTaskAssignedBy && !(filterAdminTaskAssignedBy === 'admin' && t.task?.created_by === null)) return false;
+      if (filterAdminTaskStatus && t.status !== filterAdminTaskStatus) return false;
+      return true;
+    });
+  }, [adminTasks, filterAdminTaskPriority, filterAdminTaskAssignedBy, filterAdminTaskStatus]);
 
   const filteredReservations = useMemo(() => {
     return allReservations
@@ -480,6 +504,7 @@ export default function AdminDashboard() {
           title: newTaskTitle,
           description: newTaskDesc,
           due_date: newTaskDueDate || null,
+          priority: newTaskPriority,
           created_by: null // admin
         })
         .select()
@@ -503,6 +528,7 @@ export default function AdminDashboard() {
       setNewTaskTitle("");
       setNewTaskDesc("");
       setNewTaskDueDate("");
+      setNewTaskPriority("media");
       setSelectedTaskProfs([]);
       fetchAdminTasks();
     } catch (err) {
@@ -1388,10 +1414,39 @@ export default function AdminDashboard() {
       {activeTab === "tarefas" && (
         <div className="card animate-slide">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 700 }}>Gestão Global de Tarefas ({adminTasks.length})</h2>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 700 }}>Gestão Global de Tarefas ({filteredAdminTasks.length})</h2>
             <div style={{ display: "flex", gap: "0.5rem" }}>
               <button onClick={fetchAdminTasks} className="btn btn-outline btn-sm">↻ Atualizar</button>
               <button onClick={() => setShowTaskModal(true)} className="btn btn-sm">➕ Nova Tarefa</button>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem", marginBottom: "2rem", backgroundColor: "var(--bg-color)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+            <div>
+              <label className="label" style={{ fontSize: "0.85rem", marginBottom: "0.2rem" }}>Prioridade</label>
+              <select className="input" style={{ padding: "0.4rem" }} value={filterAdminTaskPriority} onChange={e => setFilterAdminTaskPriority(e.target.value)}>
+                <option value="">Todas</option>
+                <option value="alta">Alta</option>
+                <option value="media">Média</option>
+                <option value="baixa">Baixa</option>
+              </select>
+            </div>
+            <div>
+              <label className="label" style={{ fontSize: "0.85rem", marginBottom: "0.2rem" }}>Atribuído por</label>
+              <select className="input" style={{ padding: "0.4rem" }} value={filterAdminTaskAssignedBy} onChange={e => setFilterAdminTaskAssignedBy(e.target.value)}>
+                <option value="">Todos</option>
+                <option value="admin">Admin</option>
+                {professionalsList.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label" style={{ fontSize: "0.85rem", marginBottom: "0.2rem" }}>Status</label>
+              <select className="input" style={{ padding: "0.4rem" }} value={filterAdminTaskStatus} onChange={e => setFilterAdminTaskStatus(e.target.value)}>
+                <option value="">Todos</option>
+                <option value="pendente">Pendente</option>
+                <option value="concluida">Concluída</option>
+              </select>
             </div>
           </div>
           
@@ -1400,7 +1455,7 @@ export default function AdminDashboard() {
               <div className="spinner" style={{ margin: "0 auto 1rem" }} />
               <p style={{ color: "var(--text-muted)" }}>Carregando tarefas...</p>
             </div>
-          ) : adminTasks.length === 0 ? (
+          ) : filteredAdminTasks.length === 0 ? (
             <div style={{ textAlign: "center", padding: "3rem", color: "var(--text-muted)" }}>
               <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🍃</div>
               <p>Nenhuma tarefa atribuída no sistema.</p>
@@ -1417,15 +1472,34 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {adminTasks.map(assignment => (
+                  {filteredAdminTasks.map(assignment => (
                     <tr key={assignment.id} style={{ borderBottom: "1px solid var(--border-color)" }}>
                       <td style={{ padding: "1rem" }}>
-                        <div style={{ fontWeight: 700, color: "var(--text-main)" }}>{assignment.task?.title || "Sem Título"}</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <div style={{ fontWeight: 700, color: "var(--text-main)" }}>{assignment.task?.title || "Sem Título"}</div>
+                          {(!assignment.task?.priority || assignment.task?.priority === 'media') && <span className="badge" style={{ backgroundColor: "#fef3c7", color: "#92400e", fontSize: "0.6rem" }}>Média</span>}
+                          {assignment.task?.priority === 'alta' && <span className="badge" style={{ backgroundColor: "#fee2e2", color: "#991b1b", fontSize: "0.6rem" }}>Alta</span>}
+                          {assignment.task?.priority === 'baixa' && <span className="badge" style={{ backgroundColor: "#dcfce7", color: "#166534", fontSize: "0.6rem" }}>Baixa</span>}
+                        </div>
                         {assignment.task?.due_date && (
                           <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>
                             Prazo: {new Date(assignment.task.due_date + "T00:00:00").toLocaleDateString('pt-BR')}
                           </div>
                         )}
+                        <div style={{ marginTop: "0.5rem" }}>
+                          <textarea 
+                            placeholder="Comentário..."
+                            style={{ 
+                              width: "100%", padding: "0.4rem", borderRadius: "var(--radius-sm)", 
+                              border: "1px solid var(--border-color)", backgroundColor: "var(--bg-color)",
+                              fontSize: "0.8rem", resize: "vertical", minHeight: "40px",
+                              fontFamily: "inherit"
+                            }}
+                            value={assignment.comment || ""}
+                            onChange={(e) => setAdminTasks(prev => prev.map(t => t.id === assignment.id ? { ...t, comment: e.target.value } : t))}
+                            onBlur={(e) => handleAdminCommentChange(assignment.id, e.target.value)}
+                          />
+                        </div>
                       </td>
                       <td style={{ padding: "1rem", fontWeight: 500, color: "var(--primary)" }}>
                         {assignment.professional_id === null ? "⚙️ Administração" : (assignment.professional?.name || "Desconhecido")}
@@ -1563,6 +1637,19 @@ export default function AdminDashboard() {
                   value={newTaskDueDate} 
                   onChange={e => setNewTaskDueDate(e.target.value)}
                 />
+              </div>
+
+              <div>
+                <label className="label">Prioridade</label>
+                <select 
+                  className="input" 
+                  value={newTaskPriority} 
+                  onChange={e => setNewTaskPriority(e.target.value)}
+                >
+                  <option value="baixa">Baixa</option>
+                  <option value="media">Média</option>
+                  <option value="alta">Alta</option>
+                </select>
               </div>
 
               <div>
