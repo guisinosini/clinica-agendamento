@@ -681,68 +681,62 @@ export default function AdminDashboard() {
       `}</style>
 
       {/* Navegação do Admin — organizada em grupos */}
-      <nav className="admin-nav" style={{
+      <nav className="admin-nav card" style={{
+        marginBottom: "2rem",
+        padding: "1.5rem",
         display: "flex",
         flexDirection: "column",
-        gap: "0.75rem",
-        marginBottom: "2rem",
-        padding: "1.25rem",
-        borderRadius: "var(--radius-md)",
-        border: "1px solid var(--border-color)",
-        background: "var(--card-bg)",
+        gap: "1.5rem"
       }}>
-        {/* Linha de navegação principal */}
-        <div className="admin-nav-row" style={{ display: "flex", alignItems: "flex-end", gap: "0.5rem", flexWrap: "nowrap", overflowX: "auto" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "2rem", justifyContent: "space-between" }}>
+          
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "2rem" }}>
+            {/* Grupo: Análise */}
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span className="admin-nav-group-label">📊 Análise</span>
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                <button onClick={() => setActiveTab("dashboard")} className={`admin-nav-btn${activeTab === "dashboard" ? " active" : ""}`}>
+                  Visão Geral
+                </button>
+                <button onClick={() => setActiveTab("relatorios")} className={`admin-nav-btn${activeTab === "relatorios" ? " active" : ""}`}>
+                  Relatórios
+                </button>
+                <button onClick={() => setActiveTab("disponibilidade")} className={`admin-nav-btn${activeTab === "disponibilidade" ? " active" : ""}`}>
+                  Grade
+                </button>
+              </div>
+            </div>
 
-          {/* Grupo: Análise */}
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span className="admin-nav-group-label">📊 Análise</span>
-            <div style={{ display: "flex", gap: "0.4rem" }}>
-              <button onClick={() => setActiveTab("dashboard")} className={`admin-nav-btn${activeTab === "dashboard" ? " active" : ""}`}>
-                Visão Geral
-              </button>
-              <button onClick={() => setActiveTab("relatorios")} className={`admin-nav-btn${activeTab === "relatorios" ? " active" : ""}`}>
-                Relatórios
-              </button>
-              <button onClick={() => setActiveTab("disponibilidade")} className={`admin-nav-btn${activeTab === "disponibilidade" ? " active" : ""}`}>
-                Grade
-              </button>
+            {/* Grupo: Gestão */}
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span className="admin-nav-group-label">🗂️ Gestão</span>
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                <button onClick={() => setActiveTab("reservations")} className={`admin-nav-btn${activeTab === "reservations" ? " active" : ""}`}>
+                  📋 Reservas
+                </button>
+                <button onClick={() => setActiveTab("patients")} className={`admin-nav-btn${activeTab === "patients" ? " active" : ""}`}>
+                  👥 Pacientes
+                </button>
+                <button onClick={() => setActiveTab("professionals")} className={`admin-nav-btn${activeTab === "professionals" ? " active" : ""}`}>
+                  🩺 Equipe
+                </button>
+                <button onClick={() => setActiveTab("services")} className={`admin-nav-btn${activeTab === "services" ? " active" : ""}`}>
+                  🏷️ Serviços
+                </button>
+                <button onClick={() => setActiveTab("rooms")} className={`admin-nav-btn${activeTab === "rooms" ? " active" : ""}`}>
+                  🚪 Salas
+                </button>
+                <button onClick={() => setActiveTab("tarefas")} className={`admin-nav-btn${activeTab === "tarefas" ? " active" : ""}`}>
+                  ✅ Tarefas
+                </button>
+              </div>
             </div>
           </div>
-
-          <div className="admin-nav-divider" />
-
-          {/* Grupo: Gestão */}
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span className="admin-nav-group-label">🗂️ Gestão</span>
-            <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
-              <button onClick={() => setActiveTab("reservations")} className={`admin-nav-btn${activeTab === "reservations" ? " active" : ""}`}>
-                📋 Reservas
-              </button>
-              <button onClick={() => setActiveTab("patients")} className={`admin-nav-btn${activeTab === "patients" ? " active" : ""}`}>
-                👥 Pacientes
-              </button>
-              <button onClick={() => setActiveTab("professionals")} className={`admin-nav-btn${activeTab === "professionals" ? " active" : ""}`}>
-                🩺 Equipe
-              </button>
-              <button onClick={() => setActiveTab("services")} className={`admin-nav-btn${activeTab === "services" ? " active" : ""}`}>
-                🏷️ Serviços
-              </button>
-              <button onClick={() => setActiveTab("rooms")} className={`admin-nav-btn${activeTab === "rooms" ? " active" : ""}`}>
-                🚪 Salas
-              </button>
-              <button onClick={() => setActiveTab("tarefas")} className={`admin-nav-btn${activeTab === "tarefas" ? " active" : ""}`}>
-                ✅ Tarefas
-              </button>
-            </div>
-          </div>
-
-          <div className="admin-nav-divider" style={{ marginLeft: "auto" }} />
 
           {/* Grupo: Ações Rápidas */}
-          <div style={{ display: "flex", flexDirection: "column", flexShrink: 0 }}>
-            <span className="admin-nav-group-label">⚡ Ações</span>
-            <div style={{ display: "flex", gap: "0.4rem" }}>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <span className="admin-nav-group-label">⚡ Ações Rápidas</span>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
               <button
                 onClick={() => setActiveTab("new_reservation")}
                 className={`admin-nav-btn action-primary${activeTab === "new_reservation" ? " active" : ""}`}
@@ -750,7 +744,7 @@ export default function AdminDashboard() {
                 + Nova Reserva
               </button>
               <button onClick={handleExportBackup} className="admin-nav-btn action-secondary">
-                💾 Backup
+                💾 Backup XLS
               </button>
             </div>
           </div>
