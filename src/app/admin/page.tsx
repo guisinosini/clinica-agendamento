@@ -610,48 +610,151 @@ export default function AdminDashboard() {
       <style>{`
         .admin-nav::-webkit-scrollbar { display: none; }
         .admin-nav { -ms-overflow-style: none; scrollbar-width: none; }
+        .admin-nav-group-label {
+          font-size: 0.65rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: var(--text-muted);
+          margin-bottom: 0.4rem;
+        }
+        .admin-nav-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          border-radius: 0.6rem;
+          padding: 0.5rem 1rem;
+          font-size: 0.83rem;
+          font-weight: 600;
+          white-space: nowrap;
+          border: 1.5px solid var(--border-color);
+          background: var(--card-bg);
+          color: var(--text-secondary);
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+        .admin-nav-btn:hover {
+          border-color: var(--primary);
+          color: var(--primary);
+          background: var(--primary-light);
+        }
+        .admin-nav-btn.active {
+          background: var(--primary);
+          border-color: var(--primary);
+          color: #fff;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .admin-nav-btn.action-primary {
+          background: var(--success);
+          border-color: var(--success);
+          color: #fff;
+        }
+        .admin-nav-btn.action-primary:hover {
+          opacity: 0.88;
+          color: #fff;
+        }
+        .admin-nav-btn.action-secondary {
+          border-color: var(--primary);
+          color: var(--primary);
+          background: var(--primary-light);
+        }
+        .admin-nav-btn.action-secondary:hover {
+          background: var(--primary);
+          color: #fff;
+        }
+        .admin-nav-divider {
+          width: 1px;
+          background: var(--border-color);
+          align-self: stretch;
+          margin: 0 0.5rem;
+        }
         @media print {
           body * { visibility: hidden; }
           .print-section, .print-section * { visibility: visible; }
           .print-section { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
           .print-hidden { display: none !important; }
         }
+        @media (max-width: 768px) {
+          .admin-nav-divider { display: none; }
+          .admin-nav-row { flex-wrap: wrap !important; }
+        }
       `}</style>
-      
-      {/* Container de Navegação */}
-      <nav className="admin-nav" style={{ 
-        display: "flex", 
-        flexDirection: "column",
-        gap: "1rem", 
-        marginBottom: "2rem", 
-        paddingBottom: "1rem",
-        borderBottom: "1px solid var(--border-color)",
-      }}>
-        {/* Linha 1: Análise e Ação */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-            <button onClick={() => setActiveTab("dashboard")} className={activeTab === "dashboard" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>📊 Visão Geral</button>
-            <button onClick={() => setActiveTab("relatorios")} className={activeTab === "relatorios" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>📈 Relatórios</button>
-            <button onClick={() => setActiveTab("disponibilidade")} className={activeTab === "disponibilidade" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>📅 Grade</button>
-          </div>
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <button onClick={handleExportBackup} className="btn btn-outline" style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem", borderColor: "var(--primary)", color: "var(--primary)" }}>
-              💾 Fazer Backup Geral
-            </button>
-            <button onClick={() => setActiveTab("new_reservation")} className="btn" style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem", backgroundColor: "var(--success)", borderColor: "var(--success)" }}>
-              + Nova Reserva
-            </button>
-          </div>
-        </div>
 
-        {/* Linha 2: Gestão */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-          <button onClick={() => setActiveTab("reservations")} className={activeTab === "reservations" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>📋 Reservas</button>
-          <button onClick={() => setActiveTab("patients")} className={activeTab === "patients" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>👥 Pacientes</button>
-          <button onClick={() => setActiveTab("professionals")} className={activeTab === "professionals" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>🩺 Equipe</button>
-          <button onClick={() => setActiveTab("services")} className={activeTab === "services" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>🏷️ Serviços</button>
-          <button onClick={() => setActiveTab("rooms")} className={activeTab === "rooms" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>🚪 Salas</button>
-          <button onClick={() => setActiveTab("tarefas")} className={activeTab === "tarefas" ? "btn" : "btn btn-outline"} style={{ borderRadius: "2rem", padding: "0.5rem 1.2rem", whiteSpace: "nowrap", fontSize: "0.85rem" }}>✅ Tarefas</button>
+      {/* Navegação do Admin — organizada em grupos */}
+      <nav className="admin-nav" style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.75rem",
+        marginBottom: "2rem",
+        padding: "1.25rem",
+        borderRadius: "var(--radius-md)",
+        border: "1px solid var(--border-color)",
+        background: "var(--card-bg)",
+      }}>
+        {/* Linha de navegação principal */}
+        <div className="admin-nav-row" style={{ display: "flex", alignItems: "flex-end", gap: "0.5rem", flexWrap: "nowrap", overflowX: "auto" }}>
+
+          {/* Grupo: Análise */}
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <span className="admin-nav-group-label">📊 Análise</span>
+            <div style={{ display: "flex", gap: "0.4rem" }}>
+              <button onClick={() => setActiveTab("dashboard")} className={`admin-nav-btn${activeTab === "dashboard" ? " active" : ""}`}>
+                Visão Geral
+              </button>
+              <button onClick={() => setActiveTab("relatorios")} className={`admin-nav-btn${activeTab === "relatorios" ? " active" : ""}`}>
+                Relatórios
+              </button>
+              <button onClick={() => setActiveTab("disponibilidade")} className={`admin-nav-btn${activeTab === "disponibilidade" ? " active" : ""}`}>
+                Grade
+              </button>
+            </div>
+          </div>
+
+          <div className="admin-nav-divider" />
+
+          {/* Grupo: Gestão */}
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <span className="admin-nav-group-label">🗂️ Gestão</span>
+            <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+              <button onClick={() => setActiveTab("reservations")} className={`admin-nav-btn${activeTab === "reservations" ? " active" : ""}`}>
+                📋 Reservas
+              </button>
+              <button onClick={() => setActiveTab("patients")} className={`admin-nav-btn${activeTab === "patients" ? " active" : ""}`}>
+                👥 Pacientes
+              </button>
+              <button onClick={() => setActiveTab("professionals")} className={`admin-nav-btn${activeTab === "professionals" ? " active" : ""}`}>
+                🩺 Equipe
+              </button>
+              <button onClick={() => setActiveTab("services")} className={`admin-nav-btn${activeTab === "services" ? " active" : ""}`}>
+                🏷️ Serviços
+              </button>
+              <button onClick={() => setActiveTab("rooms")} className={`admin-nav-btn${activeTab === "rooms" ? " active" : ""}`}>
+                🚪 Salas
+              </button>
+              <button onClick={() => setActiveTab("tarefas")} className={`admin-nav-btn${activeTab === "tarefas" ? " active" : ""}`}>
+                ✅ Tarefas
+              </button>
+            </div>
+          </div>
+
+          <div className="admin-nav-divider" style={{ marginLeft: "auto" }} />
+
+          {/* Grupo: Ações Rápidas */}
+          <div style={{ display: "flex", flexDirection: "column", flexShrink: 0 }}>
+            <span className="admin-nav-group-label">⚡ Ações</span>
+            <div style={{ display: "flex", gap: "0.4rem" }}>
+              <button
+                onClick={() => setActiveTab("new_reservation")}
+                className={`admin-nav-btn action-primary${activeTab === "new_reservation" ? " active" : ""}`}
+              >
+                + Nova Reserva
+              </button>
+              <button onClick={handleExportBackup} className="admin-nav-btn action-secondary">
+                💾 Backup
+              </button>
+            </div>
+          </div>
+
         </div>
       </nav>
 
