@@ -65,6 +65,7 @@ export default function AdminDashboard() {
   const [patHealthPlanNumber, setPatHealthPlanNumber] = useState("");
   const [patGender, setPatGender] = useState("");
   const [patNotes, setPatNotes] = useState("");
+  const [patientSearch, setPatientSearch] = useState("");
 
   // Service Form State
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
@@ -1111,7 +1112,7 @@ export default function AdminDashboard() {
       )}
 
       {activeTab === "patients" && (
-        <div style={{ display: "grid", gap: "2rem", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
           {/* Form de Nova/Edição Paciente */}
           <div className="card animate-slide">
             <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem" }}>
@@ -1205,11 +1206,22 @@ export default function AdminDashboard() {
           {/* Lista de Pacientes */}
           <div className="card animate-slide">
             <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem" }}>Pacientes ({patientsList.length})</h2>
+            <div style={{ marginBottom: "1rem" }}>
+              <input 
+                type="text" 
+                className="input" 
+                placeholder="Pesquisar por nome do paciente..." 
+                value={patientSearch}
+                onChange={(e) => setPatientSearch(e.target.value)}
+              />
+            </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem", maxHeight: "600px", overflowY: "auto" }}>
-              {patientsList.length === 0 ? (
-                <p style={{ color: "var(--text-muted)" }}>Nenhum paciente cadastrado.</p>
-              ) : (
-                patientsList.map(pat => (
+              {(() => {
+                const filteredPatients = patientsList.filter(pat => pat.name.toLowerCase().includes(patientSearch.toLowerCase()));
+                if (filteredPatients.length === 0) {
+                  return <p style={{ color: "var(--text-muted)" }}>Nenhum paciente encontrado.</p>;
+                }
+                return filteredPatients.map(pat => (
                   <div key={pat.id} style={{ padding: "1rem", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
                       <div>
@@ -1247,8 +1259,8 @@ export default function AdminDashboard() {
                       </div>
                     )}
                   </div>
-                ))
-              )}
+                ));
+              })()}
             </div>
           </div>
         </div>
