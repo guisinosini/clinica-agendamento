@@ -852,8 +852,8 @@ export default function AdminDashboard() {
           {filteredReservations.length === 0 ? (
             <p style={{ color: "var(--text-muted)" }}>Nenhuma reserva encontrada com os filtros selecionados.</p>
           ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
+            <div className="table-scroll">
+              <table className="responsive-table" style={{ minWidth: "560px" }}>
                 <thead>
                   <tr style={{ borderBottom: "2px solid var(--border-color)", textAlign: "left" }}>
                     <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Data</th>
@@ -988,8 +988,8 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
+          <div className="table-scroll">
+            <table className="responsive-table" style={{ minWidth: "700px" }}>
               <thead>
                 <tr style={{ borderBottom: "2px solid var(--border-color)", textAlign: "left", backgroundColor: "var(--bg-color)" }}>
                   <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Data</th>
@@ -1167,24 +1167,49 @@ export default function AdminDashboard() {
       )}
 
       {activeTab === "professionals" && (
-        <div className="card animate-slide">
-          <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1.5rem" }}>Profissionais Cadastrados ({professionalsList.length})</h2>
-          
+        <div className="animate-slide" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+
+          {/* Cabeçalho informativo */}
+          <div className="card" style={{ padding: "1.25rem 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem", background: "var(--primary-light)", border: "1px solid var(--primary-mid)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <span style={{ fontSize: "2rem", fontWeight: 800, color: "var(--primary)" }}>{professionalsList.length}</span>
+                <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 600 }}>Profissionais<br/>cadastrados</span>
+              </div>
+              <div style={{ width: "1px", height: "32px", background: "var(--primary-mid)" }} />
+              <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", maxWidth: "320px", lineHeight: 1.5 }}>
+                Para <strong>adicionar</strong> um profissional, envie o link de convite. Para <strong>remover</strong>, use o botão no card.
+              </p>
+            </div>
+          </div>
+
+          {/* Lista de cards */}
           {professionalsList.length === 0 ? (
-            <p style={{ color: "var(--text-muted)" }}>Nenhum profissional encontrado.</p>
+            <div className="card" style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>
+              <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🩺</div>
+              <p>Nenhum profissional cadastrado ainda.</p>
+            </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(290px, 1fr))", gap: "1rem" }}>
               {professionalsList.map(prof => (
-                <div key={prof.id} style={{ 
-                  padding: "1.25rem", border: "1px solid var(--border-color)", 
-                  borderRadius: "var(--radius-md)", display: "flex", justifyContent: "space-between", alignItems: "center" 
+                <div key={prof.id} style={{
+                  background: "var(--card-bg)",
+                  border: "1px solid var(--border-color)",
+                  borderRadius: "var(--radius-md)",
+                  padding: "1.25rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1rem",
+                  boxShadow: "var(--clay-card)"
                 }}>
+                  {/* Topo do card: avatar + info */}
                   <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-                    <div style={{ 
-                      width: "48px", height: "48px", borderRadius: "50%", 
-                      background: "var(--primary-light)", color: "var(--primary)", 
-                      display: "flex", alignItems: "center", justifyContent: "center", 
-                      fontWeight: 700, fontSize: "1.2rem" 
+                    <div style={{
+                      width: "52px", height: "52px", borderRadius: "50%", flexShrink: 0,
+                      background: "var(--primary-light)", color: "var(--primary)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontWeight: 700, fontSize: "1.2rem",
+                      border: "2px solid var(--primary-mid)"
                     }}>
                       {prof.avatar_url ? (
                         <img src={prof.avatar_url} alt={prof.name} style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
@@ -1192,21 +1217,48 @@ export default function AdminDashboard() {
                         prof.name.split(" ").slice(0,2).map((n: string) => n[0]).join("").toUpperCase()
                       )}
                     </div>
-                    <div>
-                      <h3 style={{ fontWeight: 700, color: "var(--text-main)", fontSize: "1.05rem" }}>{prof.name}</h3>
-                      <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>{prof.specialty || "Clínico"}</p>
-                      <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>{prof.email}</p>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h3 style={{ fontWeight: 800, color: "var(--text-main)", fontSize: "1rem", marginBottom: "0.15rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {prof.name}
+                      </h3>
+                      <p style={{ fontSize: "0.82rem", color: "var(--primary)", fontWeight: 600 }}>{prof.specialty || "Clínico"}</p>
+                      <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.15rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {prof.email}
+                      </p>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => handleDeleteProfessional(prof.id)} 
-                    style={{ 
-                      padding: "0.4rem 0.8rem", backgroundColor: "var(--danger-light)", color: "var(--danger)", 
-                      border: "none", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" 
-                    }}
-                  >
-                    Excluir
-                  </button>
+
+                  {/* Badge de status */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", gap: "0.35rem",
+                      fontSize: "0.72rem", fontWeight: 700,
+                      padding: "0.2rem 0.6rem", borderRadius: "999px",
+                      backgroundColor: "#dcfce7", color: "#166534"
+                    }}>
+                      <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#16a34a", display: "inline-block" }} />
+                      Ativo
+                    </span>
+
+                    <button
+                      onClick={() => handleDeleteProfessional(prof.id)}
+                      title="Remover profissional permanentemente"
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                        padding: "0.35rem 0.75rem",
+                        backgroundColor: "transparent",
+                        color: "var(--danger)",
+                        border: "1.5px solid var(--danger)",
+                        borderRadius: "var(--radius-sm)",
+                        fontSize: "0.75rem", fontWeight: 700, cursor: "pointer",
+                        transition: "all 0.15s ease"
+                      }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "var(--danger)"; (e.currentTarget as HTMLButtonElement).style.color = "#fff"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "var(--danger)"; }}
+                    >
+                      🗑 Excluir
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1576,8 +1628,8 @@ export default function AdminDashboard() {
               <p>Nenhuma tarefa atribuída no sistema.</p>
             </div>
           ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "800px" }}>
+            <div className="table-scroll">
+              <table className="responsive-table" style={{ minWidth: "600px" }}>
                 <thead>
                   <tr style={{ borderBottom: "2px solid var(--border-color)", textAlign: "left", backgroundColor: "var(--bg-color)" }}>
                     <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Tarefa</th>
