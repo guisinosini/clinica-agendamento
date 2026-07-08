@@ -102,10 +102,20 @@ export default function AdminDashboard() {
 
   const occupiedAdminNewResSlots = useMemo(() => {
     if (!newResRoomId || !newResDate) return [];
-    return allReservations
+    
+    const roomSlots = allReservations
       .filter(res => res.roomId === newResRoomId && res.date === newResDate && (!res.status || res.status === 'agendado' || res.status === 'confirmado' || res.status === 'realizado'))
       .map(res => res.startTime);
-  }, [allReservations, newResRoomId, newResDate]);
+
+    let profSlots: string[] = [];
+    if (newResProfId) {
+      profSlots = allReservations
+        .filter(res => res.professionalId === newResProfId && res.date === newResDate && (!res.status || res.status === 'agendado' || res.status === 'confirmado' || res.status === 'realizado' || res.status === 'indisponivel'))
+        .map(res => res.startTime);
+    }
+
+    return Array.from(new Set([...roomSlots, ...profSlots]));
+  }, [allReservations, newResRoomId, newResDate, newResProfId]);
 
   const occupiedAdminRescheduleSlots = useMemo(() => {
     if (!rescheduleRoom || !rescheduleDate) return [];
