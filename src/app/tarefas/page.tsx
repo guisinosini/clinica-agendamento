@@ -190,6 +190,30 @@ export default function TarefasPage() {
       const { error: assignErr } = await supabase.from('task_assignments').insert(assignments);
       if (assignErr) throw assignErr;
 
+      // 3. Disparar E-mails (Fire-and-Forget, sem bloquear a UI)
+      const emailsToSend = selectedProfs
+        .filter(id => id !== 'admin' && id !== professional.id)
+        .map(id => allProfessionals.find(p => p.id === id)?.email)
+        .filter(Boolean); // Remover nulos
+
+      if (emailsToSend.length > 0) {
+        const taskLink = window.location.origin + '/tarefas';
+        emailsToSend.forEach(email => {
+          fetch('/api/email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: email,
+              subject: `Nova Tarefa: ${newTask.title}`,
+              taskTitle: newTask.title,
+              taskDescription: newTask.description,
+              assignedBy: professional.name,
+              taskLink: taskLink,
+            })
+          }).catch(err => console.error('Falha ao disparar email:', err));
+        });
+      }
+
       // Sucesso
       setShowModal(false);
       setNewTask({ title: '', description: '', dueDate: '', priority: 'media' });
