@@ -56,7 +56,7 @@ export default function ReservarPage() {
   }, [loading, professional, router]);
 
   const occupiedSlots = useMemo(() => {
-    if (!selectedRoom) return [];
+    if (!selectedRoom || !professional) return [];
     
     // Horários ocupados na sala
     const roomSlots = reservations
@@ -69,7 +69,7 @@ export default function ReservarPage() {
       .map(res => res.startTime);
 
     return Array.from(new Set([...roomSlots, ...professionalSlots]));
-  }, [reservations, selectedRoom, selectedDate, professional.id]);
+  }, [reservations, selectedRoom, selectedDate, professional?.id]);
 
   if (loading || !professional) return (
     <div className="loading-screen">
