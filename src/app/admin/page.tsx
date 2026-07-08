@@ -197,14 +197,14 @@ export default function AdminDashboard() {
   // --- Dashboard Data ---
   const totalProfissionais = professionalsList.length;
   const totalPacientes = patientsList.length;
-  const totalAgendados = allReservations.filter(r => r.status !== 'cancelado' && r.status !== 'falta').length;
+  const totalAgendados = allReservations.filter(r => r.status !== 'cancelado' && r.status !== 'falta' && r.status !== 'indisponivel').length;
   const totalConcluidos = patientsList.filter(p => p.status === 'concluido').length;
 
   const chartData = useMemo(() => {
     const profs: Record<string, number> = {};
     professionalsList.forEach(p => profs[p.id] = 0);
     allReservations.forEach(r => {
-      if (r.status !== 'cancelado' && r.status !== 'falta') {
+      if (r.status !== 'cancelado' && r.status !== 'falta' && r.status !== 'indisponivel') {
         if (profs[r.professionalId] !== undefined) profs[r.professionalId]++;
         else profs[r.professionalId] = 1;
       }
@@ -876,7 +876,11 @@ export default function AdminDashboard() {
                         {professionalsMap[res.professionalId] || "Desconhecido"}
                       </td>
                       <td style={{ padding: "1rem" }}>
-                        <div style={{ fontWeight: 600 }}>{getRoomName(res.roomId)}</div>
+                        {res.status === 'indisponivel' ? (
+                          <div style={{ fontWeight: 600, color: "var(--danger)" }}>Sem Sala (Bloqueio)</div>
+                        ) : (
+                          <div style={{ fontWeight: 600 }}>{getRoomName(res.roomId)}</div>
+                        )}
                         {(res.patientName || res.service) && (
                           <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>
                             {res.patientName && <span>{res.patientName}</span>}
@@ -887,7 +891,15 @@ export default function AdminDashboard() {
                       </td>
                       <td style={{ padding: "1rem", textAlign: "right" }}>
                         <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap" }}>
-                          {res.status === 'realizado' ? (
+                          {res.status === 'indisponivel' ? (
+                            <button 
+                              onClick={() => handleCancelReservation(res.id)}
+                              style={{ color: "var(--danger)", backgroundColor: "var(--danger-light)", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "1px solid var(--danger)", cursor: "pointer" }}
+                              title="Remover este bloqueio"
+                            >
+                              Desbloquear
+                            </button>
+                          ) : res.status === 'realizado' ? (
                             <span style={{ color: "var(--success)", fontWeight: 700, fontSize: "0.85rem" }}>✅ Realizado</span>
                           ) : res.status === 'falta' ? (
                             <span style={{ color: "var(--danger)", fontWeight: 700, fontSize: "0.85rem" }}>❌ Falta</span>

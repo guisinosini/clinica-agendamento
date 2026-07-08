@@ -349,7 +349,7 @@ export default function Home() {
   // Estatísticas do Mês
   const currentMonth = new Date().toISOString().slice(0, 7); // "YYYY-MM"
   const thisMonthReservations = reservations.filter(res => 
-    res.professionalId === professional.id && res.date.startsWith(currentMonth)
+    res.professionalId === professional.id && res.date.startsWith(currentMonth) && res.status !== 'indisponivel'
   );
   
   const totalHoursThisMonth = thisMonthReservations.length; 
