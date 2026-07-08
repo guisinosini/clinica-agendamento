@@ -22,7 +22,7 @@ import {
 import { ptBR } from "date-fns/locale";
 
 export default function ProfessionalAgendaPage() {
-  const { reservations, cancelReservation, updateReservationStatus, rooms, professional, loading } = useReservation();
+  const { reservations, cancelReservation, updateReservationStatus, rooms, professional, loading, addReservations } = useReservation();
   const router = useRouter();
 
   // Estado da semana/data selecionada
@@ -55,8 +55,8 @@ export default function ProfessionalAgendaPage() {
     if (!blockDate || !blockStartTime || !blockEndTime) return;
     
     try {
-      await useReservation().addReservations([{
-        roomId: null as any,
+      await addReservations([{
+        roomId: null,
         professionalId: professional!.id,
         date: blockDate,
         startTime: blockStartTime,
