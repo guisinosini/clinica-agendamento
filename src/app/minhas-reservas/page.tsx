@@ -30,6 +30,15 @@ export default function ProfessionalAgendaPage() {
   const [currentWeekStart, setCurrentWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [selectedDate, setSelectedDate] = useState(new Date());
 
+  // Estado do Modal de Bloqueio
+  const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+  const [blockDate, setBlockDate] = useState(new Date().toISOString().split("T")[0]);
+  const [blockStartTime, setBlockStartTime] = useState("08:00");
+  const [blockEndTime, setBlockEndTime] = useState("09:00");
+  const [blockReason, setBlockReason] = useState("");
+
+  const { TIME_SLOTS } = require("../../context/ReservationContext");
+
   useEffect(() => {
     if (!loading && !professional) router.push("/");
   }, [loading, professional, router]);
@@ -40,6 +49,27 @@ export default function ProfessionalAgendaPage() {
       <p style={{ color: "var(--text-muted)" }}>Carregando sua agenda...</p>
     </div>
   );
+
+  const handleBlockTime = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!blockDate || !blockStartTime || !blockEndTime) return;
+    
+    try {
+      await useReservation().addReservations([{
+        roomId: null as any,
+        professionalId: professional!.id,
+        date: blockDate,
+        startTime: blockStartTime,
+        endTime: blockEndTime,
+        patientName: `Bloqueado: ${blockReason || 'Indisponível'}`,
+        status: 'indisponivel' as any
+      }]);
+      setIsBlockModalOpen(false);
+      setBlockReason("");
+    } catch (err) {
+      alert("Erro ao bloquear horário.");
+    }
+  };
 
   // Filtrar apenas reservas do profissional logado
   const myReservations = reservations.filter((res) => res.professionalId === professional.id);
@@ -141,9 +171,14 @@ export default function ProfessionalAgendaPage() {
           </Link>
           <h1 style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Minha Agenda</h1>
         </div>
-        <Link href="/reservar" className="btn" style={{ fontSize: "0.9rem", padding: "0.5rem 1rem" }}>
-          + Novo Agendamento
-        </Link>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button onClick={() => setIsBlockModalOpen(true)} className="btn btn-outline" style={{ fontSize: "0.9rem", padding: "0.5rem 1rem", borderColor: "var(--danger)", color: "var(--danger)" }}>
+            Bloquear Agenda
+          </button>
+          <Link href="/reservar" className="btn" style={{ fontSize: "0.9rem", padding: "0.5rem 1rem" }}>
+            + Novo Agendamento
+          </Link>
+        </div>
       </header>
 
       {/* Navegação do Calendário */}
@@ -229,33 +264,41 @@ export default function ProfessionalAgendaPage() {
                     {format(dateObj, "EEEE, dd 'de' MMMM", { locale: ptBR })}
                   </h3>
                   <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                    {groupedReservations[dateStr].map(res => (
-                      <div key={res.id} className="card animate-slide" style={{ display: "flex", gap: "1rem", alignItems: "center", padding: "1.25rem" }}>
+                    {groupedReservations[dateStr].map(res => {
+                      const isBlocked = res.status === 'indisponivel';
+                      return (
+                      <div key={res.id} className="card animate-slide" style={{ display: "flex", gap: "1rem", alignItems: "center", padding: "1.25rem", ...(isBlocked ? { background: "var(--danger-light)", border: "1px solid var(--danger)" } : {}) }}>
                 {/* Horário */}
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: "70px", paddingRight: "1rem", borderRight: "2px solid var(--border-color)" }}>
-                  <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-main)" }}>{res.startTime}</span>
-                  <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)" }}>{res.endTime}</span>
+                  <span style={{ fontSize: "1.1rem", fontWeight: 800, color: isBlocked ? "var(--danger)" : "var(--text-main)" }}>{res.startTime}</span>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 600, color: isBlocked ? "var(--danger)" : "var(--text-muted)" }}>{res.endTime}</span>
                 </div>
                 
                 {/* Detalhes */}
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.2rem", flexWrap: "wrap" }}>
-                    <h4 style={{ fontSize: "1.1rem", fontWeight: 700, color: res.status === 'falta' || res.status === 'reagendado' || res.status === 'realizado' ? "var(--text-muted)" : "var(--primary)" }}>
+                    <h4 style={{ fontSize: "1.1rem", fontWeight: 700, color: isBlocked ? "var(--danger)" : (res.status === 'falta' || res.status === 'reagendado' || res.status === 'realizado' ? "var(--text-muted)" : "var(--primary)") }}>
                       {res.patientName || "Paciente Não Informado"}
                     </h4>
+                    {isBlocked && <span className="badge" style={{ backgroundColor: "var(--danger)", color: "white", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>Bloqueado</span>}
                     {res.status === 'falta' && <span className="badge" style={{ backgroundColor: "var(--danger-light)", color: "var(--danger)", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>Falta</span>}
                     {res.status === 'reagendado' && <span className="badge" style={{ backgroundColor: "#fef3c7", color: "#b45309", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>Reagendado</span>}
                     {res.status === 'confirmado' && <span className="badge" style={{ backgroundColor: "#dcfce7", color: "var(--success, #166534)", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>✓ Confirmado</span>}
                     {res.status === 'realizado' && <span className="badge" style={{ backgroundColor: "#dcfce7", color: "var(--success, #166534)", border: "1px solid var(--success, #166534)", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>✅ Realizado</span>}
                   </div>
-                  <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>
-                    {getRoomName(res.roomId)} {res.service && `• ${res.service}`}
+                  <p style={{ fontSize: "0.85rem", color: isBlocked ? "var(--danger)" : "var(--text-secondary)", marginBottom: "0.4rem" }}>
+                    {isBlocked ? "Profissional indisponível" : `${getRoomName(res.roomId || '')} ${res.service ? `• ${res.service}` : ''}`}
                   </p>
                 </div>
 
                 {/* Ações */}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", justifyContent: "flex-end" }}>
-                  {(!res.status || res.status === 'agendado' || res.status === 'confirmado') ? (
+                  {isBlocked ? (
+                    <button onClick={() => { if(confirm("Deseja remover este bloqueio da agenda?")) cancelReservation(res.id); }} 
+                      className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--danger)", color: "var(--danger)", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                      Desbloquear
+                    </button>
+                  ) : (!res.status || res.status === 'agendado' || res.status === 'confirmado') ? (
                     <>
                       <a href={getGoogleCalendarUrl(res)} target="_blank" rel="noopener noreferrer" 
                         className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.3rem" }}
@@ -308,7 +351,8 @@ export default function ProfessionalAgendaPage() {
                   )}
                 </div>
               </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               );
@@ -316,6 +360,60 @@ export default function ProfessionalAgendaPage() {
           </div>
         )}
       </div>
+
+      {/* MODAL DE BLOQUEIO DE HORÁRIO */}
+      {isBlockModalOpen && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 999, padding: "1rem"
+        }}>
+          <div className="card animate-slide" style={{ width: "100%", maxWidth: "400px", position: "relative", padding: "2rem" }}>
+            <button 
+              onClick={() => setIsBlockModalOpen(false)}
+              style={{ position: "absolute", top: "1.5rem", right: "1.5rem", background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}
+            >
+              ✖
+            </button>
+            <h2 style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--danger)", marginBottom: "1.5rem" }}>
+              Bloquear Horário
+            </h2>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "1.5rem" }}>
+              Impede que qualquer paciente ou outro profissional agende reuniões com você neste horário.
+            </p>
+            <form onSubmit={handleBlockTime} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label className="label">Data</label>
+                <input type="date" className="input" value={blockDate} onChange={e => setBlockDate(e.target.value)} required />
+              </div>
+              <div style={{ display: "flex", gap: "1rem" }}>
+                <div style={{ flex: 1 }}>
+                  <label className="label">Início</label>
+                  <select className="input" value={blockStartTime} onChange={e => setBlockStartTime(e.target.value)}>
+                    {TIME_SLOTS?.map((slot: string) => <option key={slot} value={slot}>{slot}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label className="label">Fim</label>
+                  <select className="input" value={blockEndTime} onChange={e => setBlockEndTime(e.target.value)}>
+                    {TIME_SLOTS?.map((slot: string) => <option key={slot} value={slot}>{slot}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="label">Motivo (Opcional)</label>
+                <input className="input" value={blockReason} onChange={e => setBlockReason(e.target.value)} placeholder="Ex: Almoço, Reunião Externa, Médico..." />
+              </div>
+              <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+                <button type="submit" className="btn" style={{ flex: 1, backgroundColor: "var(--danger)", color: "white" }}>
+                  Confirmar Bloqueio
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

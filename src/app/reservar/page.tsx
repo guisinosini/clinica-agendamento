@@ -57,10 +57,19 @@ export default function ReservarPage() {
 
   const occupiedSlots = useMemo(() => {
     if (!selectedRoom) return [];
-    return reservations
-      .filter(res => res.roomId === selectedRoom && res.date === selectedDate && (!res.status || res.status === 'agendado'))
+    
+    // Horários ocupados na sala
+    const roomSlots = reservations
+      .filter(res => res.roomId === selectedRoom && res.date === selectedDate && (!res.status || res.status === 'agendado' || res.status === 'confirmado'))
       .map(res => res.startTime);
-  }, [reservations, selectedRoom, selectedDate]);
+
+    // Horários em que o profissional já está ocupado (outra sala ou bloqueio)
+    const professionalSlots = reservations
+      .filter(res => res.professionalId === professional.id && res.date === selectedDate && (!res.status || res.status === 'agendado' || res.status === 'confirmado' || res.status === 'indisponivel'))
+      .map(res => res.startTime);
+
+    return Array.from(new Set([...roomSlots, ...professionalSlots]));
+  }, [reservations, selectedRoom, selectedDate, professional.id]);
 
   if (loading || !professional) return (
     <div className="loading-screen">

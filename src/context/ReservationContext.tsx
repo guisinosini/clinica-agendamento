@@ -287,13 +287,14 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
 
   const addReservations = async (newReservations: Omit<Reservation, "id">[]) => {
     const dbReservations = newReservations.map(res => ({
-      room_id: res.roomId,
+      room_id: res.roomId || null,
       professional_id: res.professionalId,
       date: res.date,
       start_time: `${res.startTime}:00`,
       end_time: `${res.endTime}:00`,
       patient_name: res.patientName || null,
-      service: res.service || null
+      service: res.service || null,
+      status: res.status || 'agendado'
     }));
 
     const { data, error } = await supabase.from('reservations').insert(dbReservations).select();

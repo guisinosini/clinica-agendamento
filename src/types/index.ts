@@ -14,7 +14,7 @@ export type Room = {
 
 export type Reservation = {
   id: string;
-  roomId: string;
+  roomId?: string | null;
   professionalId: string;
   date: string; // Formato YYYY-MM-DD
   startTime: string; // Ex: "08:00"
