@@ -179,7 +179,7 @@ export default function ReservarPage() {
   };
 
   if (successReservationData) {
-    const getRoomName = (id: string) => rooms.find(r => r.id === id)?.name ?? "Sala Desconhecida";
+    const getRoomName = (id?: string | null) => rooms.find(r => r.id === id)?.name ?? "Sala Desconhecida";
 
     const getGoogleCalendarUrl = (res: any) => {
       if (!res) return "#";

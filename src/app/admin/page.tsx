@@ -247,7 +247,7 @@ export default function AdminDashboard() {
     </div>
   );
 
-  const getRoomName = (id: string) => rooms.find(r => r.id === id)?.name ?? "Sala Desconhecida";
+  const getRoomName = (id?: string | null) => rooms.find(r => r.id === id)?.name ?? "Sala Desconhecida";
 
   const handleCancelReservation = async (id: string) => {
     if (confirm("ATENÇÃO ADMIN: Tem certeza que deseja cancelar esta reserva? Essa ação não pode ser desfeita.")) {

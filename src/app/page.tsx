@@ -326,7 +326,7 @@ export default function Home() {
     })
     .slice(0, 5); // Mostrar apenas os próximos 5
 
-  const getRoomName = (id: string) => rooms.find(r => r.id === id)?.name ?? "Sala Desconhecida";
+  const getRoomName = (id?: string | null) => rooms.find(r => r.id === id)?.name ?? "Sala Desconhecida";
 
   const formatDate = (dateStr: string) => {
     const [y, m, d] = dateStr.split("-");

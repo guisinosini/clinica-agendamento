@@ -74,7 +74,7 @@ export default function ProfessionalAgendaPage() {
   // Filtrar apenas reservas do profissional logado
   const myReservations = reservations.filter((res) => res.professionalId === professional.id);
 
-  const getRoomName = (roomId: string) => rooms.find((r) => r.id === roomId)?.name ?? "Sala";
+  const getRoomName = (roomId?: string | null) => rooms.find((r) => r.id === roomId)?.name ?? "Sala";
 
   // Gera os 7 dias da semana atual para a visualização diária
   const weekDays = Array.from({ length: 7 }).map((_, i) => addDays(currentWeekStart, i));
