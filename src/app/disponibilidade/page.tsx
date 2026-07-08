@@ -80,7 +80,6 @@ export default function DisponibilidadePage() {
           <input
             type="date"
             value={selectedDate}
-            min={NEXT_DAYS[0]}
             onChange={(e) => { if (e.target.value) setSelectedDate(e.target.value); }}
             style={{
               fontSize: "1.35rem", fontWeight: 700,

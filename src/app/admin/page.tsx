@@ -1516,7 +1516,6 @@ export default function AdminDashboard() {
             <input
               type="date"
               value={selectedDispDate}
-              min={NEXT_DAYS[0]}
               onChange={(e) => { if (e.target.value) setSelectedDispDate(e.target.value); }}
               className="input"
               style={{ width: "200px" }}
