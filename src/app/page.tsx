@@ -355,7 +355,9 @@ export default function Home() {
   const totalHoursThisMonth = thisMonthReservations.length; 
   const uniquePatients = new Set(thisMonthReservations.map(r => r.patientName).filter(Boolean)).size;
   const mostUsedRoomId = thisMonthReservations.reduce((acc, curr) => {
-    acc[curr.roomId] = (acc[curr.roomId] || 0) + 1;
+    if (curr.roomId) {
+      acc[curr.roomId] = (acc[curr.roomId] || 0) + 1;
+    }
     return acc;
   }, {} as Record<string, number>);
   
