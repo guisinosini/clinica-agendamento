@@ -619,6 +619,16 @@ export default function AdminDashboard() {
     });
     htmlContent += `</tbody></table><br/>`;
 
+    // 4. Tarefas
+    htmlContent += `<h2>Tarefas</h2><table><thead><tr><th style="background-color: #f2f2f2;">Título</th><th style="background-color: #f2f2f2;">Descrição</th><th style="background-color: #f2f2f2;">Atribuído Para</th><th style="background-color: #f2f2f2;">Prazo</th><th style="background-color: #f2f2f2;">Prioridade</th><th style="background-color: #f2f2f2;">Status</th><th style="background-color: #f2f2f2;">Comentário</th></tr></thead><tbody>`;
+    adminTasks.forEach(assignment => {
+      const task = assignment.task || {};
+      const profName = assignment.professional_id === null ? "Administração" : (assignment.professional?.name || "Desconhecido");
+      const dueDate = task.due_date ? new Date(task.due_date + "T00:00:00").toLocaleDateString("pt-BR") : "";
+      htmlContent += `<tr><td>${task.title || ""}</td><td>${task.description || ""}</td><td>${profName}</td><td>${dueDate}</td><td style="text-transform: capitalize;">${task.priority || "media"}</td><td style="text-transform: capitalize;">${assignment.status || "pendente"}</td><td>${assignment.comment || ""}</td></tr>`;
+    });
+    htmlContent += `</tbody></table><br/>`;
+
     htmlContent += `</body></html>`;
 
     const blob = new Blob([htmlContent], { type: "application/vnd.ms-excel;charset=utf-8" });
