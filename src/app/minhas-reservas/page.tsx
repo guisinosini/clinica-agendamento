@@ -318,22 +318,7 @@ export default function ProfessionalAgendaPage() {
                         ⚠️ <span className="hide-mobile">Falta</span>
                       </button>
 
-                      <button onClick={() => { 
-                          if(confirm("Deseja reagendar? O status será alterado e você será redirecionado para a tela de agendamento.")) {
-                            updateReservationStatus(res.id, 'reagendado');
-                            router.push('/reservar');
-                          }
-                        }} 
-                        className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "#b45309", color: "#b45309", display: "flex", alignItems: "center", gap: "0.3rem" }}
-                        title="Reagendar Consulta">
-                        🔄 <span className="hide-mobile">Reagendar</span>
-                      </button>
-                      
-                      <button onClick={() => { if(confirm("Deseja realmente excluir e cancelar esta consulta?")) cancelReservation(res.id); }} 
-                        className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--text-muted)", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "0.3rem" }}
-                        title="Cancelar Consulta">
-                        ❌ <span className="hide-mobile">Cancelar</span>
-                      </button>
+
                     </>
                   ) : (
                     <>
