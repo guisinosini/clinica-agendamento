@@ -86,6 +86,9 @@ CREATE TABLE patients (
   cpf TEXT,
   "parentsName" TEXT,
   "parentsProfession" TEXT,
+  "schoolName" TEXT,
+  "schoolGrade" TEXT,
+  "schoolType" TEXT,
   status TEXT DEFAULT 'ativo',
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL

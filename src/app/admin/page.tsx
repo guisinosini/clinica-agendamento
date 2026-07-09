@@ -68,6 +68,9 @@ export default function AdminDashboard() {
   const [patCpf, setPatCpf] = useState("");
   const [patParentsName, setPatParentsName] = useState("");
   const [patParentsProfession, setPatParentsProfession] = useState("");
+  const [patSchoolName, setPatSchoolName] = useState("");
+  const [patSchoolGrade, setPatSchoolGrade] = useState("");
+  const [patSchoolType, setPatSchoolType] = useState("");
   const [patientSearch, setPatientSearch] = useState("");
 
   // Service Form State
@@ -361,7 +364,10 @@ export default function AdminDashboard() {
       notes: patNotes,
       cpf: patCpf,
       parentsName: patParentsName,
-      parentsProfession: patParentsProfession
+      parentsProfession: patParentsProfession,
+      schoolName: patSchoolName,
+      schoolGrade: patSchoolGrade,
+      schoolType: patSchoolType
     };
 
     if (editingPatientId) {
@@ -394,6 +400,9 @@ export default function AdminDashboard() {
     setPatCpf("");
     setPatParentsName("");
     setPatParentsProfession("");
+    setPatSchoolName("");
+    setPatSchoolGrade("");
+    setPatSchoolType("");
     fetchPatients();
   };
 
@@ -412,6 +421,9 @@ export default function AdminDashboard() {
     setPatCpf(pat.cpf || "");
     setPatParentsName(pat.parentsName || "");
     setPatParentsProfession(pat.parentsProfession || "");
+    setPatSchoolName(pat.schoolName || "");
+    setPatSchoolGrade(pat.schoolGrade || "");
+    setPatSchoolType(pat.schoolType || "");
     setActiveTab("patients");
   };
 
@@ -1403,6 +1415,26 @@ export default function AdminDashboard() {
               </div>
 
               <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                <div style={{ flex: "1 1 150px" }}>
+                  <label className="label">Escola (Instituição de Ensino)</label>
+                  <input className="input" value={patSchoolName} onChange={e => setPatSchoolName(e.target.value)} placeholder="Nome da escola" />
+                </div>
+                <div style={{ flex: "1 1 100px" }}>
+                  <label className="label">Série/Ano Escolar</label>
+                  <input className="input" value={patSchoolGrade} onChange={e => setPatSchoolGrade(e.target.value)} placeholder="Ex: 5º Ano" />
+                </div>
+                <div style={{ flex: "1 1 150px" }}>
+                  <label className="label">Tipo de Escola</label>
+                  <select className="input" value={patSchoolType} onChange={e => setPatSchoolType(e.target.value)}>
+                    <option value="">Selecione...</option>
+                    <option value="Pública">Pública</option>
+                    <option value="Particular">Particular</option>
+                  </select>
+                </div>
+              </div>
+
+
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
                 <div style={{ flex: "1 1 200px" }}>
                   <label className="label">Telefone (WhatsApp)</label>
                   <input className="input" value={patPhone} onChange={e => setPatPhone(e.target.value)} placeholder="(11) 99999-9999" />
@@ -1428,7 +1460,7 @@ export default function AdminDashboard() {
                 </button>
                 {editingPatientId && (
                   <button type="button" onClick={() => { 
-                    setEditingPatientId(null); setPatName(""); setPatEmail(""); setPatPhone(""); setPatBirthDate(""); setPatAddress(""); setPatGuardian(""); setPatHealthPlan(""); setPatHealthPlanNumber(""); setPatGender(""); setPatNotes(""); setPatCpf(""); setPatParentsName(""); setPatParentsProfession("");
+                    setEditingPatientId(null); setPatName(""); setPatEmail(""); setPatPhone(""); setPatBirthDate(""); setPatAddress(""); setPatGuardian(""); setPatHealthPlan(""); setPatHealthPlanNumber(""); setPatGender(""); setPatNotes(""); setPatCpf(""); setPatParentsName(""); setPatParentsProfession(""); setPatSchoolName(""); setPatSchoolGrade(""); setPatSchoolType("");
                   }} className="btn btn-outline">
                     Cancelar
                   </button>
