@@ -35,6 +35,7 @@ export default function TarefasPage() {
 
   // Modal states
   const [showModal, setShowModal] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [newTask, setNewTask] = useState({ title: '', description: '', dueDate: '', priority: 'media' });
   const [selectedProfs, setSelectedProfs] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -155,15 +156,33 @@ export default function TarefasPage() {
     }
   };
 
-  const handleCreateTask = async (e: React.FormEvent) => {
+  const handleSaveTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTask.title || selectedProfs.length === 0 || !professional) {
-      alert("Preencha o título e selecione pelo menos um profissional.");
+    if (!newTask.title || !professional) {
+      alert("Preencha o título da tarefa.");
       return;
     }
 
     setSubmitting(true);
     try {
+      if (editingTaskId) {
+        const { error: updateErr } = await supabase
+          .from('tasks')
+          .update({
+            title: newTask.title,
+            description: newTask.description,
+            due_date: newTask.dueDate || null,
+            priority: newTask.priority
+          })
+          .eq('id', editingTaskId);
+          
+        if (updateErr) throw updateErr;
+      } else {
+        if (selectedProfs.length === 0) {
+          alert("Selecione pelo menos um destinatário.");
+          setSubmitting(false);
+          return;
+        }
       // 1. Inserir Tarefa
       const { data: taskData, error: taskErr } = await supabase
         .from('tasks')
@@ -216,14 +235,40 @@ export default function TarefasPage() {
 
       // Sucesso
       setShowModal(false);
+      setEditingTaskId(null);
       setNewTask({ title: '', description: '', dueDate: '', priority: 'media' });
       setSelectedProfs([]);
       fetchTasks();
     } catch (err) {
       console.error(err);
-      alert("Erro ao criar tarefa. Verifique se as tabelas no Supabase foram criadas.");
+      alert("Erro ao salvar tarefa. Verifique se as tabelas no Supabase foram criadas.");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const openEditModal = (task: CombinedTask) => {
+    setNewTask({
+      title: task.title,
+      description: task.description || '',
+      dueDate: task.dueDate || '',
+      priority: task.priority || 'media'
+    });
+    setEditingTaskId(task.taskId);
+    setShowModal(true);
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    if (confirm("Tem certeza que deseja excluir esta tarefa? Isso a removerá para todos os envolvidos.")) {
+      try {
+        const { error } = await supabase.from('tasks').delete().eq('id', taskId);
+        if (error) throw error;
+        alert("Tarefa excluída com sucesso!");
+        fetchTasks();
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao excluir tarefa.");
+      }
     }
   };
 
@@ -285,7 +330,12 @@ export default function TarefasPage() {
           </Link>
           <h1 style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Tarefas</h1>
         </div>
-        <button onClick={() => setShowModal(true)} className="btn">
+        <button onClick={() => {
+          setEditingTaskId(null);
+          setNewTask({ title: '', description: '', dueDate: '', priority: 'media' });
+          setSelectedProfs([]);
+          setShowModal(true);
+        }} className="btn">
           ➕ Nova Tarefa
         </button>
       </header>
@@ -439,6 +489,24 @@ export default function TarefasPage() {
                       </span>
                     </span>
                   )}
+                  
+                  {/* Edit and Delete Actions */}
+                  {task.createdBy === professional?.id && (
+                    <div style={{ marginLeft: "auto", display: "flex", gap: "0.5rem" }}>
+                      <button 
+                        onClick={() => openEditModal(task)} 
+                        style={{ background: "none", border: "none", color: "var(--primary)", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}
+                      >
+                        Editar
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteTask(task.taskId)} 
+                        style={{ background: "none", border: "none", color: "var(--danger)", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}
+                      >
+                        Excluir
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ marginTop: "1rem" }}>
@@ -470,8 +538,10 @@ export default function TarefasPage() {
           zIndex: 999, padding: "1rem", overflowY: "auto"
         }}>
           <div className="card animate-slide" style={{ margin: "auto", width: "100%", maxWidth: "500px", padding: "1.25rem" }}>
-            <h2 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "1.25rem" }}>Criar Nova Tarefa</h2>
-            <form onSubmit={handleCreateTask} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "1.25rem" }}>
+              {editingTaskId ? "Editar Tarefa" : "Criar Nova Tarefa"}
+            </h2>
+            <form onSubmit={handleSaveTask} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               
               <div>
                 <label className="label">Título da Tarefa</label>
