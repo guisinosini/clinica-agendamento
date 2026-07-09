@@ -37,6 +37,12 @@ export type Patient = {
   gender?: string;
   status?: string;
   notes?: string;
+  cpf?: string;
+  parentsName?: string;
+  parentsProfession?: string;
+  schoolName?: string;
+  schoolGrade?: string;
+  schoolType?: string;
   created_at?: string;
 };
 
