@@ -79,6 +79,7 @@ export default function AdminDashboard() {
 
   // New Admin Task Modal State
   const [showTaskModal, setShowTaskModal] = useState(false);
+  const [editingAdminTaskId, setEditingAdminTaskId] = useState<string | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDesc, setNewTaskDesc] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState("");
@@ -487,11 +488,11 @@ export default function AdminDashboard() {
     router.push("/");
   };
 
-  const handleDeleteTaskAssignment = async (assignmentId: string) => {
-    if (confirm("Tem certeza que deseja excluir esta atribuição de tarefa?")) {
-      const { error } = await supabase.from('task_assignments').delete().eq('id', assignmentId);
+  const handleDeleteTask = async (taskId: string) => {
+    if (confirm("ATENÇÃO ADMIN: Tem certeza que deseja excluir esta tarefa de TODOS os profissionais?")) {
+      const { error } = await supabase.from('tasks').delete().eq('id', taskId);
       if (!error) {
-        alert("Atribuição de tarefa excluída com sucesso!");
+        alert("Tarefa excluída com sucesso!");
         fetchAdminTasks();
       } else {
         alert("Erro ao excluir tarefa.");
@@ -499,7 +500,17 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleCreateAdminTask = async (e: React.FormEvent) => {
+  const openEditAdminTask = (assignment: any) => {
+    setNewTaskTitle(assignment.task?.title || "");
+    setNewTaskDesc(assignment.task?.description || "");
+    setNewTaskDueDate(assignment.task?.due_date || "");
+    setNewTaskPriority(assignment.task?.priority || "media");
+    setEditingAdminTaskId(assignment.task?.id);
+    setSelectedTaskProfs([]); // Admin must select again, or we disable it. Better to keep it simple and just don't re-assign on edit, only edit task metadata.
+    setShowTaskModal(true);
+  };
+
+  const handleSaveAdminTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTaskTitle || selectedTaskProfs.length === 0) {
       alert("Preencha o título e selecione pelo menos um destinatário.");
@@ -508,34 +519,48 @@ export default function AdminDashboard() {
 
     setSubmittingTask(true);
     try {
-      // 1. Inserir Tarefa
-      const { data: taskData, error: taskErr } = await supabase
-        .from('tasks')
-        .insert({
-          title: newTaskTitle,
-          description: newTaskDesc,
-          due_date: newTaskDueDate || null,
-          priority: newTaskPriority,
-          created_by: null // admin
-        })
-        .select()
-        .single();
+      if (editingAdminTaskId) {
+        const { error: updateErr } = await supabase
+          .from('tasks')
+          .update({
+            title: newTaskTitle,
+            description: newTaskDesc,
+            due_date: newTaskDueDate || null,
+            priority: newTaskPriority
+          })
+          .eq('id', editingAdminTaskId);
+        if (updateErr) throw updateErr;
+      } else {
+        // 1. Inserir Tarefa
+        const { data: taskData, error: taskErr } = await supabase
+          .from('tasks')
+          .insert({
+            title: newTaskTitle,
+            description: newTaskDesc,
+            due_date: newTaskDueDate || null,
+            priority: newTaskPriority,
+            created_by: null // admin
+          })
+          .select()
+          .single();
 
-      if (taskErr || !taskData) throw taskErr;
+        if (taskErr || !taskData) throw taskErr;
 
-      // 2. Inserir Assignments
-      const assignments = selectedTaskProfs.map(profId => ({
-        task_id: taskData.id,
-        professional_id: profId === 'admin' ? null : profId,
-        status: 'pendente',
-        viewed: profId === 'admin' // Se for pro próprio admin, já marca como lida
-      }));
+        // 2. Inserir Assignments
+        const assignments = selectedTaskProfs.map(profId => ({
+          task_id: taskData.id,
+          professional_id: profId === 'admin' ? null : profId,
+          status: 'pendente',
+          viewed: profId === 'admin'
+        }));
 
-      const { error: assignErr } = await supabase.from('task_assignments').insert(assignments);
-      if (assignErr) throw assignErr;
+        const { error: assignErr } = await supabase.from('task_assignments').insert(assignments);
+        if (assignErr) throw assignErr;
+      }
 
       // Sucesso
       setShowTaskModal(false);
+      setEditingAdminTaskId(null);
       setNewTaskTitle("");
       setNewTaskDesc("");
       setNewTaskDueDate("");
@@ -544,7 +569,7 @@ export default function AdminDashboard() {
       fetchAdminTasks();
     } catch (err) {
       console.error(err);
-      alert("Erro ao criar tarefa.");
+      alert("Erro ao salvar tarefa.");
     } finally {
       setSubmittingTask(false);
     }
@@ -1599,7 +1624,15 @@ export default function AdminDashboard() {
             <h2 style={{ fontSize: "1.2rem", fontWeight: 700 }}>Gestão Global de Tarefas ({filteredAdminTasks.length})</h2>
             <div style={{ display: "flex", gap: "0.5rem" }}>
               <button onClick={fetchAdminTasks} className="btn btn-outline btn-sm">↻ Atualizar</button>
-              <button onClick={() => setShowTaskModal(true)} className="btn btn-sm">➕ Nova Tarefa</button>
+              <button onClick={() => {
+                setEditingAdminTaskId(null);
+                setNewTaskTitle("");
+                setNewTaskDesc("");
+                setNewTaskDueDate("");
+                setNewTaskPriority("media");
+                setSelectedTaskProfs([]);
+                setShowTaskModal(true);
+              }} className="btn btn-sm">➕ Nova Tarefa</button>
             </div>
           </div>
 
@@ -1694,12 +1727,20 @@ export default function AdminDashboard() {
                         )}
                       </td>
                       <td style={{ padding: "1rem", textAlign: "right" }}>
-                        <button 
-                          onClick={() => handleDeleteTaskAssignment(assignment.id)}
-                          style={{ color: "white", backgroundColor: "var(--danger)", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
-                        >
-                          Excluir
-                        </button>
+                        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+                          <button 
+                            onClick={() => openEditAdminTask(assignment)}
+                            style={{ color: "var(--primary)", backgroundColor: "var(--primary-light)", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
+                          >
+                            Editar
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteTask(assignment.task_id)}
+                            style={{ color: "white", backgroundColor: "var(--danger)", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
+                          >
+                            Excluir
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -1785,8 +1826,10 @@ export default function AdminDashboard() {
           zIndex: 999, padding: "1rem", overflowY: "auto"
         }}>
           <div className="card animate-slide" style={{ margin: "auto", width: "100%", maxWidth: "500px", padding: "1.25rem" }}>
-            <h2 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "1.25rem" }}>Atribuir Nova Tarefa</h2>
-            <form onSubmit={handleCreateAdminTask} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "1.25rem" }}>
+              {editingAdminTaskId ? "Editar Tarefa" : "Atribuir Nova Tarefa"}
+            </h2>
+            <form onSubmit={handleSaveAdminTask} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               
               <div>
                 <label className="label">Título da Tarefa</label>
