@@ -232,6 +232,7 @@ export default function TarefasPage() {
           }).catch(err => console.error('Falha ao disparar email:', err));
         });
       }
+      }
 
       // Sucesso
       setShowModal(false);
