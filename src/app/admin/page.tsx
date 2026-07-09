@@ -65,6 +65,9 @@ export default function AdminDashboard() {
   const [patHealthPlanNumber, setPatHealthPlanNumber] = useState("");
   const [patGender, setPatGender] = useState("");
   const [patNotes, setPatNotes] = useState("");
+  const [patCpf, setPatCpf] = useState("");
+  const [patParentsName, setPatParentsName] = useState("");
+  const [patParentsProfession, setPatParentsProfession] = useState("");
   const [patientSearch, setPatientSearch] = useState("");
 
   // Service Form State
@@ -355,7 +358,10 @@ export default function AdminDashboard() {
       healthPlan: patHealthPlan,
       healthPlanNumber: patHealthPlanNumber,
       gender: patGender,
-      notes: patNotes
+      notes: patNotes,
+      cpf: patCpf,
+      parentsName: patParentsName,
+      parentsProfession: patParentsProfession
     };
 
     if (editingPatientId) {
@@ -385,6 +391,9 @@ export default function AdminDashboard() {
     setPatHealthPlanNumber("");
     setPatGender("");
     setPatNotes("");
+    setPatCpf("");
+    setPatParentsName("");
+    setPatParentsProfession("");
     fetchPatients();
   };
 
@@ -400,6 +409,9 @@ export default function AdminDashboard() {
     setPatHealthPlanNumber(pat.healthPlanNumber || "");
     setPatGender(pat.gender || "");
     setPatNotes(pat.notes || "");
+    setPatCpf(pat.cpf || "");
+    setPatParentsName(pat.parentsName || "");
+    setPatParentsProfession(pat.parentsProfession || "");
     setActiveTab("patients");
   };
 
@@ -1315,9 +1327,15 @@ export default function AdminDashboard() {
               {editingPatientId ? "Editar Paciente" : "Novo Paciente"}
             </h2>
             <form onSubmit={handleSavePatient} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <div>
-                <label className="label">Nome do Paciente</label>
-                <input className="input" value={patName} onChange={e => setPatName(e.target.value)} required placeholder="Ex: Maria Souza" />
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                <div style={{ flex: "1 1 200px" }}>
+                  <label className="label">Nome do Paciente</label>
+                  <input className="input" value={patName} onChange={e => setPatName(e.target.value)} required placeholder="Ex: Maria Souza" />
+                </div>
+                <div style={{ flex: "1 1 150px" }}>
+                  <label className="label">CPF</label>
+                  <input className="input" value={patCpf} onChange={e => setPatCpf(e.target.value)} placeholder="000.000.000-00" />
+                </div>
               </div>
               
               <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
@@ -1359,9 +1377,19 @@ export default function AdminDashboard() {
                 )}
               </div>
 
-              <div>
-                <label className="label">Nome do Responsável (se menor de idade)</label>
-                <input className="input" value={patGuardian} onChange={e => setPatGuardian(e.target.value)} placeholder="Ex: João Souza (Pai)" />
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                <div style={{ flex: "1 1 150px" }}>
+                  <label className="label">Nome do Responsável (se menor)</label>
+                  <input className="input" value={patGuardian} onChange={e => setPatGuardian(e.target.value)} placeholder="Ex: João Souza" />
+                </div>
+                <div style={{ flex: "1 1 150px" }}>
+                  <label className="label">Nome dos Pais</label>
+                  <input className="input" value={patParentsName} onChange={e => setPatParentsName(e.target.value)} placeholder="Ex: João e Ana" />
+                </div>
+                <div style={{ flex: "1 1 150px" }}>
+                  <label className="label">Profissão dos Pais</label>
+                  <input className="input" value={patParentsProfession} onChange={e => setPatParentsProfession(e.target.value)} placeholder="Ex: Professor e Advogada" />
+                </div>
               </div>
 
               <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
@@ -1390,7 +1418,7 @@ export default function AdminDashboard() {
                 </button>
                 {editingPatientId && (
                   <button type="button" onClick={() => { 
-                    setEditingPatientId(null); setPatName(""); setPatEmail(""); setPatPhone(""); setPatBirthDate(""); setPatAddress(""); setPatGuardian(""); setPatHealthPlan(""); setPatHealthPlanNumber(""); setPatGender(""); setPatNotes(""); 
+                    setEditingPatientId(null); setPatName(""); setPatEmail(""); setPatPhone(""); setPatBirthDate(""); setPatAddress(""); setPatGuardian(""); setPatHealthPlan(""); setPatHealthPlanNumber(""); setPatGender(""); setPatNotes(""); setPatCpf(""); setPatParentsName(""); setPatParentsProfession("");
                   }} className="btn btn-outline">
                     Cancelar
                   </button>

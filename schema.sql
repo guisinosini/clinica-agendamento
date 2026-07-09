@@ -83,6 +83,9 @@ CREATE TABLE patients (
   "healthPlan" TEXT,
   "healthPlanNumber" TEXT,
   gender TEXT,
+  cpf TEXT,
+  "parentsName" TEXT,
+  "parentsProfession" TEXT,
   status TEXT DEFAULT 'ativo',
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
