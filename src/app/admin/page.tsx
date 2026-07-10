@@ -2012,90 +2012,118 @@ export default function AdminDashboard() {
           backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
           display: "flex", alignItems: "center", justifyContent: "center",
           zIndex: 999, padding: "1rem"
-        }}>
+        }} onClick={() => setViewingPatient(null)}>
           <style>{`
+            .only-print { display: none; }
             @media print {
               body * { visibility: hidden; }
               #print-admin-patient-modal, #print-admin-patient-modal * { visibility: visible; }
               #print-admin-patient-modal { 
                 position: absolute; left: 0; top: 0; width: 100%; 
-                max-height: none !important; overflow: visible !important;
-                padding: 2rem !important; margin: 0 !important; box-shadow: none !important;
+                max-width: none !important; max-height: none !important; overflow: visible !important;
+                padding: 0 !important; margin: 0 !important; box-shadow: none !important;
+                background: white !important; border: none !important; display: block !important;
               }
               .no-print { display: none !important; }
+              .only-print { display: block !important; }
+              
+              .print-grid { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 1rem !important; align-items: start; }
+              .print-full { grid-column: 1 / -1 !important; }
+              .data-box { background: transparent !important; border: 1px solid #ccc !important; break-inside: avoid; box-shadow: none !important; padding: 1rem !important; border-radius: 8px !important; }
+              .data-box h4 { color: #000 !important; border-bottom: 1px solid #ddd; padding-bottom: 0.4rem; margin-bottom: 0.8rem !important; font-size: 1rem !important; }
+              .data-box p { font-size: 0.95rem !important; color: #333 !important; }
             }
           `}</style>
-          <div id="print-admin-patient-modal" className="card animate-slide" style={{ width: "100%", maxWidth: "600px", maxHeight: "90vh", overflowY: "auto", position: "relative", padding: "2rem" }}>
+          <div id="print-admin-patient-modal" className="card animate-slide" style={{ width: "100%", maxWidth: "600px", maxHeight: "90vh", overflowY: "auto", position: "relative", backgroundColor: "var(--card-bg)" }} onClick={e => e.stopPropagation()}>
             <button 
               onClick={() => setViewingPatient(null)}
               className="no-print"
-              style={{ position: "absolute", top: "1.5rem", right: "1.5rem", background: "none", border: "none", fontSize: "1.5rem", cursor: "pointer", color: "var(--text-muted)", lineHeight: 1 }}
+              style={{ position: "absolute", top: "1rem", right: "1rem", background: "none", border: "none", fontSize: "1.5rem", cursor: "pointer", color: "var(--text-muted)", lineHeight: 1, zIndex: 10 }}
             >
               &times;
             </button>
-            <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--primary)", marginBottom: "1.5rem", paddingRight: "2rem" }}>
+            
+            <div className="only-print" style={{ textAlign: "center", marginBottom: "2rem", borderBottom: "2px solid #000", paddingBottom: "1rem" }}>
+              <h1 style={{ fontSize: "1.8rem", fontWeight: "bold", margin: 0, color: "#000", textTransform: "uppercase" }}>Ficha de Cadastro do Paciente</h1>
+              <p style={{ fontSize: "1rem", margin: "0.5rem 0 0 0", color: "#333" }}>Clínica de Psicologia</p>
+            </div>
+
+            <h2 className="no-print" style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--primary)", marginBottom: "1.5rem", paddingRight: "2rem" }}>
               {viewingPatient.name}
             </h2>
+            <h2 className="only-print" style={{ fontSize: "1.6rem", fontWeight: 800, marginBottom: "1rem", color: "#000" }}>Paciente: {viewingPatient.name}</h2>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                <div><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>CPF</span><p style={{ fontWeight: 600 }}>{viewingPatient.cpf || "Não informado"}</p></div>
-                <div><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>Nascimento</span><p style={{ fontWeight: 600 }}>{viewingPatient.birthDate ? new Date(viewingPatient.birthDate + "T00:00:00").toLocaleDateString("pt-BR") : "Não informado"}</p></div>
-                <div><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>Sexo</span><p style={{ fontWeight: 600 }}>{viewingPatient.gender || "Não informado"}</p></div>
-                <div><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>Telefone</span><p style={{ fontWeight: 600 }}>{viewingPatient.phone || "Não informado"}</p></div>
-                <div style={{ gridColumn: "span 2" }}><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>E-mail</span><p style={{ fontWeight: 600 }}>{viewingPatient.email || "Não informado"}</p></div>
-                <div style={{ gridColumn: "span 2" }}><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>Endereço</span><p style={{ fontWeight: 600 }}>{viewingPatient.address || "Não informado"}</p></div>
+            <div className="print-grid" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              
+              <div className="only-print data-box print-full" style={{ display: "none", padding: "1rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+                 <h4 style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Status e Convênio</h4>
+                 <div style={{ display: "flex", gap: "2rem" }}>
+                    <p style={{ margin: 0 }}><strong>Status:</strong> {viewingPatient.status === 'concluido' ? 'Alta' : 'Em Tratamento'}</p>
+                    <p style={{ margin: 0 }}><strong>Convênio:</strong> {viewingPatient.healthPlan || "Particular"} {viewingPatient.healthPlanNumber ? `(Nº: ${viewingPatient.healthPlanNumber})` : ""}</p>
+                 </div>
               </div>
 
-              {(viewingPatient.healthPlan || viewingPatient.healthPlanNumber) && (
-                <div style={{ background: "var(--primary-light)", padding: "1rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--primary-mid)" }}>
-                  <h4 style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--primary)", marginBottom: "0.5rem" }}>Plano de Saúde</h4>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                    <div><span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: 600 }}>Convênio</span><p style={{ fontWeight: 700 }}>{viewingPatient.healthPlan || "Particular"}</p></div>
-                    <div><span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: 600 }}>Carteirinha</span><p style={{ fontWeight: 700 }}>{viewingPatient.healthPlanNumber || "-"}</p></div>
-                  </div>
+              {(viewingPatient.email || viewingPatient.phone) && (
+                <div className="data-box" style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+                  <h4 style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Contato</h4>
+                  {viewingPatient.phone && <p style={{ fontSize: "0.95rem", margin: "0 0 0.3rem 0" }}><strong>Telefone:</strong> {viewingPatient.phone}</p>}
+                  {viewingPatient.email && <p style={{ fontSize: "0.95rem", margin: 0 }}><strong>E-mail:</strong> {viewingPatient.email}</p>}
+                </div>
+              )}
+
+              {(viewingPatient.birthDate || viewingPatient.gender || viewingPatient.cpf) && (
+                <div className="data-box" style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+                  <h4 style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Dados Pessoais</h4>
+                  {viewingPatient.cpf && <p style={{ fontSize: "0.95rem", margin: "0 0 0.3rem 0" }}><strong>CPF:</strong> {viewingPatient.cpf}</p>}
+                  {viewingPatient.birthDate && <p style={{ fontSize: "0.95rem", margin: "0 0 0.3rem 0" }}><strong>Nascimento:</strong> {new Date(viewingPatient.birthDate + "T00:00:00").toLocaleDateString("pt-BR")}</p>}
+                  {viewingPatient.gender && <p style={{ fontSize: "0.95rem", margin: 0 }}><strong>Gênero:</strong> {viewingPatient.gender}</p>}
                 </div>
               )}
 
               {(viewingPatient.guardianName || viewingPatient.parentsName || viewingPatient.parentsProfession) && (
-                <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
-                  <h4 style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "0.5rem", textTransform: "uppercase" }}>Responsáveis e Família</h4>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                    {viewingPatient.guardianName && <div><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>Responsável Legal</span><p style={{ fontWeight: 600 }}>{viewingPatient.guardianName}</p></div>}
-                    {viewingPatient.parentsName && <div><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>Nome dos Pais</span><p style={{ fontWeight: 600 }}>{viewingPatient.parentsName}</p></div>}
-                    {viewingPatient.parentsProfession && <div style={{ gridColumn: "span 2" }}><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>Profissão dos Pais</span><p style={{ fontWeight: 600 }}>{viewingPatient.parentsProfession}</p></div>}
-                  </div>
+                <div className="data-box" style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+                  <h4 style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Responsáveis</h4>
+                  {viewingPatient.guardianName && <p style={{ fontSize: "0.95rem", margin: "0 0 0.3rem 0" }}><strong>Responsável Direto:</strong> {viewingPatient.guardianName}</p>}
+                  {viewingPatient.parentsName && <p style={{ fontSize: "0.95rem", margin: "0 0 0.3rem 0" }}><strong>Nome dos Pais:</strong> {viewingPatient.parentsName}</p>}
+                  {viewingPatient.parentsProfession && <p style={{ fontSize: "0.95rem", margin: 0 }}><strong>Profissão dos Pais:</strong> {viewingPatient.parentsProfession}</p>}
                 </div>
               )}
 
               {(viewingPatient.schoolName || viewingPatient.schoolGrade || viewingPatient.schoolType) && (
-                <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
-                  <h4 style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "0.5rem", textTransform: "uppercase" }}>Dados Escolares</h4>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                    {viewingPatient.schoolName && <div style={{ gridColumn: "span 2" }}><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>Escola</span><p style={{ fontWeight: 600 }}>{viewingPatient.schoolName}</p></div>}
-                    {viewingPatient.schoolGrade && <div><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>Série/Ano</span><p style={{ fontWeight: 600 }}>{viewingPatient.schoolGrade}</p></div>}
-                    {viewingPatient.schoolType && <div><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>Tipo</span><p style={{ fontWeight: 600 }}>{viewingPatient.schoolType}</p></div>}
-                  </div>
+                <div className="data-box" style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+                  <h4 style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Dados Escolares</h4>
+                  {viewingPatient.schoolName && <p style={{ fontSize: "0.95rem", margin: "0 0 0.3rem 0" }}><strong>Escola:</strong> {viewingPatient.schoolName}</p>}
+                  {viewingPatient.schoolGrade && <p style={{ fontSize: "0.95rem", margin: "0 0 0.3rem 0" }}><strong>Série/Ano:</strong> {viewingPatient.schoolGrade}</p>}
+                  {viewingPatient.schoolType && <p style={{ fontSize: "0.95rem", margin: 0 }}><strong>Tipo:</strong> {viewingPatient.schoolType}</p>}
+                </div>
+              )}
+
+              {viewingPatient.address && (
+                <div className="data-box print-full" style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+                  <h4 style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Endereço</h4>
+                  <p style={{ fontSize: "0.95rem", margin: 0 }}>{viewingPatient.address}</p>
                 </div>
               )}
 
               {viewingPatient.notes && (
-                <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
-                  <h4 style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "0.5rem", textTransform: "uppercase" }}>Anotações / Observações</h4>
-                  <div style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)", fontSize: "0.9rem", color: "var(--text-main)", whiteSpace: "pre-wrap" }}>
-                    {viewingPatient.notes}
-                  </div>
+                <div className="data-box print-full" style={{ padding: "1rem", backgroundColor: "var(--primary-light)", borderRadius: "var(--radius-sm)", border: "1px solid var(--primary-light)" }}>
+                  <h4 style={{ fontSize: "0.8rem", color: "var(--primary)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Anotações da Clínica</h4>
+                  <p style={{ fontSize: "0.9rem", margin: 0, color: "var(--text-main)", whiteSpace: "pre-wrap" }}>{viewingPatient.notes}</p>
                 </div>
               )}
             </div>
 
-            <div className="no-print" style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end", gap: "1rem" }}>
-              <button onClick={() => window.print()} className="btn btn-outline" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                🖨️ Imprimir
+            <div className="no-print" style={{ marginTop: "2rem", display: "flex", gap: "1rem" }}>
+              <button onClick={() => window.print()} className="btn btn-outline" style={{ flex: 1 }}>
+                🖨️ Imprimir Cadastro
               </button>
-              <button onClick={() => setViewingPatient(null)} className="btn btn-outline">
+              <button onClick={() => setViewingPatient(null)} className="btn" style={{ flex: 1 }}>
                 Fechar
               </button>
+            </div>
+            
+            <div className="only-print" style={{ display: "none", marginTop: "3rem", textAlign: "center", borderTop: "1px dashed #ccc", paddingTop: "1rem" }}>
+              <p style={{ fontSize: "0.85rem", color: "#666" }}>Impresso em: {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR')}</p>
             </div>
           </div>
         </div>
