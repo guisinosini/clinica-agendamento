@@ -86,7 +86,10 @@ export default function ReservarPage() {
   };
 
   const handleConfirm = async () => {
-    if (!selectedRoom || selectedSlots.length === 0) return;
+    if (!selectedRoom || selectedSlots.length === 0 || !service || !professional) {
+      setFeedbackMsg("❌ Preencha todos os campos obrigatórios (Sala, Data, Horários e Serviço).");
+      return;
+    }
 
     let allReservations = [];
     
@@ -553,6 +556,7 @@ export default function ReservarPage() {
                       className="input" 
                       value={service}
                       onChange={(e) => setService(e.target.value)}
+                      required
                       style={{ cursor: "pointer" }}
                     >
                       <option value="">(Selecione um serviço...)</option>

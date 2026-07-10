@@ -442,7 +442,10 @@ export default function AdminDashboard() {
 
   const handleAdminCreateReservation = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newResProfId || !newResRoomId || !newResDate || newResSlots.length === 0) return;
+    if (!newResProfId || !newResRoomId || !newResDate || newResSlots.length === 0 || !newResService) {
+      alert("Por favor, preencha todos os campos obrigatórios (Profissional, Sala, Data, Horários e Serviço).");
+      return;
+    }
 
     const allNewReservations = newResSlots.map(slot => {
       const [hours, minutes] = slot.split(":").map(Number);
@@ -1615,8 +1618,8 @@ export default function AdminDashboard() {
                 </select>
               </div>
               <div>
-                <label className="label">Serviço/Detalhes (Opcional)</label>
-                <select className="input" value={newResService} onChange={e => setNewResService(e.target.value)} style={{ cursor: "pointer" }}>
+                <label className="label">Serviço/Detalhes</label>
+                <select className="input" value={newResService} onChange={e => setNewResService(e.target.value)} required style={{ cursor: "pointer" }}>
                   <option value="">(Selecione um serviço...)</option>
                   {servicesList?.map(svc => (
                     <option key={svc.id} value={svc.name}>
