@@ -72,6 +72,7 @@ export default function AdminDashboard() {
   const [patSchoolGrade, setPatSchoolGrade] = useState("");
   const [patSchoolType, setPatSchoolType] = useState("");
   const [patientSearch, setPatientSearch] = useState("");
+  const [viewingPatient, setViewingPatient] = useState<any | null>(null);
 
   // Service Form State
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
@@ -1492,7 +1493,13 @@ export default function AdminDashboard() {
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
                       <div>
                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-                          <h3 style={{ fontWeight: 700, color: "var(--primary)" }}>{pat.name}</h3>
+                          <button 
+                            onClick={() => setViewingPatient(pat)}
+                            title="Clique para ver o cadastro completo"
+                            style={{ fontWeight: 700, color: "var(--primary)", background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: "1.1rem", textDecoration: "underline", textAlign: "left" }}
+                          >
+                            {pat.name}
+                          </button>
                           {pat.gender && <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>({pat.gender})</span>}
                           {pat.healthPlan && (
                             <span className="badge badge-primary" style={{ fontSize: "0.65rem", padding: "0.1rem 0.4rem" }}>
@@ -1991,6 +1998,86 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE VISUALIZAÇÃO DE PACIENTE */}
+      {viewingPatient && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 999, padding: "1rem"
+        }}>
+          <div className="card animate-slide" style={{ width: "100%", maxWidth: "600px", maxHeight: "90vh", overflowY: "auto", position: "relative", padding: "2rem" }}>
+            <button 
+              onClick={() => setViewingPatient(null)}
+              style={{ position: "absolute", top: "1.5rem", right: "1.5rem", background: "none", border: "none", fontSize: "1.5rem", cursor: "pointer", color: "var(--text-muted)", lineHeight: 1 }}
+            >
+              &times;
+            </button>
+            <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--primary)", marginBottom: "1.5rem", paddingRight: "2rem" }}>
+              {viewingPatient.name}
+            </h2>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>CPF</span><p style={{ fontWeight: 600 }}>{viewingPatient.cpf || "Não informado"}</p></div>
+                <div><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>Nascimento</span><p style={{ fontWeight: 600 }}>{viewingPatient.birthDate ? new Date(viewingPatient.birthDate + "T00:00:00").toLocaleDateString("pt-BR") : "Não informado"}</p></div>
+                <div><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>Sexo</span><p style={{ fontWeight: 600 }}>{viewingPatient.gender || "Não informado"}</p></div>
+                <div><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>Telefone</span><p style={{ fontWeight: 600 }}>{viewingPatient.phone || "Não informado"}</p></div>
+                <div style={{ gridColumn: "span 2" }}><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>E-mail</span><p style={{ fontWeight: 600 }}>{viewingPatient.email || "Não informado"}</p></div>
+                <div style={{ gridColumn: "span 2" }}><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>Endereço</span><p style={{ fontWeight: 600 }}>{viewingPatient.address || "Não informado"}</p></div>
+              </div>
+
+              {(viewingPatient.healthPlan || viewingPatient.healthPlanNumber) && (
+                <div style={{ background: "var(--primary-light)", padding: "1rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--primary-mid)" }}>
+                  <h4 style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--primary)", marginBottom: "0.5rem" }}>Plano de Saúde</h4>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                    <div><span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: 600 }}>Convênio</span><p style={{ fontWeight: 700 }}>{viewingPatient.healthPlan || "Particular"}</p></div>
+                    <div><span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: 600 }}>Carteirinha</span><p style={{ fontWeight: 700 }}>{viewingPatient.healthPlanNumber || "-"}</p></div>
+                  </div>
+                </div>
+              )}
+
+              {(viewingPatient.guardianName || viewingPatient.parentsName || viewingPatient.parentsProfession) && (
+                <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
+                  <h4 style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "0.5rem", textTransform: "uppercase" }}>Responsáveis e Família</h4>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                    {viewingPatient.guardianName && <div><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>Responsável Legal</span><p style={{ fontWeight: 600 }}>{viewingPatient.guardianName}</p></div>}
+                    {viewingPatient.parentsName && <div><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>Nome dos Pais</span><p style={{ fontWeight: 600 }}>{viewingPatient.parentsName}</p></div>}
+                    {viewingPatient.parentsProfession && <div style={{ gridColumn: "span 2" }}><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>Profissão dos Pais</span><p style={{ fontWeight: 600 }}>{viewingPatient.parentsProfession}</p></div>}
+                  </div>
+                </div>
+              )}
+
+              {(viewingPatient.schoolName || viewingPatient.schoolGrade || viewingPatient.schoolType) && (
+                <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
+                  <h4 style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "0.5rem", textTransform: "uppercase" }}>Dados Escolares</h4>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                    {viewingPatient.schoolName && <div style={{ gridColumn: "span 2" }}><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>Escola</span><p style={{ fontWeight: 600 }}>{viewingPatient.schoolName}</p></div>}
+                    {viewingPatient.schoolGrade && <div><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>Série/Ano</span><p style={{ fontWeight: 600 }}>{viewingPatient.schoolGrade}</p></div>}
+                    {viewingPatient.schoolType && <div><span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>Tipo</span><p style={{ fontWeight: 600 }}>{viewingPatient.schoolType}</p></div>}
+                  </div>
+                </div>
+              )}
+
+              {viewingPatient.notes && (
+                <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
+                  <h4 style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "0.5rem", textTransform: "uppercase" }}>Anotações / Observações</h4>
+                  <div style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)", fontSize: "0.9rem", color: "var(--text-main)", whiteSpace: "pre-wrap" }}>
+                    {viewingPatient.notes}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end" }}>
+              <button onClick={() => setViewingPatient(null)} className="btn btn-outline">
+                Fechar
+              </button>
+            </div>
           </div>
         </div>
       )}
