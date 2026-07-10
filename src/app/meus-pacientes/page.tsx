@@ -318,9 +318,22 @@ export default function MeusPacientesPage() {
       {/* Modal de Detalhes do Paciente */}
       {viewingPatient && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }} onClick={() => setViewingPatient(null)}>
-          <div className="card animate-slide" style={{ maxWidth: "500px", width: "100%", maxHeight: "90vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
+          <style>{`
+            @media print {
+              body * { visibility: hidden; }
+              #print-patient-modal, #print-patient-modal * { visibility: visible; }
+              #print-patient-modal { 
+                position: absolute; left: 0; top: 0; width: 100%; 
+                max-height: none !important; overflow: visible !important;
+                padding: 2rem !important; margin: 0 !important; box-shadow: none !important;
+              }
+              .no-print { display: none !important; }
+            }
+          `}</style>
+          <div id="print-patient-modal" className="card animate-slide" style={{ maxWidth: "500px", width: "100%", maxHeight: "90vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
             <button 
               onClick={() => setViewingPatient(null)}
+              className="no-print"
               style={{ position: "absolute", top: "1rem", right: "1rem", background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}
             >
               ✕
@@ -388,9 +401,14 @@ export default function MeusPacientesPage() {
               )}
             </div>
 
-            <button onClick={() => setViewingPatient(null)} className="btn" style={{ width: "100%", marginTop: "1.5rem" }}>
-              Fechar Cadastro
-            </button>
+            <div className="no-print" style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
+              <button onClick={() => window.print()} className="btn btn-outline" style={{ flex: 1 }}>
+                🖨️ Imprimir Cadastro
+              </button>
+              <button onClick={() => setViewingPatient(null)} className="btn" style={{ flex: 1 }}>
+                Fechar Cadastro
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -2013,9 +2013,22 @@ export default function AdminDashboard() {
           display: "flex", alignItems: "center", justifyContent: "center",
           zIndex: 999, padding: "1rem"
         }}>
-          <div className="card animate-slide" style={{ width: "100%", maxWidth: "600px", maxHeight: "90vh", overflowY: "auto", position: "relative", padding: "2rem" }}>
+          <style>{`
+            @media print {
+              body * { visibility: hidden; }
+              #print-admin-patient-modal, #print-admin-patient-modal * { visibility: visible; }
+              #print-admin-patient-modal { 
+                position: absolute; left: 0; top: 0; width: 100%; 
+                max-height: none !important; overflow: visible !important;
+                padding: 2rem !important; margin: 0 !important; box-shadow: none !important;
+              }
+              .no-print { display: none !important; }
+            }
+          `}</style>
+          <div id="print-admin-patient-modal" className="card animate-slide" style={{ width: "100%", maxWidth: "600px", maxHeight: "90vh", overflowY: "auto", position: "relative", padding: "2rem" }}>
             <button 
               onClick={() => setViewingPatient(null)}
+              className="no-print"
               style={{ position: "absolute", top: "1.5rem", right: "1.5rem", background: "none", border: "none", fontSize: "1.5rem", cursor: "pointer", color: "var(--text-muted)", lineHeight: 1 }}
             >
               &times;
@@ -2076,7 +2089,10 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            <div style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end" }}>
+            <div className="no-print" style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end", gap: "1rem" }}>
+              <button onClick={() => window.print()} className="btn btn-outline" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                🖨️ Imprimir
+              </button>
               <button onClick={() => setViewingPatient(null)} className="btn btn-outline">
                 Fechar
               </button>
