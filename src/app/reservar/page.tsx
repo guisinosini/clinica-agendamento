@@ -557,7 +557,9 @@ export default function ReservarPage() {
                     >
                       <option value="">(Selecione um serviço...)</option>
                       {servicesList?.map(svc => (
-                        <option key={svc.id} value={svc.name}>{svc.name}</option>
+                        <option key={svc.id} value={svc.name}>
+                          {svc.name}{svc.duration ? ` (${svc.duration} min)` : ""}
+                        </option>
                       ))}
                     </select>
                   </div>

@@ -1612,7 +1612,9 @@ export default function AdminDashboard() {
                 <select className="input" value={newResService} onChange={e => setNewResService(e.target.value)} style={{ cursor: "pointer" }}>
                   <option value="">(Selecione um serviço...)</option>
                   {servicesList?.map(svc => (
-                    <option key={svc.id} value={svc.name}>{svc.name}</option>
+                    <option key={svc.id} value={svc.name}>
+                      {svc.name}{svc.duration ? ` (${svc.duration} min)` : ""}
+                    </option>
                   ))}
                 </select>
               </div>
