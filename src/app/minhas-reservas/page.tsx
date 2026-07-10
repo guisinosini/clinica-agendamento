@@ -351,8 +351,8 @@ export default function ProfessionalAgendaPage() {
         <div style={{
           position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          zIndex: 999, padding: "1rem"
+          display: "flex", alignItems: "flex-start", justifyContent: "center",
+          zIndex: 999, padding: "1rem", paddingTop: "5rem", overflowY: "auto"
         }}>
           <div className="card animate-slide" style={{ width: "100%", maxWidth: "400px", position: "relative", padding: "2rem" }}>
             <button 
