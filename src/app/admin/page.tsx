@@ -7,6 +7,33 @@ import { useReservation, NEXT_DAYS, TIME_SLOTS } from "../../context/Reservation
 import { supabase } from "../../lib/supabase";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
+const calculateAge = (birthDate: string) => {
+  if (!birthDate) return null;
+  const birth = new Date(birthDate + "T00:00:00");
+  const today = new Date();
+  
+  let years = today.getFullYear() - birth.getFullYear();
+  let months = today.getMonth() - birth.getMonth();
+  
+  if (today.getDate() < birth.getDate()) {
+    months--;
+  }
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+  
+  if (years === 0 && months === 0) return "Menos de 1 mês";
+  
+  let ageStr = "";
+  if (years > 0) ageStr += `${years} ano${years > 1 ? 's' : ''}`;
+  if (months > 0) {
+    if (years > 0) ageStr += " e ";
+    ageStr += `${months} mês${months > 1 ? 'es' : ''}`;
+  }
+  return ageStr;
+};
+
 export default function AdminDashboard() {
   const router = useRouter();
   const { rooms, fetchAllReservations, cancelReservation, updateReservationStatus, addRoom, updateRoom, deleteRoom, loading, addReservations, servicesList, addService, updateService, deleteService } = useReservation();
@@ -1396,7 +1423,10 @@ export default function AdminDashboard() {
               
               <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
                 <div style={{ flex: "1 1 150px" }}>
-                  <label className="label">Data de Nascimento</label>
+                  <label className="label" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>Data de Nascimento</span>
+                    {patBirthDate && <span style={{ fontSize: "0.75rem", color: "var(--primary)", fontWeight: 700 }}>{calculateAge(patBirthDate)}</span>}
+                  </label>
                   <input type="date" className="input" value={patBirthDate} onChange={e => setPatBirthDate(e.target.value)} />
                 </div>
                 <div style={{ flex: "1 1 150px" }}>
