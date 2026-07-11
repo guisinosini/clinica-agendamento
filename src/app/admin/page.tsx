@@ -352,6 +352,19 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (!patName) return;
 
+    if (patCpf) {
+      let query = supabase.from("patients").select("id").eq("cpf", patCpf);
+      if (editingPatientId) {
+        query = query.neq("id", editingPatientId);
+      }
+      const { data: existingPatient } = await query.maybeSingle();
+
+      if (existingPatient) {
+        alert("Erro: Este CPF já está cadastrado para outro paciente no sistema.");
+        return;
+      }
+    }
+
     const payload = {
       name: patName,
       email: patEmail,
@@ -1349,9 +1362,26 @@ export default function AdminDashboard() {
         <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
           {/* Form de Nova/Edição Paciente */}
           <div className="card animate-slide">
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem" }}>
-              {editingPatientId ? "Editar Paciente" : "Novo Paciente"}
-            </h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
+              <h2 style={{ fontSize: "1.2rem", fontWeight: 700, margin: 0 }}>
+                {editingPatientId ? "Editar Paciente" : "Novo Paciente"}
+              </h2>
+              {!editingPatientId && (
+                <button 
+                  type="button"
+                  onClick={() => {
+                    const link = `${window.location.origin}/cadastro-paciente`;
+                    navigator.clipboard.writeText(link);
+                    alert("Link de auto-cadastro copiado para a área de transferência!\n\nEnvie este link para o paciente preencher seus próprios dados: \n" + link);
+                  }}
+                  className="btn btn-outline"
+                  style={{ padding: "0.5rem 1rem", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.5rem", borderColor: "var(--primary)", color: "var(--primary)", fontWeight: 700 }}
+                >
+                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"></path></svg>
+                  Copiar Link de Auto-cadastro
+                </button>
+              )}
+            </div>
             <form onSubmit={handleSavePatient} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
                 <div style={{ flex: "1 1 200px" }}>
@@ -1475,21 +1505,7 @@ export default function AdminDashboard() {
 
           {/* Lista de Pacientes */}
           <div className="card animate-slide">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem", marginBottom: "1rem" }}>
-              <h2 style={{ fontSize: "1.2rem", fontWeight: 700, margin: 0 }}>Pacientes ({patientsList.length})</h2>
-              <button 
-                onClick={() => {
-                  const link = `${window.location.origin}/cadastro-paciente`;
-                  navigator.clipboard.writeText(link);
-                  alert("Link de auto-cadastro copiado para a área de transferência!\n\nEnvie este link para o paciente preencher seus próprios dados: \n" + link);
-                }}
-                className="btn btn-outline"
-                style={{ padding: "0.5rem 1rem", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.5rem", borderColor: "var(--primary)", color: "var(--primary)", fontWeight: 700 }}
-              >
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"></path></svg>
-                Copiar Link de Auto-cadastro
-              </button>
-            </div>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem" }}>Pacientes ({patientsList.length})</h2>
             <div style={{ marginBottom: "1rem" }}>
               <input 
                 type="text" 

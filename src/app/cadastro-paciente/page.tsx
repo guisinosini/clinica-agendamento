@@ -39,6 +39,19 @@ export default function CadastroPaciente() {
     setLoading(true);
     setError("");
 
+    // Verifica se o CPF já está cadastrado
+    const { data: existingPatient } = await supabase
+      .from("patients")
+      .select("id")
+      .eq("cpf", patCpf)
+      .maybeSingle();
+
+    if (existingPatient) {
+      setError("Este CPF já está cadastrado em nossa clínica.");
+      setLoading(false);
+      return;
+    }
+
     const payload = {
       name: patName,
       email: patEmail,
