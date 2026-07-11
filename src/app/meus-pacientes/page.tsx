@@ -315,13 +315,13 @@ export default function MeusPacientesPage() {
         </div>
       )}
 
-      {/* Modal de Detalhes do Paciente */}
       {viewingPatient && (
-        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }} onClick={() => setViewingPatient(null)}>
+        <div id="prof-modal-overlay" style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }} onClick={() => setViewingPatient(null)}>
           <style>{`
             .only-print { display: none; }
             @media print {
               body * { visibility: hidden; }
+              #prof-modal-overlay { align-items: flex-start !important; padding: 0 !important; background: transparent !important; }
               #print-patient-modal, #print-patient-modal * { visibility: visible; }
               #print-patient-modal { 
                 position: absolute; left: 0; top: 0; width: 100%; 

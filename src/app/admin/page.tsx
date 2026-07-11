@@ -2037,7 +2037,7 @@ export default function AdminDashboard() {
 
       {/* MODAL DE VISUALIZAÇÃO DE PACIENTE */}
       {viewingPatient && (
-        <div style={{
+        <div id="admin-modal-overlay" style={{
           position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
           display: "flex", alignItems: "center", justifyContent: "center",
@@ -2047,6 +2047,7 @@ export default function AdminDashboard() {
             .only-print { display: none; }
             @media print {
               body * { visibility: hidden; }
+              #admin-modal-overlay { align-items: flex-start !important; padding: 0 !important; background: transparent !important; }
               #print-admin-patient-modal, #print-admin-patient-modal * { visibility: visible; }
               #print-admin-patient-modal { 
                 position: absolute; left: 0; top: 0; width: 100%; 
