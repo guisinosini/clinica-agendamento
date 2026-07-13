@@ -1655,7 +1655,7 @@ export default function AdminDashboard() {
             {newResRoomId && newResDate && (
               <div className="animate-fade" style={{ marginTop: "0.5rem" }}>
                 <label className="label">Horários Disponíveis (Pode selecionar múltiplos)</label>
-                <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: "0.5rem" }}>
+                <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: "0.5rem" }}>
                   {TIME_SLOTS.map(slot => {
                     const isOccupied = occupiedAdminNewResSlots.includes(slot);
                     const isSelected = newResSlots.includes(slot);

@@ -470,7 +470,7 @@ export default function ReservarPage() {
             </div>
 
             <div className="card" style={{ padding: "1.5rem" }}>
-              <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(95px, 1fr))", gap: "0.625rem" }}>
+              <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: "0.5rem" }}>
                 {TIME_SLOTS.map(slot => {
                   const isOccupied = occupiedSlots.includes(slot);
                   const isSelected = selectedSlots.includes(slot);
