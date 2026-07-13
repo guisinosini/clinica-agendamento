@@ -138,25 +138,41 @@ export default function AdminDashboard() {
   const occupiedAdminNewResSlots = useMemo(() => {
     if (!newResRoomId || !newResDate) return [];
     
-    const roomSlots = allReservations
-      .filter(res => res.roomId === newResRoomId && res.date === newResDate && (!res.status || res.status === 'agendado' || res.status === 'confirmado' || res.status === 'realizado'))
-      .map(res => res.startTime);
+    const isSlotOccupied = (slot: string, res: any) => {
+       const slotMinutes = parseInt(slot.split(':')[0]) * 60 + parseInt(slot.split(':')[1]);
+       const startMinutes = parseInt(res.startTime.split(':')[0]) * 60 + parseInt(res.startTime.split(':')[1]);
+       const endMinutes = parseInt(res.endTime.split(':')[0]) * 60 + parseInt(res.endTime.split(':')[1]);
+       return slotMinutes >= startMinutes && slotMinutes < endMinutes;
+    };
 
-    let profSlots: string[] = [];
-    if (newResProfId) {
-      profSlots = allReservations
-        .filter(res => res.professionalId === newResProfId && res.date === newResDate && (!res.status || res.status === 'agendado' || res.status === 'confirmado' || res.status === 'realizado' || res.status === 'indisponivel'))
-        .map(res => res.startTime);
-    }
+    const activeReservations = allReservations.filter(res => 
+       res.date === newResDate && (!res.status || res.status === 'agendado' || res.status === 'confirmado' || res.status === 'realizado' || res.status === 'indisponivel')
+    );
 
-    return Array.from(new Set([...roomSlots, ...profSlots]));
+    const roomReservations = activeReservations.filter(res => res.roomId === newResRoomId && res.status !== 'indisponivel');
+    const professionalReservations = newResProfId ? activeReservations.filter(res => res.professionalId === newResProfId) : [];
+
+    return TIME_SLOTS.filter(slot => {
+       return roomReservations.some(res => isSlotOccupied(slot, res)) ||
+              professionalReservations.some(res => isSlotOccupied(slot, res));
+    });
   }, [allReservations, newResRoomId, newResDate, newResProfId]);
 
   const occupiedAdminRescheduleSlots = useMemo(() => {
     if (!rescheduleRoom || !rescheduleDate) return [];
-    return allReservations
-      .filter(res => res.roomId === rescheduleRoom && res.date === rescheduleDate && res.id !== reschedulingId && (!res.status || res.status === 'agendado' || res.status === 'confirmado' || res.status === 'realizado'))
-      .map(res => res.startTime);
+    
+    const isSlotOccupied = (slot: string, res: any) => {
+       const slotMinutes = parseInt(slot.split(':')[0]) * 60 + parseInt(slot.split(':')[1]);
+       const startMinutes = parseInt(res.startTime.split(':')[0]) * 60 + parseInt(res.startTime.split(':')[1]);
+       const endMinutes = parseInt(res.endTime.split(':')[0]) * 60 + parseInt(res.endTime.split(':')[1]);
+       return slotMinutes >= startMinutes && slotMinutes < endMinutes;
+    };
+    
+    const activeReservations = allReservations.filter(res => 
+       res.roomId === rescheduleRoom && res.date === rescheduleDate && res.id !== reschedulingId && (!res.status || res.status === 'agendado' || res.status === 'confirmado' || res.status === 'realizado')
+    );
+    
+    return TIME_SLOTS.filter(slot => activeReservations.some(res => isSlotOccupied(slot, res)));
   }, [allReservations, rescheduleRoom, rescheduleDate, reschedulingId]);
 
   const fetchAdminTasks = async () => {
@@ -489,8 +505,12 @@ export default function AdminDashboard() {
 
     const allNewReservations = newResSlots.map(slot => {
       const [hours, minutes] = slot.split(":").map(Number);
+      
+      const selectedServiceObj = servicesList?.find(s => s.name === newResService);
+      const duration = selectedServiceObj?.duration || 60;
+      
       const d = new Date();
-      d.setHours(hours + 1, minutes, 0); 
+      d.setHours(hours, minutes + duration, 0); 
       return {
         roomId: newResRoomId,
         professionalId: newResProfId,
@@ -526,9 +546,14 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (!reschedulingId || !rescheduleDate || !rescheduleStart || !rescheduleRoom) return;
 
+    const originalRes = allReservations.find(r => r.id === reschedulingId);
+    const serviceName = originalRes?.service;
+    const selectedServiceObj = servicesList?.find(s => s.name === serviceName);
+    const duration = selectedServiceObj?.duration || 60;
+
     const [hours, minutes] = rescheduleStart.split(":").map(Number);
     const d = new Date();
-    d.setHours(hours + 1, minutes, 0);
+    d.setHours(hours, minutes + duration, 0);
     const calculatedEnd = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 
     try {

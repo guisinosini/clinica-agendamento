@@ -58,17 +58,26 @@ export default function ReservarPage() {
   const occupiedSlots = useMemo(() => {
     if (!selectedRoom || !professional) return [];
     
-    // Horários ocupados na sala
-    const roomSlots = reservations
-      .filter(res => res.roomId === selectedRoom && res.date === selectedDate && (!res.status || res.status === 'agendado' || res.status === 'confirmado'))
-      .map(res => res.startTime);
+    const isSlotOccupied = (slot: string, res: any) => {
+       const slotMinutes = parseInt(slot.split(':')[0]) * 60 + parseInt(slot.split(':')[1]);
+       const startMinutes = parseInt(res.startTime.split(':')[0]) * 60 + parseInt(res.startTime.split(':')[1]);
+       const endMinutes = parseInt(res.endTime.split(':')[0]) * 60 + parseInt(res.endTime.split(':')[1]);
+       return slotMinutes >= startMinutes && slotMinutes < endMinutes;
+    };
 
-    // Horários em que o profissional já está ocupado (outra sala ou bloqueio)
-    const professionalSlots = reservations
-      .filter(res => res.professionalId === professional.id && res.date === selectedDate && (!res.status || res.status === 'agendado' || res.status === 'confirmado' || res.status === 'indisponivel'))
-      .map(res => res.startTime);
+    const activeReservations = reservations.filter(res => 
+       res.date === selectedDate && (!res.status || res.status === 'agendado' || res.status === 'confirmado' || res.status === 'indisponivel')
+    );
 
-    return Array.from(new Set([...roomSlots, ...professionalSlots]));
+    const roomReservations = activeReservations.filter(res => res.roomId === selectedRoom && res.status !== 'indisponivel');
+    const professionalReservations = activeReservations.filter(res => res.professionalId === professional.id);
+
+    const occupied = TIME_SLOTS.filter(slot => {
+       return roomReservations.some(res => isSlotOccupied(slot, res)) ||
+              professionalReservations.some(res => isSlotOccupied(slot, res));
+    });
+
+    return occupied;
   }, [reservations, selectedRoom, selectedDate, professional?.id]);
 
   if (loading || !professional) return (
@@ -111,8 +120,13 @@ export default function ReservarPage() {
       
       const dailyReservations = selectedSlots.flatMap(slot => {
         const [hours, minutes] = slot.split(":").map(Number);
+        
+        // Obter duração do serviço
+        const selectedServiceObj = servicesList?.find(s => s.name === service);
+        const duration = selectedServiceObj?.duration || 60;
+        
         const d = new Date();
-        d.setHours(hours + 1, minutes, 0); // Presume duração de 1 hora
+        d.setHours(hours, minutes + duration, 0); 
         
         const hostRes = {
           roomId: selectedRoom,
@@ -137,13 +151,21 @@ export default function ReservarPage() {
       allReservations.push(...dailyReservations);
     }
 
-    const conflicts = allReservations.filter(res => 
-      reservations.some(existing => 
-        existing.roomId === res.roomId && 
-        existing.date === res.date && 
-        existing.startTime === res.startTime
-      )
-    );
+    const conflicts = allReservations.filter(res => {
+      const start1 = parseInt(res.startTime.split(':')[0]) * 60 + parseInt(res.startTime.split(':')[1]);
+      const end1 = parseInt(res.endTime.split(':')[0]) * 60 + parseInt(res.endTime.split(':')[1]);
+      
+      return reservations.some(existing => {
+        if (existing.date !== res.date) return false;
+        if (existing.status && existing.status !== 'agendado' && existing.status !== 'confirmado' && existing.status !== 'indisponivel') return false;
+        if (existing.roomId !== res.roomId && existing.professionalId !== res.professionalId) return false;
+        
+        const start2 = parseInt(existing.startTime.split(':')[0]) * 60 + parseInt(existing.startTime.split(':')[1]);
+        const end2 = parseInt(existing.endTime.split(':')[0]) * 60 + parseInt(existing.endTime.split(':')[1]);
+        
+        return start1 < end2 && start2 < end1;
+      });
+    });
 
     let finalReservations = allReservations;
 
