@@ -725,6 +725,29 @@ export default function AdminDashboard() {
 
         const { error: assignErr } = await supabase.from('task_assignments').insert(assignments);
         if (assignErr) throw assignErr;
+
+        // Disparar notificação por e-mail para os profissionais (exceto admin)
+        const emailsToNotify = selectedTaskProfs
+          .filter(id => id !== 'admin')
+          .map(id => professionalsList.find(p => p.id === id)?.email)
+          .filter(Boolean);
+
+        if (emailsToNotify.length > 0) {
+          Promise.all(emailsToNotify.map(email => 
+            fetch('/api/email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: email,
+                subject: `Nova Tarefa Atribuída: ${newTaskTitle}`,
+                taskTitle: newTaskTitle,
+                taskDescription: newTaskDesc,
+                assignedBy: "Administração",
+                taskLink: `${window.location.origin}/tarefas`
+              })
+            })
+          )).catch(err => console.error("Erro ao enviar notificação por e-mail:", err));
+        }
       }
 
       // Sucesso
