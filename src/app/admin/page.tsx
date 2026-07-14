@@ -138,11 +138,16 @@ export default function AdminDashboard() {
   const occupiedAdminNewResSlots = useMemo(() => {
     if (!newResRoomId || !newResDate) return [];
     
+    const selectedServiceObj = servicesList?.find(s => s.name === newResService);
+    const duration = selectedServiceObj?.duration || 60;
+
     const isSlotOccupied = (slot: string, res: any) => {
        const slotMinutes = parseInt(slot.split(':')[0]) * 60 + parseInt(slot.split(':')[1]);
        const startMinutes = parseInt(res.startTime.split(':')[0]) * 60 + parseInt(res.startTime.split(':')[1]);
        const endMinutes = parseInt(res.endTime.split(':')[0]) * 60 + parseInt(res.endTime.split(':')[1]);
-       return slotMinutes >= startMinutes && slotMinutes < endMinutes;
+       
+       const slotEndMinutes = slotMinutes + duration;
+       return slotMinutes < endMinutes && startMinutes < slotEndMinutes;
     };
 
     const activeReservations = allReservations.filter(res => 
@@ -156,16 +161,23 @@ export default function AdminDashboard() {
        return roomReservations.some(res => isSlotOccupied(slot, res)) ||
               professionalReservations.some(res => isSlotOccupied(slot, res));
     });
-  }, [allReservations, newResRoomId, newResDate, newResProfId]);
+  }, [allReservations, newResRoomId, newResDate, newResProfId, newResService, servicesList]);
 
   const occupiedAdminRescheduleSlots = useMemo(() => {
     if (!rescheduleRoom || !rescheduleDate) return [];
     
+    const originalRes = allReservations.find(r => r.id === reschedulingId);
+    const serviceName = originalRes?.service;
+    const selectedServiceObj = servicesList?.find(s => s.name === serviceName);
+    const duration = selectedServiceObj?.duration || 60;
+
     const isSlotOccupied = (slot: string, res: any) => {
        const slotMinutes = parseInt(slot.split(':')[0]) * 60 + parseInt(slot.split(':')[1]);
        const startMinutes = parseInt(res.startTime.split(':')[0]) * 60 + parseInt(res.startTime.split(':')[1]);
        const endMinutes = parseInt(res.endTime.split(':')[0]) * 60 + parseInt(res.endTime.split(':')[1]);
-       return slotMinutes >= startMinutes && slotMinutes < endMinutes;
+       
+       const slotEndMinutes = slotMinutes + duration;
+       return slotMinutes < endMinutes && startMinutes < slotEndMinutes;
     };
     
     const activeReservations = allReservations.filter(res => 
@@ -173,7 +185,7 @@ export default function AdminDashboard() {
     );
     
     return TIME_SLOTS.filter(slot => activeReservations.some(res => isSlotOccupied(slot, res)));
-  }, [allReservations, rescheduleRoom, rescheduleDate, reschedulingId]);
+  }, [allReservations, rescheduleRoom, rescheduleDate, reschedulingId, servicesList]);
 
   const fetchAdminTasks = async () => {
     setLoadingAdminTasks(true);
@@ -536,8 +548,24 @@ export default function AdminDashboard() {
       });
     });
 
-    if (hasInternalConflicts) {
-      alert("Erro: Você selecionou horários que se sobrepõem devido à duração do serviço (ex: selecionou 08:00 e 08:30 para um serviço de 90min). Por favor, selecione APENAS o horário de início da sessão.");
+    const hasExternalConflicts = allNewReservations.some(res => {
+      const start1 = parseInt(res.startTime.split(':')[0]) * 60 + parseInt(res.startTime.split(':')[1]);
+      const end1 = parseInt(res.endTime.split(':')[0]) * 60 + parseInt(res.endTime.split(':')[1]);
+      
+      return allReservations.some(existing => {
+        if (existing.date !== res.date) return false;
+        if (existing.status && existing.status !== 'agendado' && existing.status !== 'confirmado' && existing.status !== 'realizado' && existing.status !== 'indisponivel') return false;
+        if (existing.roomId !== res.roomId && existing.professionalId !== res.professionalId) return false;
+        
+        const start2 = parseInt(existing.startTime.split(':')[0]) * 60 + parseInt(existing.startTime.split(':')[1]);
+        const end2 = parseInt(existing.endTime.split(':')[0]) * 60 + parseInt(existing.endTime.split(':')[1]);
+        
+        return start1 < end2 && start2 < end1;
+      });
+    });
+
+    if (hasInternalConflicts || hasExternalConflicts) {
+      alert("Erro: O horário selecionado (junto com a duração do serviço) conflita com outra reserva já existente nesta sala ou para este profissional.");
       return;
     }
 
@@ -575,6 +603,27 @@ export default function AdminDashboard() {
     const endHours = Math.floor(totalMinutes / 60);
     const endMins = totalMinutes % 60;
     const calculatedEnd = `${String(endHours).padStart(2, "0")}:${String(endMins).padStart(2, "0")}`;
+
+    const hasExternalConflict = allReservations.some(existing => {
+        if (existing.id === reschedulingId) return false;
+        if (existing.date !== rescheduleDate) return false;
+        if (existing.status && existing.status !== 'agendado' && existing.status !== 'confirmado' && existing.status !== 'realizado' && existing.status !== 'indisponivel') return false;
+        
+        if (existing.roomId !== rescheduleRoom && existing.professionalId !== originalRes?.professionalId) return false;
+        
+        const start1 = hours * 60 + minutes;
+        const end1 = start1 + duration;
+
+        const start2 = parseInt(existing.startTime.split(':')[0]) * 60 + parseInt(existing.startTime.split(':')[1]);
+        const end2 = parseInt(existing.endTime.split(':')[0]) * 60 + parseInt(existing.endTime.split(':')[1]);
+        
+        return start1 < end2 && start2 < end1;
+    });
+
+    if (hasExternalConflict) {
+        alert("Erro: O novo horário conflita com uma reserva existente.");
+        return;
+    }
 
     try {
       const { error } = await supabase.from('reservations').update({

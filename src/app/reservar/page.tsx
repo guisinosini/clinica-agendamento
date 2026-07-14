@@ -56,13 +56,18 @@ export default function ReservarPage() {
   }, [loading, professional, router]);
 
   const occupiedSlots = useMemo(() => {
-    if (!selectedRoom || !professional) return [];
+    if (!selectedRoom || !selectedDate) return [];
+    
+    const selectedServiceObj = servicesList?.find(s => s.name === service);
+    const duration = selectedServiceObj?.duration || 60;
     
     const isSlotOccupied = (slot: string, res: any) => {
        const slotMinutes = parseInt(slot.split(':')[0]) * 60 + parseInt(slot.split(':')[1]);
        const startMinutes = parseInt(res.startTime.split(':')[0]) * 60 + parseInt(res.startTime.split(':')[1]);
        const endMinutes = parseInt(res.endTime.split(':')[0]) * 60 + parseInt(res.endTime.split(':')[1]);
-       return slotMinutes >= startMinutes && slotMinutes < endMinutes;
+       
+       const slotEndMinutes = slotMinutes + duration;
+       return slotMinutes < endMinutes && startMinutes < slotEndMinutes;
     };
 
     const activeReservations = reservations.filter(res => 
@@ -70,7 +75,7 @@ export default function ReservarPage() {
     );
 
     const roomReservations = activeReservations.filter(res => res.roomId === selectedRoom && res.status !== 'indisponivel');
-    const professionalReservations = activeReservations.filter(res => res.professionalId === professional.id);
+    const professionalReservations = activeReservations.filter(res => res.professionalId === professional?.id);
 
     const occupied = TIME_SLOTS.filter(slot => {
        return roomReservations.some(res => isSlotOccupied(slot, res)) ||
@@ -78,7 +83,7 @@ export default function ReservarPage() {
     });
 
     return occupied;
-  }, [reservations, selectedRoom, selectedDate, professional?.id]);
+  }, [reservations, selectedRoom, selectedDate, professional?.id, service, servicesList]);
 
   if (loading || !professional) return (
     <div className="loading-screen">
