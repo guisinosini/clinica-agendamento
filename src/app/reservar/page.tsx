@@ -59,7 +59,7 @@ export default function ReservarPage() {
     if (!selectedRoom || !selectedDate) return [];
     
     const selectedServiceObj = servicesList?.find(s => s.name === service);
-    const duration = selectedServiceObj?.duration || 60;
+    const duration = service ? (selectedServiceObj?.duration || 60) : 30;
     
     const isSlotOccupied = (slot: string, res: any) => {
        const slotMinutes = parseInt(slot.split(':')[0]) * 60 + parseInt(slot.split(':')[1]);
@@ -427,10 +427,10 @@ export default function ReservarPage() {
         </div>
       </section>
 
-      {/* Passos 2 e 3 (aparecem após sala ser selecionada) */}
+      {/* Passos 2 e seguintes (aparecem após sala ser selecionada) */}
       {selectedRoom && (
         <div className="animate-slide">
-          {/* Passo 2: Data */}
+          {/* Passo 2: Dados Básicos */}
           <section style={{ marginBottom: "2rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
               <div style={{
@@ -440,6 +440,76 @@ export default function ReservarPage() {
                 display: "flex", alignItems: "center", justifyContent: "center",
                 flexShrink: 0, boxShadow: "var(--clay-btn)",
               }}>2</div>
+              <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-secondary)" }}>Paciente e Serviço</h2>
+            </div>
+            
+            <div className="card" style={{ padding: "2rem" }}>
+              <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem" }}>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.2rem" }}>
+                    <label className="label" style={{ marginBottom: 0 }}>Paciente (Opcional)</label>
+                    <button 
+                      type="button" 
+                      onClick={() => setIsPatientModalOpen(true)}
+                      style={{ background: "none", border: "none", color: "var(--primary)", fontSize: "0.8rem", fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}
+                    >
+                      + Novo Paciente
+                    </button>
+                  </div>
+
+                  <select 
+                    className="input" 
+                    value={patientName}
+                    onChange={(e) => setPatientName(e.target.value)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <option value="">(Sem paciente / Selecione...)</option>
+                    {patientsList.map(pat => {
+                      let ageStr = "";
+                      if (pat.birthDate) {
+                        const birthDate = new Date(pat.birthDate);
+                        const today = new Date();
+                        let age = today.getFullYear() - birthDate.getFullYear();
+                        const m = today.getMonth() - birthDate.getMonth();
+                        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+                        if (age >= 0) ageStr = ` (${age} anos)`;
+                      }
+                      return <option key={pat.id} value={pat.name}>{pat.name}{ageStr}</option>;
+                    })}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Serviço / Procedimento</label>
+                  <select 
+                    className="input" 
+                    value={service}
+                    onChange={(e) => { setService(e.target.value); setSelectedSlots([]); }}
+                    required
+                    style={{ cursor: "pointer" }}
+                  >
+                    <option value="">(Selecione um serviço...)</option>
+                    {servicesList?.map(svc => (
+                      <option key={svc.id} value={svc.name}>
+                        {svc.name}{svc.duration ? ` (${svc.duration} min)` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Passo 3: Data */}
+          {service && (
+          <section className="animate-slide" style={{ marginBottom: "2rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
+              <div style={{
+                width: "32px", height: "32px", borderRadius: "var(--radius-full)",
+                background: "var(--primary)",
+                color: "var(--primary-mid)", fontSize: "0.9rem", fontWeight: 700,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0, boxShadow: "var(--clay-btn)",
+              }}>3</div>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-secondary)" }}>Escolha a Data</h2>
             </div>
             <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "2.5rem 2rem", gap: "0.75rem" }}>
@@ -472,94 +542,92 @@ export default function ReservarPage() {
               )}
             </div>
           </section>
+          )}
 
-          {/* Passo 3: Horários */}
-          <section style={{ marginBottom: "2rem" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem", flexWrap: "wrap", gap: "0.75rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                <div style={{
-                  width: "32px", height: "32px", borderRadius: "var(--radius-full)",
-                  background: "var(--primary)",
-                  color: "var(--primary-mid)", fontSize: "0.9rem", fontWeight: 700,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  flexShrink: 0, boxShadow: "var(--clay-btn)",
-                }}>3</div>
-                <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-secondary)" }}>Selecione os Horários</h2>
-              </div>
-              {selectedSlots.length > 0 && (
-                <span className="badge badge-primary" style={{ fontSize: "0.8rem" }}>
-                  {selectedSlots.length} hora(s) selecionada(s)
-                </span>
-              )}
-            </div>
-
-            <div className="card" style={{ padding: "1.5rem" }}>
-              <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: "0.5rem" }}>
-                {TIME_SLOTS.map(slot => {
-                  const isOccupied = occupiedSlots.includes(slot);
-                  const isSelected = selectedSlots.includes(slot);
-                  
-                  const isBlockedBySelection = selectedSlots.some(selectedSlot => {
-                    if (selectedSlot === slot) return false;
-                    const startMins = parseInt(selectedSlot.split(':')[0]) * 60 + parseInt(selectedSlot.split(':')[1]);
-                    const currentMins = parseInt(slot.split(':')[0]) * 60 + parseInt(slot.split(':')[1]);
-                    const selectedServiceObj = servicesList?.find(s => s.name === service);
-                    const duration = selectedServiceObj?.duration || 60;
-                    return currentMins > startMins && currentMins < startMins + duration;
-                  });
-
-                  const isDisabled = isOccupied || isBlockedBySelection;
-
-                  return (
-                    <button
-                      key={slot}
-                      disabled={isDisabled}
-                      onClick={() => handleSlotClick(slot)}
-                      style={{
-                        padding: "0.85rem 0.5rem",
-                        borderRadius: "var(--radius-sm)",
-                        fontWeight: 600,
-                        fontSize: "0.9rem",
-                        border: "1.5px solid",
-                        borderColor: isDisabled
-                          ? "var(--border-color)"
-                          : isSelected ? "var(--primary)" : "var(--border-color)",
-                        background: isDisabled
-                          ? "var(--primary-light)"
-                          : isSelected
-                            ? "var(--primary)"
-                            : "var(--card-bg)",
-                        color: isDisabled ? "var(--text-light)" : isSelected ? "var(--primary-mid)" : "var(--text-secondary)",
-                        cursor: isDisabled ? "not-allowed" : "pointer",
-                        transition: "all 0.15s ease",
-                        textDecoration: isDisabled ? "line-through" : "none",
-                        boxShadow: isSelected ? "var(--clay-btn)" : "var(--clay-input)",
-                        transform: isSelected ? "translateY(-1px)" : "none",
-                      }}
-                    >
-                      {slot}
-                    </button>
-                  );
-                })}
+          {/* Passo 4: Horários */}
+          {service && selectedDate && (
+            <section className="animate-slide" style={{ marginBottom: "2rem" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem", flexWrap: "wrap", gap: "0.75rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <div style={{
+                    width: "32px", height: "32px", borderRadius: "var(--radius-full)",
+                    background: "var(--primary)",
+                    color: "var(--primary-mid)", fontSize: "0.9rem", fontWeight: 700,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0, boxShadow: "var(--clay-btn)",
+                  }}>4</div>
+                  <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-secondary)" }}>Selecione os Horários</h2>
+                </div>
+                {selectedSlots.length > 0 && (
+                  <span className="badge badge-primary" style={{ fontSize: "0.8rem" }}>
+                    {selectedSlots.length} hora(s) selecionada(s)
+                  </span>
+                )}
               </div>
 
-              {/* Legenda */}
-              <div style={{ display: "flex", gap: "1.25rem", marginTop: "1.5rem", fontSize: "0.8rem", color: "var(--text-muted)", flexWrap: "wrap", borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
-                {[
-                  { color: "var(--card-bg)", border: "var(--border-color)", label: "Disponível" },
-                  { color: "var(--primary)", border: "var(--primary)", label: "Selecionado" },
-                  { color: "var(--primary-light)", border: "var(--primary-light)", label: "Ocupado" },
-                ].map(item => (
-                  <div key={item.label} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                    <div style={{ width: "14px", height: "14px", backgroundColor: item.color, border: `1.5px solid ${item.border}`, borderRadius: "4px" }} />
-                    <span>{item.label}</span>
+              <div className="card" style={{ padding: "1.5rem" }}>
+                <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: "0.5rem" }}>
+                  {TIME_SLOTS.map(slot => {
+                    const isOccupied = occupiedSlots.includes(slot);
+                    const isSelected = selectedSlots.includes(slot);
+                    
+                    const isBlockedBySelection = selectedSlots.some(selectedSlot => {
+                      if (selectedSlot === slot) return false;
+                      const startMins = parseInt(selectedSlot.split(':')[0]) * 60 + parseInt(selectedSlot.split(':')[1]);
+                      const currentMins = parseInt(slot.split(':')[0]) * 60 + parseInt(slot.split(':')[1]);
+                      const selectedServiceObj = servicesList?.find(s => s.name === service);
+                      const duration = service ? (selectedServiceObj?.duration || 60) : 30;
+                      return currentMins > startMins && currentMins < startMins + duration;
+                    });
+
+                    const isDisabled = isOccupied || isBlockedBySelection;
+
+                    return (
+                      <button
+                        key={slot}
+                        disabled={isDisabled}
+                        onClick={() => handleSlotClick(slot)}
+                        style={{
+                          padding: "0.85rem 0.5rem",
+                          borderRadius: "var(--radius-sm)",
+                          fontWeight: 600,
+                          fontSize: "0.9rem",
+                          border: "1.5px solid",
+                          borderColor: isDisabled ? "var(--border-color)" : isSelected ? "var(--primary)" : "var(--border-color)",
+                          background: isDisabled ? "var(--primary-light)" : isSelected ? "var(--primary)" : "var(--card-bg)",
+                          color: isDisabled ? "var(--text-light)" : isSelected ? "var(--primary-mid)" : "var(--text-secondary)",
+                          cursor: isDisabled ? "not-allowed" : "pointer",
+                          transition: "all 0.15s ease",
+                          textDecoration: isDisabled ? "line-through" : "none",
+                          boxShadow: isSelected ? "var(--clay-btn)" : "var(--clay-input)",
+                          transform: isSelected ? "translateY(-1px)" : "none",
+                        }}
+                      >
+                        {slot}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div style={{ display: "flex", gap: "1.25rem", marginTop: "1.5rem", fontSize: "0.8rem", color: "var(--text-muted)", flexWrap: "wrap", borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    <div style={{ width: "14px", height: "14px", backgroundColor: "var(--card-bg)", border: "1.5px solid var(--border-color)", borderRadius: "4px" }}></div>
+                    <span>Disponível</span>
                   </div>
-                ))}
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    <div style={{ width: "14px", height: "14px", backgroundColor: "var(--primary)", border: "1.5px solid var(--primary)", borderRadius: "4px" }}></div>
+                    <span>Selecionado</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    <div style={{ width: "14px", height: "14px", backgroundColor: "var(--primary-light)", border: "1.5px solid var(--primary-light)", borderRadius: "4px" }}></div>
+                    <span>Ocupado</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )}
 
-          {/* Passo 4: Dados do Paciente (Opcional) */}
+          {/* Passo 5: Opções Adicionais (Convites e Repetição) */}
           {selectedSlots.length > 0 && (
             <section className="animate-slide" style={{ marginBottom: "2rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
@@ -569,64 +637,11 @@ export default function ReservarPage() {
                   color: "var(--primary-mid)", fontSize: "0.9rem", fontWeight: 700,
                   display: "flex", alignItems: "center", justifyContent: "center",
                   flexShrink: 0, boxShadow: "var(--clay-btn)",
-                }}>4</div>
-                <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-secondary)" }}>Dados do Agendamento</h2>
+                }}>5</div>
+                <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-secondary)" }}>Opções Adicionais</h2>
               </div>
               
               <div className="card" style={{ padding: "2rem" }}>
-                <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem" }}>
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.2rem" }}>
-                      <label className="label" style={{ marginBottom: 0 }}>Paciente</label>
-                      <button 
-                        type="button" 
-                        onClick={() => setIsPatientModalOpen(true)}
-                        style={{ background: "none", border: "none", color: "var(--primary)", fontSize: "0.8rem", fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}
-                      >
-                        + Novo Paciente
-                      </button>
-                    </div>
-
-                    <select 
-                      className="input" 
-                      value={patientName}
-                      onChange={(e) => setPatientName(e.target.value)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <option value="">(Sem paciente / Selecione...)</option>
-                      {patientsList.map(pat => {
-                        let ageStr = "";
-                        if (pat.birthDate) {
-                          const birthDate = new Date(pat.birthDate);
-                          const today = new Date();
-                          let age = today.getFullYear() - birthDate.getFullYear();
-                          const m = today.getMonth() - birthDate.getMonth();
-                          if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-                          if (age >= 0) ageStr = ` (${age} anos)`;
-                        }
-                        return <option key={pat.id} value={pat.name}>{pat.name}{ageStr}</option>;
-                      })}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="label">Serviço / Procedimento</label>
-                    <select 
-                      className="input" 
-                      value={service}
-                      onChange={(e) => setService(e.target.value)}
-                      required
-                      style={{ cursor: "pointer" }}
-                    >
-                      <option value="">(Selecione um serviço...)</option>
-                      {servicesList?.map(svc => (
-                        <option key={svc.id} value={svc.name}>
-                          {svc.name}{svc.duration ? ` (${svc.duration} min)` : ""}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
                 {/* Opções de Convite (Apenas Sala de Reunião r5) */}
                 {isMeetingRoom && (
                   <div className="animate-fade" style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid var(--border-color)" }}>
@@ -681,7 +696,7 @@ export default function ReservarPage() {
                 )}
 
                 {/* Opções de Repetição */}
-                <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid var(--border-color)" }}>
+                <div style={{ paddingTop: "0.5rem" }}>
                   <label style={{ display: "flex", alignItems: "center", gap: "0.6rem", cursor: "pointer", fontWeight: 600, color: "var(--text-main)" }}>
                     <input 
                       type="checkbox" 

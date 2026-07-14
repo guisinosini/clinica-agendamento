@@ -139,7 +139,7 @@ export default function AdminDashboard() {
     if (!newResRoomId || !newResDate) return [];
     
     const selectedServiceObj = servicesList?.find(s => s.name === newResService);
-    const duration = selectedServiceObj?.duration || 60;
+    const duration = newResService ? (selectedServiceObj?.duration || 60) : 30;
 
     const isSlotOccupied = (slot: string, res: any) => {
        const slotMinutes = parseInt(slot.split(':')[0]) * 60 + parseInt(slot.split(':')[1]);
@@ -169,7 +169,7 @@ export default function AdminDashboard() {
     const originalRes = allReservations.find(r => r.id === reschedulingId);
     const serviceName = originalRes?.service;
     const selectedServiceObj = servicesList?.find(s => s.name === serviceName);
-    const duration = selectedServiceObj?.duration || 60;
+    const duration = serviceName ? (selectedServiceObj?.duration || 60) : 30;
 
     const isSlotOccupied = (slot: string, res: any) => {
        const slotMinutes = parseInt(slot.split(':')[0]) * 60 + parseInt(slot.split(':')[1]);
@@ -1716,12 +1716,24 @@ export default function AdminDashboard() {
                 </select>
               </div>
               <div>
+                <label className="label">Serviço/Detalhes</label>
+                <select className="input" value={newResService} onChange={e => { setNewResService(e.target.value); setNewResSlots([]); }} required style={{ cursor: "pointer" }}>
+                  <option value="">(Selecione um serviço...)</option>
+                  {servicesList?.map(svc => (
+                    <option key={svc.id} value={svc.name}>
+                      {svc.name}{svc.duration ? ` (${svc.duration} min)` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
                 <label className="label">Data</label>
                 <input type="date" className="input" value={newResDate} onChange={e => { setNewResDate(e.target.value); setNewResSlots([]); }} required />
               </div>
             </div>
 
-            {newResRoomId && newResDate && (
+            {newResRoomId && newResDate && newResService && (
               <div className="animate-fade" style={{ marginTop: "0.5rem" }}>
                 <label className="label">Horários Disponíveis (Pode selecionar múltiplos)</label>
                 <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: "0.5rem" }}>
@@ -1734,7 +1746,7 @@ export default function AdminDashboard() {
                       const startMins = parseInt(selectedSlot.split(':')[0]) * 60 + parseInt(selectedSlot.split(':')[1]);
                       const currentMins = parseInt(slot.split(':')[0]) * 60 + parseInt(slot.split(':')[1]);
                       const selectedServiceObj = servicesList?.find(s => s.name === newResService);
-                      const duration = selectedServiceObj?.duration || 60;
+                      const duration = newResService ? (selectedServiceObj?.duration || 60) : 30;
                       return currentMins > startMins && currentMins < startMins + duration;
                     });
 
@@ -1783,17 +1795,7 @@ export default function AdminDashboard() {
                   })}
                 </select>
               </div>
-              <div>
-                <label className="label">Serviço/Detalhes</label>
-                <select className="input" value={newResService} onChange={e => setNewResService(e.target.value)} required style={{ cursor: "pointer" }}>
-                  <option value="">(Selecione um serviço...)</option>
-                  {servicesList?.map(svc => (
-                    <option key={svc.id} value={svc.name}>
-                      {svc.name}{svc.duration ? ` (${svc.duration} min)` : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
+
             </div>
 
             <button type="submit" className="btn" style={{ marginTop: "1rem", alignSelf: "flex-start" }}>
