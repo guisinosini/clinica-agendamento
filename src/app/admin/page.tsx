@@ -657,6 +657,30 @@ export default function AdminDashboard() {
     router.push("/");
   };
 
+  const toggleAdminTaskStatus = async (assignment: any) => {
+    const newStatus = assignment.status === 'pendente' ? 'concluida' : 'pendente';
+    
+    // Optimistic update
+    setAdminTasks(prev => prev.map(t => t.id === assignment.id ? { ...t, status: newStatus } : t));
+
+    try {
+      const { error } = await supabase
+        .from('task_assignments')
+        .update({ 
+          status: newStatus,
+          completed_at: newStatus === 'concluida' ? new Date().toISOString() : null
+        })
+        .eq('id', assignment.id);
+
+      if (error) throw error;
+    } catch (err) {
+      console.error(err);
+      // Revert in case of error
+      setAdminTasks(prev => prev.map(t => t.id === assignment.id ? { ...t, status: assignment.status } : t));
+      alert("Erro ao atualizar o status da tarefa.");
+    }
+  };
+
   const handleDeleteTask = async (taskId: string) => {
     if (confirm("ATENÇÃO ADMIN: Tem certeza que deseja excluir esta tarefa de TODOS os profissionais?")) {
       const { error } = await supabase.from('tasks').delete().eq('id', taskId);
@@ -2029,7 +2053,17 @@ export default function AdminDashboard() {
                         )}
                       </td>
                       <td style={{ padding: "1rem", textAlign: "right" }}>
-                        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+                        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", flexWrap: "wrap" }}>
+                          <button 
+                            onClick={() => toggleAdminTaskStatus(assignment)}
+                            style={{ 
+                              color: assignment.status === 'pendente' ? "white" : "var(--success)", 
+                              backgroundColor: assignment.status === 'pendente' ? "var(--success)" : "#dcfce7", 
+                              padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" 
+                            }}
+                          >
+                            {assignment.status === 'pendente' ? 'Concluir' : 'Reabrir'}
+                          </button>
                           <button 
                             onClick={() => openEditAdminTask(assignment)}
                             style={{ color: "var(--primary)", backgroundColor: "var(--primary-light)", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
