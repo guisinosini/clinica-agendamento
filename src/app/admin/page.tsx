@@ -40,7 +40,7 @@ export default function AdminDashboard() {
   const allReservations = fetchAllReservations();
   
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "reservations" | "rooms" | "professionals" | "new_reservation" | "patients" | "disponibilidade" | "relatorios" | "services" | "tarefas">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "reservations" | "rooms" | "professionals" | "new_reservation" | "patients" | "disponibilidade" | "relatorios" | "services" | "tarefas" | "finances">("dashboard");
   const [selectedDispDate, setSelectedDispDate] = useState<string>(NEXT_DAYS[0]);
   const [professionalsMap, setProfessionalsMap] = useState<Record<string, string>>({});
   const [professionalsList, setProfessionalsList] = useState<any[]>([]);
@@ -111,6 +111,10 @@ export default function AdminDashboard() {
   // Admin Tasks State
   const [adminTasks, setAdminTasks] = useState<any[]>([]);
   const [loadingAdminTasks, setLoadingAdminTasks] = useState(false);
+
+  // Finances State
+  const [isFinancesUnlocked, setIsFinancesUnlocked] = useState(false);
+  const [financePasswordInput, setFinancePasswordInput] = useState("");
 
   // New Admin Task Modal State
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -938,6 +942,9 @@ export default function AdminDashboard() {
                 </button>
                 <button onClick={() => setActiveTab("tarefas")} className={`admin-nav-btn${activeTab === "tarefas" ? " active" : ""}`}>
                   ✅ Tarefas
+                </button>
+                <button onClick={() => setActiveTab("finances")} className={`admin-nav-btn${activeTab === "finances" ? " active" : ""}`}>
+                  💰 Finanças
                 </button>
               </div>
             </div>
@@ -2312,6 +2319,109 @@ export default function AdminDashboard() {
               <p style={{ fontSize: "0.85rem", color: "#666" }}>Impresso em: {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR')}</p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* FINANÇAS */}
+      {activeTab === "finances" && (
+        <div className="animate-slide">
+          {!isFinancesUnlocked ? (
+            <div className="card" style={{ padding: "4rem 2rem", maxWidth: "450px", margin: "4rem auto", textAlign: "center" }}>
+              <div style={{ fontSize: "4rem", marginBottom: "1.5rem", color: "var(--primary)" }}>🔒</div>
+              <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.5rem" }}>Acesso Restrito</h2>
+              <p style={{ color: "var(--text-muted)", marginBottom: "2rem", fontSize: "0.95rem" }}>
+                O módulo financeiro contém informações sensíveis. Digite a senha para continuar.
+              </p>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                if (financePasswordInput === "riqueza123") {
+                  setIsFinancesUnlocked(true);
+                  setFinancePasswordInput("");
+                } else {
+                  alert("Senha incorreta!");
+                }
+              }} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <input 
+                  type="password" 
+                  className="input" 
+                  placeholder="Digite a senha..." 
+                  value={financePasswordInput}
+                  onChange={e => setFinancePasswordInput(e.target.value)}
+                  style={{ textAlign: "center", fontSize: "1.1rem", padding: "0.8rem", letterSpacing: "2px" }}
+                  autoFocus
+                />
+                <button type="submit" className="btn" style={{ padding: "0.8rem", fontSize: "1rem" }}>
+                  Desbloquear
+                </button>
+              </form>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+                <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--text-main)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <span>💰</span> Dashboard Financeiro
+                </h2>
+                <button 
+                  onClick={() => setIsFinancesUnlocked(false)} 
+                  className="btn btn-outline"
+                  style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", padding: "0.4rem 0.8rem" }}
+                  title="Bloquear painel"
+                >
+                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M12 11V7a4 4 0 00-8 0v4M5 11h10a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2z"></path></svg>
+                  Bloquear
+                </button>
+              </div>
+
+              {/* Cards de Resumo */}
+              <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem" }}>
+                <div className="card" style={{ padding: "1.5rem", borderLeft: "4px solid var(--success)" }}>
+                  <h3 style={{ fontSize: "0.9rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Entradas (Mês Atual)</h3>
+                  <p style={{ fontSize: "2rem", fontWeight: 800, color: "var(--success)", marginTop: "0.5rem" }}>R$ 0,00</p>
+                </div>
+                <div className="card" style={{ padding: "1.5rem", borderLeft: "4px solid var(--danger)" }}>
+                  <h3 style={{ fontSize: "0.9rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Saídas (Mês Atual)</h3>
+                  <p style={{ fontSize: "2rem", fontWeight: 800, color: "var(--danger)", marginTop: "0.5rem" }}>R$ 0,00</p>
+                </div>
+                <div className="card" style={{ padding: "1.5rem", borderLeft: "4px solid var(--primary)", backgroundColor: "var(--primary-light)" }}>
+                  <h3 style={{ fontSize: "0.9rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Saldo Geral</h3>
+                  <p style={{ fontSize: "2rem", fontWeight: 800, color: "var(--primary)", marginTop: "0.5rem" }}>R$ 0,00</p>
+                </div>
+              </div>
+
+              {/* Tabela de Transações */}
+              <div className="card" style={{ padding: "1.5rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+                  <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)" }}>Transações Recentes</h3>
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                    <button className="btn btn-outline" style={{ borderColor: "var(--success)", color: "var(--success)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>+ Nova Receita</button>
+                    <button className="btn btn-outline" style={{ borderColor: "var(--danger)", color: "var(--danger)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>- Nova Despesa</button>
+                  </div>
+                </div>
+
+                <div className="table-scroll">
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "2px solid var(--border-color)", textAlign: "left" }}>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Data</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Descrição</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Categoria</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Tipo</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)", textAlign: "right" }}>Valor</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colSpan={5} style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>
+                          Nenhuma transação registrada ainda.<br/>
+                          <span style={{ fontSize: "0.85rem" }}>(A integração com o banco de dados será implementada na próxima etapa)</span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

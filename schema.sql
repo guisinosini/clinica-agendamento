@@ -115,3 +115,20 @@ CREATE POLICY "Leitura pública para serviços" ON services FOR SELECT USING (tr
 CREATE POLICY "Permitir inserção de serviços" ON services FOR INSERT WITH CHECK (true);
 CREATE POLICY "Permitir atualização de serviços" ON services FOR UPDATE USING (true);
 CREATE POLICY "Permitir deleção de serviços" ON services FOR DELETE USING (true);
+
+-- Criação da tabela de Finanças (Fluxo de Caixa)
+CREATE TABLE finances (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  date DATE NOT NULL,
+  description TEXT NOT NULL,
+  category TEXT, -- Ex: Consulta, Aluguel, Materiais, Pagamento, etc.
+  type TEXT NOT NULL, -- 'receita' ou 'despesa'
+  amount DECIMAL(10, 2) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE finances ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Leitura pública para finances" ON finances FOR SELECT USING (true);
+CREATE POLICY "Inserção pública para finances" ON finances FOR INSERT WITH CHECK (true);
+CREATE POLICY "Atualização pública para finances" ON finances FOR UPDATE USING (true);
+CREATE POLICY "Deleção pública para finances" ON finances FOR DELETE USING (true);
