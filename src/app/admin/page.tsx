@@ -99,6 +99,7 @@ export default function AdminDashboard() {
   const [patSchoolGrade, setPatSchoolGrade] = useState("");
   const [patSchoolType, setPatSchoolType] = useState("");
   const [patientSearch, setPatientSearch] = useState("");
+  const [showPatientForm, setShowPatientForm] = useState(false);
   const [viewingPatient, setViewingPatient] = useState<any | null>(null);
 
   // Service Form State
@@ -472,6 +473,7 @@ export default function AdminDashboard() {
     setPatSchoolName("");
     setPatSchoolGrade("");
     setPatSchoolType("");
+    setShowPatientForm(false);
     fetchPatients();
   };
 
@@ -493,6 +495,7 @@ export default function AdminDashboard() {
     setPatSchoolName(pat.schoolName || "");
     setPatSchoolGrade(pat.schoolGrade || "");
     setPatSchoolType(pat.schoolType || "");
+    setShowPatientForm(true);
     setActiveTab("patients");
   };
 
@@ -1481,7 +1484,21 @@ export default function AdminDashboard() {
 
       {activeTab === "patients" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+          {!showPatientForm && !editingPatientId && (
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button 
+                onClick={() => setShowPatientForm(true)} 
+                className="btn"
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+              >
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+                Cadastrar Novo Paciente
+              </button>
+            </div>
+          )}
+
           {/* Form de Nova/Edição Paciente */}
+          {(showPatientForm || editingPatientId) && (
           <div className="card animate-slide">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
               <h2 style={{ fontSize: "1.2rem", fontWeight: 700, margin: 0 }}>
@@ -1616,16 +1633,16 @@ export default function AdminDashboard() {
                 <button type="submit" className="btn" style={{ flex: 1 }}>
                   {editingPatientId ? "Salvar Alterações" : "Cadastrar Paciente"}
                 </button>
-                {editingPatientId && (
-                  <button type="button" onClick={() => { 
-                    setEditingPatientId(null); setPatName(""); setPatEmail(""); setPatPhone(""); setPatBirthDate(""); setPatAddress(""); setPatGuardian(""); setPatHealthPlan(""); setPatHealthPlanNumber(""); setPatGender(""); setPatNotes(""); setPatCpf(""); setPatParentsName(""); setPatParentsProfession(""); setPatSchoolName(""); setPatSchoolGrade(""); setPatSchoolType("");
-                  }} className="btn btn-outline">
-                    Cancelar
-                  </button>
-                )}
+                <button type="button" onClick={() => { 
+                  setEditingPatientId(null); setPatName(""); setPatEmail(""); setPatPhone(""); setPatBirthDate(""); setPatAddress(""); setPatGuardian(""); setPatHealthPlan(""); setPatHealthPlanNumber(""); setPatGender(""); setPatNotes(""); setPatCpf(""); setPatParentsName(""); setPatParentsProfession(""); setPatSchoolName(""); setPatSchoolGrade(""); setPatSchoolType("");
+                  setShowPatientForm(false);
+                }} className="btn btn-outline">
+                  Cancelar
+                </button>
               </div>
             </form>
           </div>
+          )}
 
           {/* Lista de Pacientes */}
           <div className="card animate-slide">
