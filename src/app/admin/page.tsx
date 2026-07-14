@@ -128,7 +128,7 @@ export default function AdminDashboard() {
 
   // Admin Task Filters
   const [filterAdminTaskPriority, setFilterAdminTaskPriority] = useState("");
-  const [filterAdminTaskAssignedBy, setFilterAdminTaskAssignedBy] = useState("");
+  const [filterAdminTaskAssignedTo, setFilterAdminTaskAssignedTo] = useState("");
   const [filterAdminTaskStatus, setFilterAdminTaskStatus] = useState("");
 
   const handleAdminCommentChange = async (assignmentId: string, comment: string) => {
@@ -213,11 +213,11 @@ export default function AdminDashboard() {
   const filteredAdminTasks = useMemo(() => {
     return adminTasks.filter(t => {
       if (filterAdminTaskPriority && t.task?.priority !== filterAdminTaskPriority && !(filterAdminTaskPriority === 'media' && !t.task?.priority)) return false;
-      if (filterAdminTaskAssignedBy && t.task?.created_by !== filterAdminTaskAssignedBy && !(filterAdminTaskAssignedBy === 'admin' && t.task?.created_by === null)) return false;
+      if (filterAdminTaskAssignedTo && t.professional_id !== filterAdminTaskAssignedTo && !(filterAdminTaskAssignedTo === 'admin' && t.professional_id === null)) return false;
       if (filterAdminTaskStatus && t.status !== filterAdminTaskStatus) return false;
       return true;
     });
-  }, [adminTasks, filterAdminTaskPriority, filterAdminTaskAssignedBy, filterAdminTaskStatus]);
+  }, [adminTasks, filterAdminTaskPriority, filterAdminTaskAssignedTo, filterAdminTaskStatus]);
 
   const filteredReservations = useMemo(() => {
     return allReservations
@@ -1969,8 +1969,8 @@ export default function AdminDashboard() {
               </select>
             </div>
             <div>
-              <label className="label" style={{ fontSize: "0.85rem", marginBottom: "0.2rem" }}>Atribuído por</label>
-              <select className="input" style={{ padding: "0.4rem" }} value={filterAdminTaskAssignedBy} onChange={e => setFilterAdminTaskAssignedBy(e.target.value)}>
+              <label className="label" style={{ fontSize: "0.85rem", marginBottom: "0.2rem" }}>Atribuído para</label>
+              <select className="input" style={{ padding: "0.4rem" }} value={filterAdminTaskAssignedTo} onChange={e => setFilterAdminTaskAssignedTo(e.target.value)}>
                 <option value="">Todos</option>
                 <option value="admin">Admin</option>
                 {professionalsList.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
