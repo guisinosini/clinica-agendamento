@@ -509,18 +509,37 @@ export default function AdminDashboard() {
       const selectedServiceObj = servicesList?.find(s => s.name === newResService);
       const duration = selectedServiceObj?.duration || 60;
       
-      const d = new Date();
-      d.setHours(hours, minutes + duration, 0); 
+      const totalMinutes = hours * 60 + minutes + duration;
+      const endHours = Math.floor(totalMinutes / 60);
+      const endMins = totalMinutes % 60;
+      const formattedEndTime = `${String(endHours).padStart(2, "0")}:${String(endMins).padStart(2, "0")}`;
+      
       return {
         roomId: newResRoomId,
         professionalId: newResProfId,
         date: newResDate,
         startTime: slot,
-        endTime: `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`,
+        endTime: formattedEndTime,
         patientName: newResPatient || undefined,
         service: newResService || undefined
       };
     });
+
+    const hasInternalConflicts = allNewReservations.some((res1, index1) => {
+      const start1 = parseInt(res1.startTime.split(':')[0]) * 60 + parseInt(res1.startTime.split(':')[1]);
+      const end1 = parseInt(res1.endTime.split(':')[0]) * 60 + parseInt(res1.endTime.split(':')[1]);
+      return allNewReservations.some((res2, index2) => {
+        if (index1 === index2) return false;
+        const start2 = parseInt(res2.startTime.split(':')[0]) * 60 + parseInt(res2.startTime.split(':')[1]);
+        const end2 = parseInt(res2.endTime.split(':')[0]) * 60 + parseInt(res2.endTime.split(':')[1]);
+        return start1 < end2 && start2 < end1;
+      });
+    });
+
+    if (hasInternalConflicts) {
+      alert("Erro: Você selecionou horários que se sobrepõem devido à duração do serviço (ex: selecionou 08:00 e 08:30 para um serviço de 90min). Por favor, selecione APENAS o horário de início da sessão.");
+      return;
+    }
 
     try {
       await addReservations(allNewReservations);
@@ -552,9 +571,10 @@ export default function AdminDashboard() {
     const duration = selectedServiceObj?.duration || 60;
 
     const [hours, minutes] = rescheduleStart.split(":").map(Number);
-    const d = new Date();
-    d.setHours(hours, minutes + duration, 0);
-    const calculatedEnd = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    const totalMinutes = hours * 60 + minutes + duration;
+    const endHours = Math.floor(totalMinutes / 60);
+    const endMins = totalMinutes % 60;
+    const calculatedEnd = `${String(endHours).padStart(2, "0")}:${String(endMins).padStart(2, "0")}`;
 
     try {
       const { error } = await supabase.from('reservations').update({
@@ -1659,20 +1679,32 @@ export default function AdminDashboard() {
                   {TIME_SLOTS.map(slot => {
                     const isOccupied = occupiedAdminNewResSlots.includes(slot);
                     const isSelected = newResSlots.includes(slot);
+                    
+                    const isBlockedBySelection = newResSlots.some(selectedSlot => {
+                      if (selectedSlot === slot) return false;
+                      const startMins = parseInt(selectedSlot.split(':')[0]) * 60 + parseInt(selectedSlot.split(':')[1]);
+                      const currentMins = parseInt(slot.split(':')[0]) * 60 + parseInt(slot.split(':')[1]);
+                      const selectedServiceObj = servicesList?.find(s => s.name === newResService);
+                      const duration = selectedServiceObj?.duration || 60;
+                      return currentMins > startMins && currentMins < startMins + duration;
+                    });
+
+                    const isDisabled = isOccupied || isBlockedBySelection;
+                    
                     return (
                       <button
                         key={slot}
                         type="button"
-                        disabled={isOccupied}
+                        disabled={isDisabled}
                         onClick={() => setNewResSlots(prev => prev.includes(slot) ? prev.filter(s => s !== slot) : [...prev, slot].sort())}
                         style={{
                           padding: "0.6rem", borderRadius: "var(--radius-sm)", fontWeight: 600, fontSize: "0.85rem",
                           border: "1px solid",
-                          borderColor: isOccupied ? "var(--border-color)" : isSelected ? "var(--primary)" : "var(--border-color)",
-                          background: isOccupied ? "var(--primary-light)" : isSelected ? "var(--primary)" : "var(--bg-color)",
-                          color: isOccupied ? "var(--text-light)" : isSelected ? "var(--primary-mid)" : "var(--text-secondary)",
-                          cursor: isOccupied ? "not-allowed" : "pointer",
-                          textDecoration: isOccupied ? "line-through" : "none"
+                          borderColor: isDisabled ? "var(--border-color)" : isSelected ? "var(--primary)" : "var(--border-color)",
+                          background: isDisabled ? "var(--primary-light)" : isSelected ? "var(--primary)" : "var(--bg-color)",
+                          color: isDisabled ? "var(--text-light)" : isSelected ? "var(--primary-mid)" : "var(--text-secondary)",
+                          cursor: isDisabled ? "not-allowed" : "pointer",
+                          textDecoration: isDisabled ? "line-through" : "none"
                         }}
                       >
                         {slot}

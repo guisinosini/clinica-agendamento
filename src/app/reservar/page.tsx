@@ -125,15 +125,17 @@ export default function ReservarPage() {
         const selectedServiceObj = servicesList?.find(s => s.name === service);
         const duration = selectedServiceObj?.duration || 60;
         
-        const d = new Date();
-        d.setHours(hours, minutes + duration, 0); 
+        const totalMinutes = hours * 60 + minutes + duration;
+        const endHours = Math.floor(totalMinutes / 60);
+        const endMins = totalMinutes % 60;
+        const formattedEndTime = `${String(endHours).padStart(2, "0")}:${String(endMins).padStart(2, "0")}`;
         
         const hostRes = {
           roomId: selectedRoom,
           professionalId: professional.id,
           date: dateStr,
           startTime: slot,
-          endTime: `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`,
+          endTime: formattedEndTime,
           patientName: patientName || undefined,
           service: service || undefined
         };
@@ -166,6 +168,23 @@ export default function ReservarPage() {
         return start1 < end2 && start2 < end1;
       });
     });
+
+    const hasInternalConflicts = allReservations.some((res1, index1) => {
+      const start1 = parseInt(res1.startTime.split(':')[0]) * 60 + parseInt(res1.startTime.split(':')[1]);
+      const end1 = parseInt(res1.endTime.split(':')[0]) * 60 + parseInt(res1.endTime.split(':')[1]);
+      return allReservations.some((res2, index2) => {
+        if (index1 === index2) return false;
+        if (res1.date !== res2.date || res1.roomId !== res2.roomId) return false;
+        const start2 = parseInt(res2.startTime.split(':')[0]) * 60 + parseInt(res2.startTime.split(':')[1]);
+        const end2 = parseInt(res2.endTime.split(':')[0]) * 60 + parseInt(res2.endTime.split(':')[1]);
+        return start1 < end2 && start2 < end1;
+      });
+    });
+
+    if (hasInternalConflicts) {
+      setFeedbackMsg("❌ Você selecionou horários consecutivos que entram em conflito. Por favor, selecione APENAS o horário de início (o tempo de duração ocupará os próximos horários automaticamente).");
+      return;
+    }
 
     let finalReservations = allReservations;
 
@@ -474,10 +493,22 @@ export default function ReservarPage() {
                 {TIME_SLOTS.map(slot => {
                   const isOccupied = occupiedSlots.includes(slot);
                   const isSelected = selectedSlots.includes(slot);
+                  
+                  const isBlockedBySelection = selectedSlots.some(selectedSlot => {
+                    if (selectedSlot === slot) return false;
+                    const startMins = parseInt(selectedSlot.split(':')[0]) * 60 + parseInt(selectedSlot.split(':')[1]);
+                    const currentMins = parseInt(slot.split(':')[0]) * 60 + parseInt(slot.split(':')[1]);
+                    const selectedServiceObj = servicesList?.find(s => s.name === service);
+                    const duration = selectedServiceObj?.duration || 60;
+                    return currentMins > startMins && currentMins < startMins + duration;
+                  });
+
+                  const isDisabled = isOccupied || isBlockedBySelection;
+
                   return (
                     <button
                       key={slot}
-                      disabled={isOccupied}
+                      disabled={isDisabled}
                       onClick={() => handleSlotClick(slot)}
                       style={{
                         padding: "0.85rem 0.5rem",
@@ -485,18 +516,18 @@ export default function ReservarPage() {
                         fontWeight: 600,
                         fontSize: "0.9rem",
                         border: "1.5px solid",
-                        borderColor: isOccupied
+                        borderColor: isDisabled
                           ? "var(--border-color)"
                           : isSelected ? "var(--primary)" : "var(--border-color)",
-                        background: isOccupied
+                        background: isDisabled
                           ? "var(--primary-light)"
                           : isSelected
                             ? "var(--primary)"
                             : "var(--card-bg)",
-                        color: isOccupied ? "var(--text-light)" : isSelected ? "var(--primary-mid)" : "var(--text-secondary)",
-                        cursor: isOccupied ? "not-allowed" : "pointer",
+                        color: isDisabled ? "var(--text-light)" : isSelected ? "var(--primary-mid)" : "var(--text-secondary)",
+                        cursor: isDisabled ? "not-allowed" : "pointer",
                         transition: "all 0.15s ease",
-                        textDecoration: isOccupied ? "line-through" : "none",
+                        textDecoration: isDisabled ? "line-through" : "none",
                         boxShadow: isSelected ? "var(--clay-btn)" : "var(--clay-input)",
                         transform: isSelected ? "translateY(-1px)" : "none",
                       }}
