@@ -22,13 +22,14 @@ import {
 import { ptBR } from "date-fns/locale";
 
 export default function ProfessionalAgendaPage() {
-  const { reservations, cancelReservation, updateReservationStatus, rooms, professional, loading, addReservations } = useReservation();
+  const { reservations, cancelReservation, updateReservationStatus, rooms, professional, loading, addReservations, servicesList } = useReservation();
   const router = useRouter();
 
   // Estado da semana/data selecionada
   const [viewMode, setViewMode] = useState<"daily" | "weekly" | "monthly">("daily");
   const [currentWeekStart, setCurrentWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [filterService, setFilterService] = useState("");
 
   // Estado do Modal de Bloqueio
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
@@ -95,6 +96,7 @@ export default function ProfessionalAgendaPage() {
 
   const periodReservations = myReservations
     .filter(res => res.date >= startStr && res.date <= endStr)
+    .filter(res => filterService ? res.service === filterService : true)
     .sort((a, b) => {
       if (a.date !== b.date) return a.date.localeCompare(b.date);
       return a.startTime.localeCompare(b.startTime);
@@ -188,6 +190,17 @@ export default function ProfessionalAgendaPage() {
             {getHeaderTitle()}
           </h2>
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+            <select
+              className="input"
+              value={filterService}
+              onChange={e => setFilterService(e.target.value)}
+              style={{ width: "auto", padding: "0.4rem 0.8rem", height: "100%", fontSize: "0.85rem", cursor: "pointer", marginRight: "0.5rem" }}
+            >
+              <option value="">Todos os Serviços</option>
+              {servicesList?.map(svc => (
+                <option key={svc.id} value={svc.name}>{svc.name}</option>
+              ))}
+            </select>
             <select 
               className="input" 
               value={viewMode} 
