@@ -1998,6 +1998,11 @@ export default function AdminDashboard() {
                             Prazo: {new Date(assignment.task.due_date + "T00:00:00").toLocaleDateString('pt-BR')}
                           </div>
                         )}
+                        {assignment.task?.created_at && (
+                          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>
+                            Criada em: {new Date(assignment.task.created_at).toLocaleString('pt-BR')}
+                          </div>
+                        )}
                         <div style={{ marginTop: "0.5rem" }}>
                           <textarea 
                             placeholder="Comentário..."

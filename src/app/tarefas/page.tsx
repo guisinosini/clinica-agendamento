@@ -23,6 +23,7 @@ type CombinedTask = {
   assignmentId?: string;
   priority?: 'baixa' | 'media' | 'alta';
   comment?: string;
+  createdAt?: string;
 };
 
 export default function TarefasPage() {
@@ -101,6 +102,7 @@ export default function TarefasPage() {
             createdByName: allProfessionals.find(p => p.id === task.created_by)?.name || 'Desconhecido',
             priority: task.priority || 'media',
             comment: assignment.comment || '',
+            createdAt: task.created_at,
           });
         });
       }
@@ -127,6 +129,7 @@ export default function TarefasPage() {
                   createdByName: professional.name,
                   priority: task.priority || 'media',
                   comment: assignment.comment || '',
+                  createdAt: task.created_at,
                 });
               }
             });
@@ -467,6 +470,11 @@ export default function TarefasPage() {
                     {task.dueDate && (
                       <span className="badge" style={{ backgroundColor: "var(--bg-color)", border: "1px solid var(--border-color)", fontSize: "0.75rem" }}>
                         📅 Prazo: {new Date(task.dueDate + "T00:00:00").toLocaleDateString('pt-BR')}
+                      </span>
+                    )}
+                    {task.createdAt && (
+                      <span className="badge" style={{ backgroundColor: "var(--bg-color)", border: "1px solid var(--border-color)", fontSize: "0.75rem" }}>
+                        🕒 Criada em: {new Date(task.createdAt).toLocaleString('pt-BR')}
                       </span>
                     )}
                   </div>
