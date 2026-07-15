@@ -7,6 +7,33 @@ import { useReservation } from "../../context/ReservationContext";
 import { supabase } from "../../lib/supabase";
 import { Patient } from "../../types";
 
+const calculateAge = (birthDate: string) => {
+  if (!birthDate) return null;
+  const birth = new Date(birthDate + "T00:00:00");
+  const today = new Date();
+  
+  let years = today.getFullYear() - birth.getFullYear();
+  let months = today.getMonth() - birth.getMonth();
+  
+  if (today.getDate() < birth.getDate()) {
+    months--;
+  }
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+  
+  if (years === 0 && months === 0) return "Menos de 1 mês";
+  
+  let ageStr = "";
+  if (years > 0) ageStr += `${years} ano${years > 1 ? 's' : ''}`;
+  if (months > 0) {
+    if (years > 0) ageStr += " e ";
+    ageStr += `${months} mês${months > 1 ? 'es' : ''}`;
+  }
+  return ageStr;
+};
+
 export default function MeusPacientesPage() {
   const { reservations, professional, loading } = useReservation();
   const router = useRouter();
@@ -389,7 +416,7 @@ export default function MeusPacientesPage() {
                 <div className="data-box" style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
                   <h4 style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Dados Pessoais</h4>
                   {viewingPatient.cpf && <p style={{ fontSize: "0.95rem", margin: "0 0 0.3rem 0" }}><strong>CPF:</strong> {viewingPatient.cpf}</p>}
-                  {viewingPatient.birthDate && <p style={{ fontSize: "0.95rem", margin: "0 0 0.3rem 0" }}><strong>Nascimento:</strong> {new Date(viewingPatient.birthDate + "T00:00:00").toLocaleDateString("pt-BR")}</p>}
+                  {viewingPatient.birthDate && <p style={{ fontSize: "0.95rem", margin: "0 0 0.3rem 0" }}><strong>Nascimento:</strong> {new Date(viewingPatient.birthDate + "T00:00:00").toLocaleDateString("pt-BR")} <span style={{ fontSize: "0.85rem", color: "#555", marginLeft: "0.3rem" }}>({calculateAge(viewingPatient.birthDate)})</span></p>}
                   {viewingPatient.gender && <p style={{ fontSize: "0.95rem", margin: 0 }}><strong>Gênero:</strong> {viewingPatient.gender}</p>}
                 </div>
               )}
@@ -425,6 +452,19 @@ export default function MeusPacientesPage() {
                   <p style={{ fontSize: "0.9rem", margin: 0, color: "var(--text-main)", whiteSpace: "pre-wrap" }}>{viewingPatient.notes}</p>
                 </div>
               )}
+              
+              <div className="only-print print-full data-box" style={{ display: "none", marginTop: "1rem" }}>
+                  <h4 style={{ fontSize: "1rem", color: "#000", textTransform: "uppercase", borderBottom: "1px solid #ddd", paddingBottom: "0.4rem", marginBottom: "1rem", fontWeight: 700 }}>Datas das Sessões</h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "2.5rem", marginTop: "1.5rem" }}>
+                      <div style={{ borderBottom: "1px solid #999", width: "100%" }}></div>
+                      <div style={{ borderBottom: "1px solid #999", width: "100%" }}></div>
+                      <div style={{ borderBottom: "1px solid #999", width: "100%" }}></div>
+                      <div style={{ borderBottom: "1px solid #999", width: "100%" }}></div>
+                      <div style={{ borderBottom: "1px solid #999", width: "100%" }}></div>
+                      <div style={{ borderBottom: "1px solid #999", width: "100%" }}></div>
+                      <div style={{ borderBottom: "1px solid #999", width: "100%" }}></div>
+                  </div>
+              </div>
             </div>
 
             <div className="no-print" style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
