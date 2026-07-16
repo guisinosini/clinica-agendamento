@@ -37,6 +37,8 @@ export default function ProfessionalAgendaPage() {
   const [blockStartTime, setBlockStartTime] = useState("08:00");
   const [blockEndTime, setBlockEndTime] = useState("09:00");
   const [blockReason, setBlockReason] = useState("");
+  const [blockRecurrence, setBlockRecurrence] = useState<"none" | "daily" | "weekly" | "monthly">("none");
+  const [blockRecurrenceEnd, setBlockRecurrenceEnd] = useState("");
 
   const { TIME_SLOTS } = require("../../context/ReservationContext");
 
@@ -54,19 +56,46 @@ export default function ProfessionalAgendaPage() {
   const handleBlockTime = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!blockDate || !blockStartTime || !blockEndTime) return;
+    if (blockRecurrence !== "none" && !blockRecurrenceEnd) {
+      alert("Por favor, selecione até quando a repetição deve ocorrer.");
+      return;
+    }
     
     try {
-      await addReservations([{
-        roomId: null,
-        professionalId: professional!.id,
-        date: blockDate,
-        startTime: blockStartTime,
-        endTime: blockEndTime,
-        patientName: `Bloqueado: ${blockReason || 'Indisponível'}`,
-        status: 'indisponivel' as any
-      }]);
+      const blocksToCreate = [];
+      let currentDate = new Date(blockDate + "T00:00:00");
+      let endDate = blockRecurrence !== "none" && blockRecurrenceEnd 
+        ? new Date(blockRecurrenceEnd + "T00:00:00") 
+        : currentDate;
+        
+      // Limite de segurança (máximo de 100 repetições para evitar loops infinitos)
+      const maxBlocks = 100;
+      let count = 0;
+
+      while (currentDate <= endDate && count < maxBlocks) {
+        blocksToCreate.push({
+          roomId: null,
+          professionalId: professional!.id,
+          date: format(currentDate, "yyyy-MM-dd"),
+          startTime: blockStartTime,
+          endTime: blockEndTime,
+          patientName: `Bloqueado: ${blockReason || 'Indisponível'}`,
+          status: 'indisponivel' as any
+        });
+
+        if (blockRecurrence === "none") break;
+        if (blockRecurrence === "daily") currentDate = addDays(currentDate, 1);
+        if (blockRecurrence === "weekly") currentDate = addWeeks(currentDate, 1);
+        if (blockRecurrence === "monthly") currentDate = addMonths(currentDate, 1);
+        
+        count++;
+      }
+
+      await addReservations(blocksToCreate);
       setIsBlockModalOpen(false);
       setBlockReason("");
+      setBlockRecurrence("none");
+      setBlockRecurrenceEnd("");
     } catch (err) {
       alert("Erro ao bloquear horário.");
     }
@@ -399,6 +428,25 @@ export default function ProfessionalAgendaPage() {
                   </select>
                 </div>
               </div>
+
+              <div style={{ display: "flex", gap: "1rem" }}>
+                <div style={{ flex: 1 }}>
+                  <label className="label">Recorrência</label>
+                  <select className="input" value={blockRecurrence} onChange={e => setBlockRecurrence(e.target.value as any)}>
+                    <option value="none">Nenhuma</option>
+                    <option value="daily">Diária</option>
+                    <option value="weekly">Semanal</option>
+                    <option value="monthly">Mensal</option>
+                  </select>
+                </div>
+                {blockRecurrence !== "none" && (
+                  <div style={{ flex: 1 }}>
+                    <label className="label">Até quando?</label>
+                    <input type="date" className="input" value={blockRecurrenceEnd} onChange={e => setBlockRecurrenceEnd(e.target.value)} min={blockDate} required />
+                  </div>
+                )}
+              </div>
+
               <div>
                 <label className="label">Motivo (Opcional)</label>
                 <input className="input" value={blockReason} onChange={e => setBlockReason(e.target.value)} placeholder="Ex: Almoço, Reunião Externa, Médico..." />
