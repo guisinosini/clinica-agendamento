@@ -94,7 +94,8 @@ export default function CadastroPaciente() {
       parentsProfession: patParentsProfession,
       schoolName: patSchoolName,
       schoolGrade: patSchoolGrade,
-      schoolType: patSchoolType
+      schoolType: patSchoolType,
+      lgpd_consent: lgpdConsent
     };
 
     const { error: dbError } = await supabase.from("patients").insert([payload]);

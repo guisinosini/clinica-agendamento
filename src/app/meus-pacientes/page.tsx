@@ -446,6 +446,13 @@ export default function MeusPacientesPage() {
                 </div>
               )}
 
+              <div className="data-box print-full" style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+                <h4 style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Termos e Consentimento (LGPD)</h4>
+                <p style={{ fontSize: "0.95rem", margin: 0, color: viewingPatient.lgpd_consent ? "var(--success)" : "var(--danger)", fontWeight: 600 }}>
+                  {viewingPatient.lgpd_consent ? "✓ Termos de aceite LGPD e veracidade das informações concordados pelo paciente." : "✗ Aceite pendente ou não registrado."}
+                </p>
+              </div>
+
               {viewingPatient.notes && (
                 <div className="data-box print-full" style={{ padding: "1rem", backgroundColor: "var(--primary-light)", borderRadius: "var(--radius-sm)", border: "1px solid var(--primary-light)" }}>
                   <h4 style={{ fontSize: "0.8rem", color: "var(--primary)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Anotações da Clínica</h4>

@@ -89,6 +89,7 @@ CREATE TABLE patients (
   "schoolName" TEXT,
   "schoolGrade" TEXT,
   "schoolType" TEXT,
+  lgpd_consent BOOLEAN DEFAULT false,
   status TEXT DEFAULT 'ativo',
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL

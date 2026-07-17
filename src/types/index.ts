@@ -43,6 +43,7 @@ export type Patient = {
   schoolName?: string;
   schoolGrade?: string;
   schoolType?: string;
+  lgpd_consent?: boolean;
   created_at?: string;
 };
 
