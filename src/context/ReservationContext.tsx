@@ -60,6 +60,7 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
   const [servicesList, setServicesList] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
     fetchData();
     
     // Restaurar sessão do Supabase Auth
