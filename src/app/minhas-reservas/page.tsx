@@ -288,103 +288,162 @@ export default function ProfessionalAgendaPage() {
         )}
       </div>
 
-      {/* Lista de Consultas Agrupadas */}
+      {/* Lista de Consultas */}
       <div>
-        {sortedDates.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "3rem 1rem", border: "2px dashed var(--border-color)", borderRadius: "var(--radius-lg)" }}>
-            <div style={{ fontSize: "2.5rem", marginBottom: "1rem", opacity: 0.5 }}>🛋️</div>
-            <p style={{ color: "var(--text-muted)", fontWeight: 500 }}>Nenhum agendamento encontrado neste período.</p>
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-            {sortedDates.map(dateStr => {
-              const dateObj = new Date(dateStr + "T00:00:00");
+        {viewMode === "weekly" ? (
+          <div style={{ display: "flex", gap: "1rem", overflowX: "auto", paddingBottom: "1rem", minHeight: "500px" }}>
+            {weekDays.map(day => {
+              const dateStr = format(day, "yyyy-MM-dd");
+              const isTodayDay = isToday(day);
+              const dayReservations = groupedReservations[dateStr] || [];
+              
               return (
-                <div key={dateStr}>
-                  <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-secondary)", textTransform: "capitalize", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <span style={{ display: "inline-block", width: "8px", height: "8px", backgroundColor: "var(--primary)", borderRadius: "50%" }} />
-                    {format(dateObj, "EEEE, dd 'de' MMMM", { locale: ptBR })}
-                  </h3>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                    {groupedReservations[dateStr].map(res => {
-                      const isBlocked = res.status === 'indisponivel';
-                      return (
-                      <div key={res.id} className="card animate-slide" style={{ display: "flex", gap: "1rem", alignItems: "center", padding: "1.25rem", ...(isBlocked ? { background: "var(--danger-light)", border: "1px solid var(--danger)" } : {}) }}>
-                {/* Horário */}
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: "70px", paddingRight: "1rem", borderRight: "2px solid var(--border-color)" }}>
-                  <span style={{ fontSize: "1.1rem", fontWeight: 800, color: isBlocked ? "var(--danger)" : "var(--text-main)" }}>{res.startTime}</span>
-                  <span style={{ fontSize: "0.75rem", fontWeight: 600, color: isBlocked ? "var(--danger)" : "var(--text-muted)" }}>{res.endTime}</span>
-                </div>
-                
-                {/* Detalhes */}
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.2rem", flexWrap: "wrap" }}>
-                    <h4 style={{ fontSize: "1.1rem", fontWeight: 700, color: isBlocked ? "var(--danger)" : (res.status === 'falta' || res.status === 'reagendado' || res.status === 'realizado' ? "var(--text-muted)" : "var(--primary)") }}>
-                      {res.patientName || "Paciente Não Informado"}
-                    </h4>
-                    {isBlocked && <span className="badge" style={{ backgroundColor: "var(--danger)", color: "white", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>Bloqueado</span>}
-                    {res.status === 'falta' && <span className="badge" style={{ backgroundColor: "var(--danger-light)", color: "var(--danger)", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>Falta</span>}
-                    {res.status === 'reagendado' && <span className="badge" style={{ backgroundColor: "#fef3c7", color: "#b45309", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>Reagendado</span>}
-                    {res.status === 'confirmado' && <span className="badge" style={{ backgroundColor: "#dcfce7", color: "var(--success, #166534)", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>✓ Confirmado</span>}
-                    {res.status === 'realizado' && <span className="badge" style={{ backgroundColor: "#dcfce7", color: "var(--success, #166534)", border: "1px solid var(--success, #166534)", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>✅ Realizado</span>}
+                <div key={dateStr} style={{ minWidth: "200px", flex: 1, backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-md)", border: isTodayDay ? "2px solid var(--primary)" : "1px solid var(--border-color)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                  <div style={{ padding: "0.8rem", textAlign: "center", borderBottom: "1px solid var(--border-color)", backgroundColor: isTodayDay ? "var(--primary-light)" : "rgba(0,0,0,0.02)" }}>
+                    <span style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: isTodayDay ? "var(--primary)" : "var(--text-muted)", display: "block" }}>{format(day, "EEEE", { locale: ptBR })}</span>
+                    <span style={{ fontSize: "1.2rem", fontWeight: 800, color: isTodayDay ? "var(--primary)" : "var(--text-main)" }}>{format(day, "dd/MM")}</span>
                   </div>
-                  <p style={{ fontSize: "0.85rem", color: isBlocked ? "var(--danger)" : "var(--text-secondary)", marginBottom: "0.4rem" }}>
-                    {isBlocked ? "Profissional indisponível" : `${getRoomName(res.roomId || '')} ${res.service ? `• ${res.service}` : ''}`}
-                  </p>
-                </div>
-
-                {/* Ações */}
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", justifyContent: "flex-end" }}>
-                  {isBlocked ? (
-                    <button onClick={() => { if(confirm("Deseja remover este bloqueio da agenda?")) cancelReservation(res.id); }} 
-                      className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--danger)", color: "var(--danger)", display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                      Desbloquear
-                    </button>
-                  ) : (!res.status || res.status === 'agendado' || res.status === 'confirmado') ? (
-                    <>
-                      <a href={getGoogleCalendarUrl(res)} target="_blank" rel="noopener noreferrer" 
-                        className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.3rem" }}
-                        title="Adicionar ao Google Calendar">
-                        📅 <span className="hide-mobile">GCal</span>
-                      </a>
-                      
-                      <button onClick={() => { if(confirm("Marcar este atendimento como finalizado/realizado?")) updateReservationStatus(res.id, 'realizado'); }} 
-                        className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--success, #166534)", color: "var(--success, #166534)", display: "flex", alignItems: "center", gap: "0.3rem" }}
-                        title="Atendimento Realizado">
-                        ✅ <span className="hide-mobile">Realizado</span>
-                      </button>
-
-                      <button onClick={() => { if(confirm("Marcar como falta do paciente?")) updateReservationStatus(res.id, 'falta'); }} 
-                        className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--danger)", color: "var(--danger)", display: "flex", alignItems: "center", gap: "0.3rem" }}
-                        title="Marcar Falta">
-                        ⚠️ <span className="hide-mobile">Falta</span>
-                      </button>
-
-
-                    </>
-                  ) : (
-                    <>
-                      <button onClick={() => { if(confirm("Deseja desfazer o status atual e retornar para 'Agendado'?")) updateReservationStatus(res.id, 'agendado'); }} 
-                        className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--primary)", color: "var(--primary)", display: "flex", alignItems: "center", gap: "0.3rem" }}
-                        title="Desfazer Status / Editar">
-                        ↩️ <span className="hide-mobile">Desfazer</span>
-                      </button>
-                      <button onClick={() => { if(confirm("Deseja excluir permanentemente este registro do histórico?")) cancelReservation(res.id); }} 
-                        className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--text-muted)", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "0.3rem" }}
-                        title="Excluir Registro">
-                        🗑️ <span className="hide-mobile">Excluir</span>
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-                      );
-                    })}
+                  <div style={{ padding: "0.5rem", display: "flex", flexDirection: "column", gap: "0.5rem", flex: 1 }}>
+                    {dayReservations.length === 0 ? (
+                      <div style={{ textAlign: "center", padding: "1rem", color: "var(--text-muted)", fontSize: "0.85rem", fontStyle: "italic", opacity: 0.7 }}>Sem horários</div>
+                    ) : (
+                      dayReservations.map(res => {
+                        const isBlocked = res.status === 'indisponivel';
+                        return (
+                          <div key={res.id} className="card" style={{ padding: "0.6rem", display: "flex", flexDirection: "column", gap: "0.3rem", fontSize: "0.8rem", borderLeft: `4px solid ${isBlocked ? 'var(--danger)' : (res.status === 'realizado' ? 'var(--success)' : 'var(--primary)')}` }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <span style={{ fontWeight: 800, color: isBlocked ? 'var(--danger)' : 'var(--text-main)' }}>{res.startTime}</span>
+                              {isBlocked && <span className="badge" style={{ backgroundColor: "var(--danger)", color: "white", fontSize: "0.6rem", padding: "0.1rem 0.3rem" }}>Bloq</span>}
+                              {res.status === 'realizado' && <span className="badge" style={{ backgroundColor: "#dcfce7", color: "#166534", fontSize: "0.6rem", padding: "0.1rem 0.3rem" }}>✓</span>}
+                              {res.status === 'falta' && <span className="badge" style={{ backgroundColor: "var(--danger-light)", color: "var(--danger)", fontSize: "0.6rem", padding: "0.1rem 0.3rem" }}>Falta</span>}
+                            </div>
+                            <div style={{ fontWeight: 700, color: isBlocked ? 'var(--danger)' : (res.status === 'realizado' || res.status === 'falta' ? 'var(--text-muted)' : 'var(--primary)'), whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {res.patientName || "Paciente"}
+                            </div>
+                            <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {isBlocked ? blockReason || "Indisponível" : res.service}
+                            </div>
+                            
+                            {/* Tiny Actions */}
+                            <div style={{ display: "flex", gap: "0.2rem", marginTop: "0.4rem" }}>
+                              {isBlocked ? (
+                                <button onClick={() => { if(confirm("Desbloquear?")) cancelReservation(res.id); }} style={{ fontSize: "0.65rem", padding: "0.2rem", flex: 1, borderColor: "var(--danger)", color: "var(--danger)" }} className="btn btn-outline" title="Desbloquear">Desbloq.</button>
+                              ) : (!res.status || res.status === 'agendado' || res.status === 'confirmado') ? (
+                                <>
+                                  <button onClick={() => { if(confirm("Atendimento Realizado?")) updateReservationStatus(res.id, 'realizado'); }} style={{ fontSize: "0.8rem", padding: "0.1rem", flex: 1, borderColor: "var(--success)", color: "var(--success)" }} className="btn btn-outline" title="Realizado">✅</button>
+                                  <button onClick={() => { if(confirm("Paciente faltou?")) updateReservationStatus(res.id, 'falta'); }} style={{ fontSize: "0.8rem", padding: "0.1rem", flex: 1, borderColor: "var(--danger)", color: "var(--danger)" }} className="btn btn-outline" title="Falta">⚠️</button>
+                                  <button onClick={() => { if(confirm("Excluir agendamento?")) cancelReservation(res.id); }} style={{ fontSize: "0.8rem", padding: "0.1rem", flex: 1, borderColor: "var(--text-muted)", color: "var(--text-muted)" }} className="btn btn-outline" title="Excluir">🗑️</button>
+                                </>
+                              ) : (
+                                <button onClick={() => { if(confirm("Desfazer status?")) updateReservationStatus(res.id, 'agendado'); }} style={{ fontSize: "0.65rem", padding: "0.2rem", flex: 1, borderColor: "var(--primary)", color: "var(--primary)" }} className="btn btn-outline" title="Desfazer">↩️ Desfazer</button>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })
+                    )}
                   </div>
                 </div>
-              );
+              )
             })}
           </div>
+        ) : (
+          sortedDates.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "3rem 1rem", border: "2px dashed var(--border-color)", borderRadius: "var(--radius-lg)" }}>
+              <div style={{ fontSize: "2.5rem", marginBottom: "1rem", opacity: 0.5 }}>🛋️</div>
+              <p style={{ color: "var(--text-muted)", fontWeight: 500 }}>Nenhum agendamento encontrado neste período.</p>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+              {sortedDates.map(dateStr => {
+                const dateObj = new Date(dateStr + "T00:00:00");
+                return (
+                  <div key={dateStr}>
+                    <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-secondary)", textTransform: "capitalize", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <span style={{ display: "inline-block", width: "8px", height: "8px", backgroundColor: "var(--primary)", borderRadius: "50%" }} />
+                      {format(dateObj, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                    </h3>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                      {groupedReservations[dateStr].map(res => {
+                        const isBlocked = res.status === 'indisponivel';
+                        return (
+                        <div key={res.id} className="card animate-slide" style={{ display: "flex", gap: "1rem", alignItems: "center", padding: "1.25rem", ...(isBlocked ? { background: "var(--danger-light)", border: "1px solid var(--danger)" } : {}) }}>
+                  {/* Horário */}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: "70px", paddingRight: "1rem", borderRight: "2px solid var(--border-color)" }}>
+                    <span style={{ fontSize: "1.1rem", fontWeight: 800, color: isBlocked ? "var(--danger)" : "var(--text-main)" }}>{res.startTime}</span>
+                    <span style={{ fontSize: "0.75rem", fontWeight: 600, color: isBlocked ? "var(--danger)" : "var(--text-muted)" }}>{res.endTime}</span>
+                  </div>
+                  
+                  {/* Detalhes */}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.2rem", flexWrap: "wrap" }}>
+                      <h4 style={{ fontSize: "1.1rem", fontWeight: 700, color: isBlocked ? "var(--danger)" : (res.status === 'falta' || res.status === 'reagendado' || res.status === 'realizado' ? "var(--text-muted)" : "var(--primary)") }}>
+                        {res.patientName || "Paciente Não Informado"}
+                      </h4>
+                      {isBlocked && <span className="badge" style={{ backgroundColor: "var(--danger)", color: "white", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>Bloqueado</span>}
+                      {res.status === 'falta' && <span className="badge" style={{ backgroundColor: "var(--danger-light)", color: "var(--danger)", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>Falta</span>}
+                      {res.status === 'reagendado' && <span className="badge" style={{ backgroundColor: "#fef3c7", color: "#b45309", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>Reagendado</span>}
+                      {res.status === 'confirmado' && <span className="badge" style={{ backgroundColor: "#dcfce7", color: "var(--success, #166534)", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>✓ Confirmado</span>}
+                      {res.status === 'realizado' && <span className="badge" style={{ backgroundColor: "#dcfce7", color: "var(--success, #166534)", border: "1px solid var(--success, #166534)", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>✅ Realizado</span>}
+                    </div>
+                    <p style={{ fontSize: "0.85rem", color: isBlocked ? "var(--danger)" : "var(--text-secondary)", marginBottom: "0.4rem" }}>
+                      {isBlocked ? "Profissional indisponível" : `${getRoomName(res.roomId || '')} ${res.service ? `• ${res.service}` : ''}`}
+                    </p>
+                  </div>
+  
+                  {/* Ações */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", justifyContent: "flex-end" }}>
+                    {isBlocked ? (
+                      <button onClick={() => { if(confirm("Deseja remover este bloqueio da agenda?")) cancelReservation(res.id); }} 
+                        className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--danger)", color: "var(--danger)", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                        Desbloquear
+                      </button>
+                    ) : (!res.status || res.status === 'agendado' || res.status === 'confirmado') ? (
+                      <>
+                        <a href={getGoogleCalendarUrl(res)} target="_blank" rel="noopener noreferrer" 
+                          className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.3rem" }}
+                          title="Adicionar ao Google Calendar">
+                          📅 <span className="hide-mobile">GCal</span>
+                        </a>
+                        
+                        <button onClick={() => { if(confirm("Marcar este atendimento como finalizado/realizado?")) updateReservationStatus(res.id, 'realizado'); }} 
+                          className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--success, #166534)", color: "var(--success, #166534)", display: "flex", alignItems: "center", gap: "0.3rem" }}
+                          title="Atendimento Realizado">
+                          ✅ <span className="hide-mobile">Realizado</span>
+                        </button>
+  
+                        <button onClick={() => { if(confirm("Marcar como falta do paciente?")) updateReservationStatus(res.id, 'falta'); }} 
+                          className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--danger)", color: "var(--danger)", display: "flex", alignItems: "center", gap: "0.3rem" }}
+                          title="Marcar Falta">
+                          ⚠️ <span className="hide-mobile">Falta</span>
+                        </button>
+  
+  
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={() => { if(confirm("Deseja desfazer o status atual e retornar para 'Agendado'?")) updateReservationStatus(res.id, 'agendado'); }} 
+                          className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--primary)", color: "var(--primary)", display: "flex", alignItems: "center", gap: "0.3rem" }}
+                          title="Desfazer Status / Editar">
+                          ↩️ <span className="hide-mobile">Desfazer</span>
+                        </button>
+                        <button onClick={() => { if(confirm("Deseja excluir permanentemente este registro do histórico?")) cancelReservation(res.id); }} 
+                          className="btn btn-outline" style={{ padding: "0.4rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--text-muted)", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "0.3rem" }}
+                          title="Excluir Registro">
+                          🗑️ <span className="hide-mobile">Excluir</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )
         )}
       </div>
 
