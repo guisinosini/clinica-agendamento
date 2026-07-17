@@ -60,17 +60,35 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
   const [servicesList, setServicesList] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Ao iniciar o app, apenas carrega salas e reservas gerais, não um profissional fixo
     fetchData();
     
-    // Tenta recuperar sessão salva no localStorage (persistência básica de login)
-    const savedEmail = localStorage.getItem("@Clinica:email");
-    if (savedEmail) {
-      login(savedEmail);
-    } else {
-      setLoading(false);
-    }
+    // Restaurar sessão do Supabase Auth
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        supabase.from('professionals').select('*').eq('id', session.user.id).single()
+          .then(({ data }) => {
+            if (data) {
+              setProfessional({ id: data.id, name: data.name, email: data.email, specialty: data.specialty, avatarUrl: data.avatar_url ?? null });
+            }
+            setLoading(false);
+          });
+      } else {
+        setLoading(false);
+      }
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setProfessional(null);
+      } else if (event === 'SIGNED_IN' && session?.user) {
+        supabase.from('professionals').select('*').eq('id', session.user.id).single()
+          .then(({ data }) => {
+            if (data) {
+              setProfessional({ id: data.id, name: data.name, email: data.email, specialty: data.specialty, avatarUrl: data.avatar_url ?? null });
+            }
+          });
+      }
+    });
     
     const subscription = supabase
       .channel('reservations_changes')
@@ -105,30 +123,32 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoading(true);
       
-      let query = supabase
-        .from('professionals')
-        .select('*')
-        .eq('email', email.trim().toLowerCase());
-        
-      if (password) {
-        query = query.eq('password', password);
+      if (!password) {
+        return { success: false, message: "A senha é obrigatória." };
       }
 
-      const { data, error } = await query.maybeSingle();
-      
-      if (error) throw error;
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password: password,
+      });
+
+      if (authError) throw authError;
+
+      const { data, error } = await supabase
+        .from('professionals')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
 
       if (data) {
         setProfessional({ id: data.id, name: data.name, email: data.email, specialty: data.specialty, avatarUrl: data.avatar_url ?? null });
-        localStorage.setItem("@Clinica:email", data.email);
-        // Não salvamos a senha no localStorage por segurança
         return { success: true, message: "Login realizado com sucesso!" };
       } else {
-        return { success: false, message: password ? "E-mail ou senha incorretos." : "E-mail não encontrado." };
+        return { success: false, message: "Perfil não encontrado." };
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erro no login:", err);
-      return { success: false, message: "Erro ao realizar o login." };
+      return { success: false, message: err?.message === "Invalid login credentials" ? "E-mail ou senha incorretos." : "Erro ao realizar o login." };
     } finally {
       setLoading(false);
     }
@@ -137,20 +157,31 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
   const register = async (name: string, email: string, specialty: string, password?: string) => {
     try {
       setLoading(true);
-      // Verifica se o e-mail já existe
-      const { data: existingUser } = await supabase
-        .from('professionals')
-        .select('id')
-        .eq('email', email.trim().toLowerCase())
-        .maybeSingle();
-
-      if (existingUser) {
-        return { success: false, message: "Este e-mail já está cadastrado." };
+      
+      if (!password) {
+        return { success: false, message: "A senha é obrigatória." };
       }
 
-      // Insere o novo profissional
-      const payload: any = { name, email: email.trim().toLowerCase(), specialty };
-      if (password) payload.password = password;
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password: password,
+      });
+
+      if (authError) {
+        if (authError.message.includes('already registered')) {
+           return { success: false, message: "Este e-mail já está cadastrado." };
+        }
+        throw authError;
+      }
+      
+      if (!authData.user) throw new Error("Falha ao criar usuário de autenticação.");
+
+      const payload = { 
+        id: authData.user.id, 
+        name, 
+        email: email.trim().toLowerCase(), 
+        specialty 
+      };
 
       const { data, error } = await supabase
         .from('professionals')
@@ -162,7 +193,6 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
 
       if (data) {
         setProfessional({ id: data.id, name: data.name, email: data.email, specialty: data.specialty, avatarUrl: data.avatar_url ?? null });
-        localStorage.setItem("@Clinica:email", data.email);
         return { success: true, message: "Cadastro realizado com sucesso!" };
       }
       return { success: false, message: "Erro desconhecido ao cadastrar." };
@@ -174,9 +204,9 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setProfessional(null);
-    localStorage.removeItem("@Clinica:email");
   };
 
   const updateProfile = async (id: string, name: string, specialty: string, avatarUrl?: string) => {
@@ -206,11 +236,7 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
 
   const updatePassword = async (id: string, newPassword: string) => {
     try {
-      const { error } = await supabase
-        .from('professionals')
-        .update({ password: newPassword })
-        .eq('id', id);
-
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
       return { success: true, message: "Senha atualizada com sucesso!" };
     } catch (err) {
