@@ -278,10 +278,15 @@ export default function CadastroPaciente() {
             <button 
               type="submit" 
               className="btn" 
-              style={{ width: "100%", padding: "1rem", fontSize: "1.1rem", fontWeight: 800 }}
-              disabled={loading}
+              style={{ 
+                width: "100%", padding: "1rem", fontSize: "1.1rem", fontWeight: 800,
+                opacity: (!lgpdConsent || loading) ? 0.6 : 1,
+                cursor: (!lgpdConsent || loading) ? "not-allowed" : "pointer",
+                transition: "all 0.3s ease"
+              }}
+              disabled={loading || !lgpdConsent}
             >
-              {loading ? "Salvando..." : "Salvar e Enviar para a Clínica"}
+              {loading ? "Salvando..." : (!lgpdConsent ? "Aceite os termos para continuar" : "Salvar e Enviar para a Clínica")}
             </button>
             <p style={{ textAlign: "center", color: "var(--text-muted)", fontSize: "0.85rem", marginTop: "1rem" }}>
               As informações são confidenciais e armazenadas com segurança.
