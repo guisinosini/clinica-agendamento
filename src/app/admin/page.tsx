@@ -2071,6 +2071,11 @@ export default function AdminDashboard() {
                             Criada em: {new Date(assignment.task.created_at).toLocaleString('pt-BR')}
                           </div>
                         )}
+                        {assignment.task?.description && (
+                          <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "0.5rem", whiteSpace: "pre-wrap" }}>
+                            {assignment.task.description}
+                          </div>
+                        )}
                         <div style={{ marginTop: "0.5rem" }}>
                           <textarea 
                             placeholder="Comentário..."
