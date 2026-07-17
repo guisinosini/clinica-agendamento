@@ -2820,6 +2820,23 @@ export default function AdminDashboard() {
                                   {finance.is_paid ? '↩️' : '✅'}
                                 </button>
                               )}
+                              <button onClick={() => {
+                                setFinanceForm({
+                                  id: finance.id,
+                                  date: finance.date,
+                                  description: finance.description,
+                                  category: finance.category,
+                                  type: finance.type,
+                                  amount: Number(finance.amount).toFixed(2).replace('.', ','),
+                                  due_date: finance.due_date || "",
+                                  is_paid: finance.is_paid,
+                                  is_recurring: false,
+                                  recurring_months: 12
+                                });
+                                setShowFinanceModal(true);
+                              }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.1rem" }} title="Editar">
+                                ✏️
+                              </button>
                               <button onClick={() => handleDeleteFinance(finance.id)} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "1.3rem" }} title="Excluir">
                                 &times;
                               </button>
