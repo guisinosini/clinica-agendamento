@@ -30,6 +30,15 @@ const calculateAge = (birthDate: string) => {
   return ageStr;
 };
 
+const formatCPF = (value: string) => {
+  return value
+    .replace(/\D/g, '') 
+    .replace(/(\d{3})(\d)/, '$1.$2') 
+    .replace(/(\d{3})(\d)/, '$1.$2') 
+    .replace(/(\d{3})(\d{1,2})/, '$1-$2') 
+    .replace(/(-\d{2})\d+?$/, '$1'); 
+};
+
 export default function CadastroPaciente() {
   const [patName, setPatName] = useState("");
   const [patEmail, setPatEmail] = useState("");
@@ -141,7 +150,7 @@ export default function CadastroPaciente() {
               </div>
               <div style={{ flex: "1 1 150px" }}>
                 <label className="label">CPF *</label>
-                <input className="input" value={patCpf} onChange={e => setPatCpf(e.target.value)} required placeholder="000.000.000-00" />
+                <input className="input" value={patCpf} onChange={e => setPatCpf(formatCPF(e.target.value))} required placeholder="000.000.000-00" maxLength={14} />
               </div>
             </div>
             
