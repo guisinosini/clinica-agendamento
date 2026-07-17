@@ -99,6 +99,8 @@ export default function AdminDashboard() {
   const [patSchoolGrade, setPatSchoolGrade] = useState("");
   const [patSchoolType, setPatSchoolType] = useState("");
   const [patientSearch, setPatientSearch] = useState("");
+  const [patientFilterHealthPlan, setPatientFilterHealthPlan] = useState("");
+  const [patientFilterAgeGroup, setPatientFilterAgeGroup] = useState("");
   const [showPatientForm, setShowPatientForm] = useState(false);
   const [viewingPatient, setViewingPatient] = useState<any | null>(null);
 
@@ -1743,18 +1745,70 @@ export default function AdminDashboard() {
           {/* Lista de Pacientes */}
           <div className="card animate-slide">
             <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem" }}>Pacientes ({patientsList.length})</h2>
-            <div style={{ marginBottom: "1rem" }}>
-              <input 
-                type="text" 
-                className="input" 
-                placeholder="Pesquisar por nome do paciente..." 
-                value={patientSearch}
-                onChange={(e) => setPatientSearch(e.target.value)}
-              />
+            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
+              <div style={{ flex: "1 1 200px" }}>
+                <label className="label" style={{ fontSize: "0.85rem", marginBottom: "0.2rem" }}>Pesquisar</label>
+                <input 
+                  type="text" 
+                  className="input" 
+                  style={{ padding: "0.4rem" }}
+                  placeholder="Nome do paciente..." 
+                  value={patientSearch}
+                  onChange={(e) => setPatientSearch(e.target.value)}
+                />
+              </div>
+              <div style={{ flex: "1 1 150px" }}>
+                <label className="label" style={{ fontSize: "0.85rem", marginBottom: "0.2rem" }}>Convênio</label>
+                <select className="input" style={{ padding: "0.4rem" }} value={patientFilterHealthPlan} onChange={(e) => setPatientFilterHealthPlan(e.target.value)}>
+                  <option value="">Todos</option>
+                  <option value="Particular">Particular</option>
+                  <option value="Unimed">Unimed</option>
+                  <option value="Prefeitura">Prefeitura</option>
+                  <option value="Lumiar">Lumiar</option>
+                  <option value="Bradesco">Bradesco</option>
+                  <option value="Pró Saúde">Pró Saúde</option>
+                  <option value="São Luiz Saúde">São Luiz Saúde</option>
+                  <option value="KR Saúde">KR Saúde</option>
+                </select>
+              </div>
+              <div style={{ flex: "1 1 150px" }}>
+                <label className="label" style={{ fontSize: "0.85rem", marginBottom: "0.2rem" }}>Faixa Etária</label>
+                <select className="input" style={{ padding: "0.4rem" }} value={patientFilterAgeGroup} onChange={(e) => setPatientFilterAgeGroup(e.target.value)}>
+                  <option value="">Todas</option>
+                  <option value="crianca">Criança (0 a 11 anos)</option>
+                  <option value="adolescente">Adolescente (12 a 17 anos)</option>
+                  <option value="adulto">Adulto (18 a 59 anos)</option>
+                  <option value="idoso">Idoso (60+ anos)</option>
+                </select>
+              </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem", maxHeight: "600px", overflowY: "auto" }}>
               {(() => {
-                const filteredPatients = patientsList.filter(pat => pat.name.toLowerCase().includes(patientSearch.toLowerCase()));
+                const filteredPatients = patientsList.filter(pat => {
+                  if (patientSearch && !pat.name.toLowerCase().includes(patientSearch.toLowerCase())) return false;
+                  
+                  if (patientFilterHealthPlan) {
+                    if (patientFilterHealthPlan === "Particular" && pat.healthPlan && pat.healthPlan !== "Particular") return false;
+                    if (patientFilterHealthPlan !== "Particular" && pat.healthPlan !== patientFilterHealthPlan) return false;
+                  }
+
+                  if (patientFilterAgeGroup && pat.birthDate) {
+                    const birth = new Date(pat.birthDate + "T00:00:00");
+                    const today = new Date();
+                    let age = today.getFullYear() - birth.getFullYear();
+                    const m = today.getMonth() - birth.getMonth();
+                    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+
+                    if (patientFilterAgeGroup === "crianca" && age > 11) return false;
+                    if (patientFilterAgeGroup === "adolescente" && (age < 12 || age > 17)) return false;
+                    if (patientFilterAgeGroup === "adulto" && (age < 18 || age > 59)) return false;
+                    if (patientFilterAgeGroup === "idoso" && age < 60) return false;
+                  } else if (patientFilterAgeGroup && !pat.birthDate) {
+                    return false; // se filtrou por idade mas não tem data, não exibe
+                  }
+
+                  return true;
+                });
                 if (filteredPatients.length === 0) {
                   return <p style={{ color: "var(--text-muted)" }}>Nenhum paciente encontrado.</p>;
                 }

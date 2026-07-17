@@ -41,6 +41,8 @@ export default function MeusPacientesPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterHealthPlan, setFilterHealthPlan] = useState("");
+  const [filterAgeGroup, setFilterAgeGroup] = useState("");
   const [printingPatient, setPrintingPatient] = useState<Patient | null>(null);
   const [viewingPatient, setViewingPatient] = useState<Patient | null>(null);
 
@@ -192,7 +194,31 @@ export default function MeusPacientesPage() {
   }
 
   // Filtragem e Separação
-  const filteredPatients = patients.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredPatients = patients.filter(p => {
+    if (searchTerm && !p.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    
+    if (filterHealthPlan) {
+      if (filterHealthPlan === "Particular" && p.healthPlan && p.healthPlan !== "Particular") return false;
+      if (filterHealthPlan !== "Particular" && p.healthPlan !== filterHealthPlan) return false;
+    }
+
+    if (filterAgeGroup && p.birthDate) {
+      const birth = new Date(p.birthDate + "T00:00:00");
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+
+      if (filterAgeGroup === "crianca" && age > 11) return false;
+      if (filterAgeGroup === "adolescente" && (age < 12 || age > 17)) return false;
+      if (filterAgeGroup === "adulto" && (age < 18 || age > 59)) return false;
+      if (filterAgeGroup === "idoso" && age < 60) return false;
+    } else if (filterAgeGroup && !p.birthDate) {
+      return false;
+    }
+
+    return true;
+  });
   const activePatients = filteredPatients.filter(p => !p.status || p.status === 'ativo');
   const concludedPatients = filteredPatients.filter(p => p.status === 'concluido');
 
@@ -214,15 +240,41 @@ export default function MeusPacientesPage() {
       <div className="card animate-slide" style={{ padding: "1.5rem", marginBottom: "2rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
           <div style={{ flex: 1, minWidth: "250px" }}>
+            <label className="label" style={{ fontSize: "0.85rem", marginBottom: "0.2rem" }}>Pesquisar Nome</label>
             <input 
               type="text" 
               className="input" 
+              style={{ padding: "0.4rem" }}
               placeholder="Buscar paciente por nome..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div style={{ display: "flex", gap: "1rem", color: "var(--text-secondary)", fontSize: "0.9rem", fontWeight: 600 }}>
+          <div style={{ flex: "1 1 150px" }}>
+            <label className="label" style={{ fontSize: "0.85rem", marginBottom: "0.2rem" }}>Convênio</label>
+            <select className="input" style={{ padding: "0.4rem" }} value={filterHealthPlan} onChange={(e) => setFilterHealthPlan(e.target.value)}>
+              <option value="">Todos</option>
+              <option value="Particular">Particular</option>
+              <option value="Unimed">Unimed</option>
+              <option value="Prefeitura">Prefeitura</option>
+              <option value="Lumiar">Lumiar</option>
+              <option value="Bradesco">Bradesco</option>
+              <option value="Pró Saúde">Pró Saúde</option>
+              <option value="São Luiz Saúde">São Luiz Saúde</option>
+              <option value="KR Saúde">KR Saúde</option>
+            </select>
+          </div>
+          <div style={{ flex: "1 1 150px" }}>
+            <label className="label" style={{ fontSize: "0.85rem", marginBottom: "0.2rem" }}>Faixa Etária</label>
+            <select className="input" style={{ padding: "0.4rem" }} value={filterAgeGroup} onChange={(e) => setFilterAgeGroup(e.target.value)}>
+              <option value="">Todas</option>
+              <option value="crianca">Criança (0 a 11 anos)</option>
+              <option value="adolescente">Adolescente (12 a 17 anos)</option>
+              <option value="adulto">Adulto (18 a 59 anos)</option>
+              <option value="idoso">Idoso (60+ anos)</option>
+            </select>
+          </div>
+          <div style={{ display: "flex", gap: "1rem", color: "var(--text-secondary)", fontSize: "0.9rem", fontWeight: 600, width: "100%", justifyContent: "flex-end" }}>
             <span><span style={{ color: "var(--primary)" }}>{activePatients.length}</span> Ativos</span>
             <span><span style={{ color: "var(--success)" }}>{concludedPatients.length}</span> Concluídos</span>
           </div>
