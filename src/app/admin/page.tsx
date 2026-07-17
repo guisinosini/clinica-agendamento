@@ -133,6 +133,9 @@ export default function AdminDashboard() {
   const [showFinanceModal, setShowFinanceModal] = useState(false);
   const [financeForm, setFinanceForm] = useState({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Consulta", type: "receita", amount: "", due_date: "", is_paid: true, is_recurring: false, recurring_months: 12 });
   const [isSubmittingFinance, setIsSubmittingFinance] = useState(false);
+  const [financeFilterType, setFinanceFilterType] = useState("todos");
+  const [financeFilterStatus, setFinanceFilterStatus] = useState("todos");
+  const [financeFilterCategory, setFinanceFilterCategory] = useState("todas");
 
   const fetchFinances = async () => {
     // Busca uma margem maior no banco para garantir que pegamos registros 
@@ -2878,9 +2881,39 @@ export default function AdminDashboard() {
               </div>
 
               {/* Tabela de Transações */}
+              {(() => {
+                const filteredTableList = financesList.filter(f => {
+                  if (financeFilterType !== "todos" && f.type !== financeFilterType) return false;
+                  if (financeFilterStatus !== "todos") {
+                    const isPaidStr = f.is_paid ? "pago" : "pendente";
+                    if (financeFilterStatus !== isPaidStr) return false;
+                  }
+                  if (financeFilterCategory !== "todas" && f.category !== financeFilterCategory) return false;
+                  return true;
+                });
+
+                return (
               <div className="card" style={{ padding: "1.5rem" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
                   <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)" }}>Histórico de Transações</h3>
+                  <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                    <select className="input" value={financeFilterType} onChange={e => setFinanceFilterType(e.target.value)} style={{ padding: "0.4rem 0.8rem", fontSize: "0.85rem", cursor: "pointer", width: "auto" }}>
+                      <option value="todos">Todos os Tipos</option>
+                      <option value="receita">Receitas</option>
+                      <option value="despesa">Despesas</option>
+                    </select>
+                    <select className="input" value={financeFilterStatus} onChange={e => setFinanceFilterStatus(e.target.value)} style={{ padding: "0.4rem 0.8rem", fontSize: "0.85rem", cursor: "pointer", width: "auto" }}>
+                      <option value="todos">Todos os Status</option>
+                      <option value="pago">Pagos</option>
+                      <option value="pendente">Pendentes</option>
+                    </select>
+                    <select className="input" value={financeFilterCategory} onChange={e => setFinanceFilterCategory(e.target.value)} style={{ padding: "0.4rem 0.8rem", fontSize: "0.85rem", cursor: "pointer", width: "auto" }}>
+                      <option value="todas">Todas as Categorias</option>
+                      {Array.from(new Set(financesList.map(f => f.category))).map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="table-scroll">
@@ -2895,14 +2928,14 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {financesList.length === 0 ? (
+                      {filteredTableList.length === 0 ? (
                         <tr>
                           <td colSpan={5} style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>
-                            Nenhuma transação encontrada no período.
+                            Nenhuma transação encontrada com os filtros atuais.
                           </td>
                         </tr>
                       ) : (
-                        financesList.map(finance => (
+                        filteredTableList.map(finance => (
                           <tr key={finance.id} style={{ borderBottom: "1px solid var(--border-color)", opacity: (!finance.is_paid && finance.type === 'despesa') ? 0.7 : 1 }}>
                             <td style={{ padding: "1rem", color: "var(--text-main)" }}>
                               {finance.type === 'despesa' ? (
@@ -2963,6 +2996,8 @@ export default function AdminDashboard() {
                   </table>
                 </div>
               </div>
+              );
+              })()}
             </div>
           )}
         </div>
