@@ -2792,10 +2792,11 @@ export default function AdminDashboard() {
               {(() => {
                 const totalReceitas = financesList.filter(f => f.type === 'receita' && f.is_paid).reduce((acc, curr) => acc + Number(curr.amount), 0);
                 const totalDespesas = financesList.filter(f => f.type === 'despesa' && f.is_paid).reduce((acc, curr) => acc + Number(curr.amount), 0);
+                const previsaoDespesas = financesList.filter(f => f.type === 'despesa').reduce((acc, curr) => acc + Number(curr.amount), 0);
                 const saldo = totalReceitas - totalDespesas;
                 
                 return (
-                  <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem" }}>
+                  <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.5rem" }}>
                     <div className="card" style={{ padding: "1.5rem", borderLeft: "4px solid var(--success)" }}>
                       <h3 style={{ fontSize: "0.9rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Entradas</h3>
                       <p style={{ fontSize: "2rem", fontWeight: 800, color: "var(--success)", marginTop: "0.5rem" }}>
@@ -2803,9 +2804,15 @@ export default function AdminDashboard() {
                       </p>
                     </div>
                     <div className="card" style={{ padding: "1.5rem", borderLeft: "4px solid var(--danger)" }}>
-                      <h3 style={{ fontSize: "0.9rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Saídas</h3>
+                      <h3 style={{ fontSize: "0.9rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Saídas (Pagas)</h3>
                       <p style={{ fontSize: "2rem", fontWeight: 800, color: "var(--danger)", marginTop: "0.5rem" }}>
                         R$ {totalDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div className="card" style={{ padding: "1.5rem", borderLeft: "4px solid #f59e0b", backgroundColor: "#fffbeb" }}>
+                      <h3 style={{ fontSize: "0.9rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Previsão (Pagas+Pendentes)</h3>
+                      <p style={{ fontSize: "2rem", fontWeight: 800, color: "#d97706", marginTop: "0.5rem" }}>
+                        R$ {previsaoDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
                     </div>
                     <div className="card" style={{ padding: "1.5rem", borderLeft: "4px solid var(--primary)", backgroundColor: "var(--primary-light)" }}>
