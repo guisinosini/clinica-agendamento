@@ -2864,27 +2864,82 @@ export default function AdminDashboard() {
                 );
               })()}
 
-              {/* Gráfico Financeiro */}
-              <div className="card" style={{ padding: "1.5rem" }}>
-                <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)", marginBottom: "1.5rem" }}>Visão Geral</h3>
-                {financesList.length > 0 ? (
-                  <div style={{ height: "300px", width: "100%" }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={[
-                        { name: 'Receitas', valor: financesList.filter(f => f.type === 'receita' && f.is_paid).reduce((a, c) => a + Number(c.amount), 0), fill: 'var(--success)' },
-                        { name: 'Despesas', valor: financesList.filter(f => f.type === 'despesa' && f.is_paid).reduce((a, c) => a + Number(c.amount), 0), fill: 'var(--danger)' }
-                      ]}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--text-muted)', fontSize: 12}} dy={10} />
-                        <YAxis axisLine={false} tickLine={false} tick={{fill: 'var(--text-muted)', fontSize: 12}} tickFormatter={(value) => `R$ ${value}`} />
-                        <Tooltip cursor={{fill: 'var(--bg-color)'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)'}} formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, 'Valor']} />
-                        <Bar dataKey="valor" radius={[4, 4, 0, 0]} barSize={60} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <p style={{ textAlign: "center", color: "var(--text-muted)", padding: "2rem 0" }}>Não há dados para gerar o gráfico neste período.</p>
-                )}
+              {/* Gráfico e Resumo Mensal */}
+              <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
+                {/* Gráfico Financeiro */}
+                <div className="card" style={{ padding: "1.5rem" }}>
+                  <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)", marginBottom: "1.5rem" }}>Visão Geral</h3>
+                  {financesList.length > 0 ? (
+                    <div style={{ height: "300px", width: "100%" }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={[
+                          { name: 'Receitas', valor: financesList.filter(f => f.type === 'receita' && f.is_paid).reduce((a, c) => a + Number(c.amount), 0), fill: 'var(--success)' },
+                          { name: 'Despesas', valor: financesList.filter(f => f.type === 'despesa' && f.is_paid).reduce((a, c) => a + Number(c.amount), 0), fill: 'var(--danger)' }
+                        ]}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
+                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--text-muted)', fontSize: 12}} dy={10} />
+                          <YAxis axisLine={false} tickLine={false} tick={{fill: 'var(--text-muted)', fontSize: 12}} tickFormatter={(value) => `R$ ${value}`} />
+                          <Tooltip cursor={{fill: 'var(--bg-color)'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)'}} formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, 'Valor']} />
+                          <Bar dataKey="valor" radius={[4, 4, 0, 0]} barSize={60} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <p style={{ textAlign: "center", color: "var(--text-muted)", padding: "2rem 0" }}>Não há dados para gerar o gráfico neste período.</p>
+                  )}
+                </div>
+
+                {/* Tabela Resumo Mensal */}
+                <div className="card" style={{ padding: "1.5rem" }}>
+                  <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)", marginBottom: "1.5rem" }}>Resumo Mensal</h3>
+                  {financesList.length > 0 ? (
+                    (() => {
+                      const monthlySummary = financesList.reduce((acc, curr) => {
+                        const dateStr = curr.type === 'despesa' && curr.due_date ? curr.due_date : curr.date;
+                        const monthKey = dateStr.substring(0, 7); // "YYYY-MM"
+                        if (!acc[monthKey]) acc[monthKey] = { receitas: 0, despesas: 0 };
+                        
+                        if (curr.type === 'receita' && curr.is_paid) acc[monthKey].receitas += Number(curr.amount);
+                        if (curr.type === 'despesa' && curr.is_paid) acc[monthKey].despesas += Number(curr.amount);
+                        
+                        return acc;
+                      }, {} as Record<string, {receitas: number, despesas: number}>);
+                      
+                      const sortedMonths = Object.keys(monthlySummary).sort();
+                      
+                      return (
+                        <div className="table-scroll" style={{ maxHeight: "300px", overflowY: "auto" }}>
+                          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                            <thead>
+                              <tr style={{ borderBottom: "2px solid var(--border-color)", textAlign: "left" }}>
+                                <th style={{ padding: "0.8rem", color: "var(--text-secondary)" }}>Mês</th>
+                                <th style={{ padding: "0.8rem", color: "var(--text-secondary)", textAlign: "right" }}>Total Despesas</th>
+                                <th style={{ padding: "0.8rem", color: "var(--text-secondary)", textAlign: "right" }}>Saldo Líquido</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {sortedMonths.map(m => {
+                                const [year, month] = m.split('-');
+                                const monthName = new Date(Number(year), Number(month) - 1, 1).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+                                const data = monthlySummary[m];
+                                const saldo = data.receitas - data.despesas;
+                                return (
+                                  <tr key={m} style={{ borderBottom: "1px solid var(--border-color)" }}>
+                                    <td style={{ padding: "0.8rem", color: "var(--text-main)", textTransform: "capitalize", fontWeight: 600 }}>{monthName}</td>
+                                    <td style={{ padding: "0.8rem", color: "var(--danger)", textAlign: "right", fontWeight: 600 }}>R$ {data.despesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                    <td style={{ padding: "0.8rem", color: saldo >= 0 ? "var(--primary)" : "var(--danger)", textAlign: "right", fontWeight: 700 }}>R$ {saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    <p style={{ textAlign: "center", color: "var(--text-muted)", padding: "2rem 0" }}>Não há dados para gerar o resumo neste período.</p>
+                  )}
+                </div>
               </div>
 
               {/* Tabela de Transações */}
