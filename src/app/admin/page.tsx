@@ -2764,7 +2764,7 @@ export default function AdminDashboard() {
                   <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)" }}>Transações</h3>
                   <div style={{ display: "flex", gap: "0.5rem" }}>
                     <button onClick={() => { setFinanceForm({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Consulta", type: "receita", amount: "", due_date: "", is_paid: true, is_recurring: false, recurring_months: 12 }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--success)", color: "var(--success)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>+ Nova Receita</button>
-                    <button onClick={() => { setFinanceForm({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Material", type: "despesa", amount: "", due_date: "", is_paid: false, is_recurring: false, recurring_months: 12 }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--danger)", color: "var(--danger)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>- Nova Despesa</button>
+                    <button onClick={() => { const today = new Date().toISOString().split("T")[0]; setFinanceForm({ id: "", date: today, description: "", category: "Material", type: "despesa", amount: "", due_date: today, is_paid: false, is_recurring: false, recurring_months: 12 }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--danger)", color: "var(--danger)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>- Nova Despesa</button>
                   </div>
                 </div>
 
@@ -2843,14 +2843,16 @@ export default function AdminDashboard() {
             </h2>
             <form onSubmit={handleSaveFinance} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div style={{ display: "flex", gap: "1rem" }}>
-                <div style={{ flex: 1 }}>
-                  <label className="label">Data {financeForm.type === 'despesa' ? "da Despesa" : "da Receita"}</label>
-                  <input type="date" className="input" value={financeForm.date} onChange={e => setFinanceForm({...financeForm, date: e.target.value})} required />
-                </div>
+                {financeForm.type === 'receita' && (
+                  <div style={{ flex: 1 }}>
+                    <label className="label">Data da Receita</label>
+                    <input type="date" className="input" value={financeForm.date} onChange={e => setFinanceForm({...financeForm, date: e.target.value})} required />
+                  </div>
+                )}
                 {financeForm.type === 'despesa' && (
                   <div style={{ flex: 1 }}>
-                    <label className="label">Vencimento (Opcional)</label>
-                    <input type="date" className="input" value={financeForm.due_date || ""} onChange={e => setFinanceForm({...financeForm, due_date: e.target.value})} />
+                    <label className="label">Dia do Vencimento</label>
+                    <input type="date" className="input" value={financeForm.due_date || financeForm.date} onChange={e => setFinanceForm({...financeForm, due_date: e.target.value, date: e.target.value})} required />
                   </div>
                 )}
                 <div style={{ flex: 1 }}>
