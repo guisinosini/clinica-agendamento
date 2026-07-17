@@ -135,13 +135,34 @@ export default function AdminDashboard() {
   const [isSubmittingFinance, setIsSubmittingFinance] = useState(false);
 
   const fetchFinances = async () => {
+    // Busca uma margem maior no banco para garantir que pegamos registros 
+    // onde a data de criação difere da data de vencimento
+    const startObj = new Date(financeStartDate + "T00:00:00");
+    startObj.setMonth(startObj.getMonth() - 2);
+    const wideStart = startObj.toISOString().split("T")[0];
+    
+    const endObj = new Date(financeEndDate + "T00:00:00");
+    endObj.setMonth(endObj.getMonth() + 2);
+    const wideEnd = endObj.toISOString().split("T")[0];
+
     const { data } = await supabase
       .from('finances')
       .select('*')
-      .gte('date', financeStartDate)
-      .lte('date', financeEndDate)
-      .order('date', { ascending: false });
-    if (data) setFinancesList(data);
+      .gte('date', wideStart)
+      .lte('date', wideEnd);
+
+    if (data) {
+      const filtered = data.filter(f => {
+         const relevantDate = f.type === 'despesa' && f.due_date ? f.due_date : f.date;
+         return relevantDate >= financeStartDate && relevantDate <= financeEndDate;
+      }).sort((a, b) => {
+         const dateA = a.type === 'despesa' && a.due_date ? a.due_date : a.date;
+         const dateB = b.type === 'despesa' && b.due_date ? b.due_date : b.date;
+         if (dateA !== dateB) return new Date(dateB).getTime() - new Date(dateA).getTime();
+         return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      });
+      setFinancesList(filtered);
+    }
   };
 
   useEffect(() => {
