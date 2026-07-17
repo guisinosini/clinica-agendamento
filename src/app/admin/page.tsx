@@ -118,6 +118,67 @@ export default function AdminDashboard() {
   // Finances State
   const [isFinancesUnlocked, setIsFinancesUnlocked] = useState(false);
   const [financePasswordInput, setFinancePasswordInput] = useState("");
+  const [financesList, setFinancesList] = useState<any[]>([]);
+  const [financeStartDate, setFinanceStartDate] = useState(() => {
+    const date = new Date();
+    date.setDate(1);
+    return date.toISOString().split("T")[0];
+  });
+  const [financeEndDate, setFinanceEndDate] = useState(() => {
+    const date = new Date();
+    date.setMonth(date.getMonth() + 1);
+    date.setDate(0);
+    return date.toISOString().split("T")[0];
+  });
+  const [showFinanceModal, setShowFinanceModal] = useState(false);
+  const [financeForm, setFinanceForm] = useState({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Consulta", type: "receita", amount: "" });
+  const [isSubmittingFinance, setIsSubmittingFinance] = useState(false);
+
+  const fetchFinances = async () => {
+    const { data } = await supabase
+      .from('finances')
+      .select('*')
+      .gte('date', financeStartDate)
+      .lte('date', financeEndDate)
+      .order('date', { ascending: false });
+    if (data) setFinancesList(data);
+  };
+
+  useEffect(() => {
+    if (activeTab === "finances" && isFinancesUnlocked) {
+      fetchFinances();
+    }
+  }, [activeTab, isFinancesUnlocked, financeStartDate, financeEndDate]);
+
+  const handleSaveFinance = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingFinance(true);
+    
+    const payload = {
+      date: financeForm.date,
+      description: financeForm.description,
+      category: financeForm.category,
+      type: financeForm.type,
+      amount: parseFloat(financeForm.amount.replace(',', '.'))
+    };
+
+    if (financeForm.id) {
+      await supabase.from('finances').update(payload).eq('id', financeForm.id);
+    } else {
+      await supabase.from('finances').insert([payload]);
+    }
+    
+    await fetchFinances();
+    setShowFinanceModal(false);
+    setIsSubmittingFinance(false);
+  };
+
+  const handleDeleteFinance = async (id: string) => {
+    if (confirm("Tem certeza que deseja excluir esta transação?")) {
+      await supabase.from('finances').delete().eq('id', id);
+      fetchFinances();
+    }
+  };
 
   // New Admin Task Modal State
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -2556,29 +2617,78 @@ export default function AdminDashboard() {
                 </button>
               </div>
 
+              <div style={{ display: "flex", gap: "1rem", backgroundColor: "var(--bg-color)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", flexWrap: "wrap", alignItems: "center" }}>
+                <h3 style={{ fontSize: "0.95rem", fontWeight: 700, margin: 0, color: "var(--text-main)" }}>Período:</h3>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>De</label>
+                  <input type="date" className="input" style={{ padding: "0.4rem" }} value={financeStartDate} onChange={e => setFinanceStartDate(e.target.value)} />
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Até</label>
+                  <input type="date" className="input" style={{ padding: "0.4rem" }} value={financeEndDate} onChange={e => setFinanceEndDate(e.target.value)} />
+                </div>
+              </div>
+
               {/* Cards de Resumo */}
-              <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem" }}>
-                <div className="card" style={{ padding: "1.5rem", borderLeft: "4px solid var(--success)" }}>
-                  <h3 style={{ fontSize: "0.9rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Entradas (Mês Atual)</h3>
-                  <p style={{ fontSize: "2rem", fontWeight: 800, color: "var(--success)", marginTop: "0.5rem" }}>R$ 0,00</p>
-                </div>
-                <div className="card" style={{ padding: "1.5rem", borderLeft: "4px solid var(--danger)" }}>
-                  <h3 style={{ fontSize: "0.9rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Saídas (Mês Atual)</h3>
-                  <p style={{ fontSize: "2rem", fontWeight: 800, color: "var(--danger)", marginTop: "0.5rem" }}>R$ 0,00</p>
-                </div>
-                <div className="card" style={{ padding: "1.5rem", borderLeft: "4px solid var(--primary)", backgroundColor: "var(--primary-light)" }}>
-                  <h3 style={{ fontSize: "0.9rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Saldo Geral</h3>
-                  <p style={{ fontSize: "2rem", fontWeight: 800, color: "var(--primary)", marginTop: "0.5rem" }}>R$ 0,00</p>
-                </div>
+              {(() => {
+                const totalReceitas = financesList.filter(f => f.type === 'receita').reduce((acc, curr) => acc + Number(curr.amount), 0);
+                const totalDespesas = financesList.filter(f => f.type === 'despesa').reduce((acc, curr) => acc + Number(curr.amount), 0);
+                const saldo = totalReceitas - totalDespesas;
+                
+                return (
+                  <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem" }}>
+                    <div className="card" style={{ padding: "1.5rem", borderLeft: "4px solid var(--success)" }}>
+                      <h3 style={{ fontSize: "0.9rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Entradas</h3>
+                      <p style={{ fontSize: "2rem", fontWeight: 800, color: "var(--success)", marginTop: "0.5rem" }}>
+                        R$ {totalReceitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div className="card" style={{ padding: "1.5rem", borderLeft: "4px solid var(--danger)" }}>
+                      <h3 style={{ fontSize: "0.9rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Saídas</h3>
+                      <p style={{ fontSize: "2rem", fontWeight: 800, color: "var(--danger)", marginTop: "0.5rem" }}>
+                        R$ {totalDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div className="card" style={{ padding: "1.5rem", borderLeft: "4px solid var(--primary)", backgroundColor: "var(--primary-light)" }}>
+                      <h3 style={{ fontSize: "0.9rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Saldo Líquido</h3>
+                      <p style={{ fontSize: "2rem", fontWeight: 800, color: "var(--primary)", marginTop: "0.5rem" }}>
+                        R$ {saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Gráfico Financeiro */}
+              <div className="card" style={{ padding: "1.5rem" }}>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)", marginBottom: "1.5rem" }}>Visão Geral</h3>
+                {financesList.length > 0 ? (
+                  <div style={{ height: "300px", width: "100%" }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={[
+                        { name: 'Receitas', valor: financesList.filter(f => f.type === 'receita').reduce((a, c) => a + Number(c.amount), 0), fill: 'var(--success)' },
+                        { name: 'Despesas', valor: financesList.filter(f => f.type === 'despesa').reduce((a, c) => a + Number(c.amount), 0), fill: 'var(--danger)' }
+                      ]}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--text-muted)', fontSize: 12}} dy={10} />
+                        <YAxis axisLine={false} tickLine={false} tick={{fill: 'var(--text-muted)', fontSize: 12}} tickFormatter={(value) => `R$ ${value}`} />
+                        <Tooltip cursor={{fill: 'var(--bg-color)'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)'}} formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, 'Valor']} />
+                        <Bar dataKey="valor" radius={[4, 4, 0, 0]} barSize={60} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <p style={{ textAlign: "center", color: "var(--text-muted)", padding: "2rem 0" }}>Não há dados para gerar o gráfico neste período.</p>
+                )}
               </div>
 
               {/* Tabela de Transações */}
               <div className="card" style={{ padding: "1.5rem" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
-                  <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)" }}>Transações Recentes</h3>
+                  <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)" }}>Transações</h3>
                   <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <button className="btn btn-outline" style={{ borderColor: "var(--success)", color: "var(--success)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>+ Nova Receita</button>
-                    <button className="btn btn-outline" style={{ borderColor: "var(--danger)", color: "var(--danger)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>- Nova Despesa</button>
+                    <button onClick={() => { setFinanceForm({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Consulta", type: "receita", amount: "" }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--success)", color: "var(--success)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>+ Nova Receita</button>
+                    <button onClick={() => { setFinanceForm({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Material", type: "despesa", amount: "" }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--danger)", color: "var(--danger)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>- Nova Despesa</button>
                   </div>
                 </div>
 
@@ -2589,23 +2699,97 @@ export default function AdminDashboard() {
                         <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Data</th>
                         <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Descrição</th>
                         <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Categoria</th>
-                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Tipo</th>
                         <th style={{ padding: "1rem", color: "var(--text-secondary)", textAlign: "right" }}>Valor</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)", textAlign: "center" }}>Ação</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td colSpan={5} style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>
-                          Nenhuma transação registrada ainda.<br/>
-                          <span style={{ fontSize: "0.85rem" }}>(A integração com o banco de dados será implementada na próxima etapa)</span>
-                        </td>
-                      </tr>
+                      {financesList.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>
+                            Nenhuma transação encontrada no período.
+                          </td>
+                        </tr>
+                      ) : (
+                        financesList.map(finance => (
+                          <tr key={finance.id} style={{ borderBottom: "1px solid var(--border-color)" }}>
+                            <td style={{ padding: "1rem", color: "var(--text-main)" }}>{new Date(finance.date + "T00:00:00").toLocaleDateString('pt-BR')}</td>
+                            <td style={{ padding: "1rem", color: "var(--text-main)", fontWeight: 500 }}>{finance.description}</td>
+                            <td style={{ padding: "1rem" }}>
+                               <span className="badge" style={{ backgroundColor: "var(--bg-color)", color: "var(--text-muted)", border: "1px solid var(--border-color)", fontSize: "0.75rem" }}>
+                                 {finance.category}
+                               </span>
+                            </td>
+                            <td style={{ padding: "1rem", color: finance.type === 'receita' ? "var(--success)" : "var(--danger)", fontWeight: 700, textAlign: "right" }}>
+                              {finance.type === 'receita' ? '+' : '-'} R$ {Number(finance.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </td>
+                            <td style={{ padding: "1rem", textAlign: "center" }}>
+                              <button onClick={() => handleDeleteFinance(finance.id)} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "1.2rem" }} title="Excluir">
+                                &times;
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {showFinanceModal && (
+        <div className="modal-overlay">
+          <div className="modal-content animate-slide" style={{ maxWidth: "500px" }}>
+            <h2 style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "1rem" }}>
+              Adicionar {financeForm.type === 'receita' ? 'Receita' : 'Despesa'}
+            </h2>
+            <form onSubmit={handleSaveFinance} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div style={{ display: "flex", gap: "1rem" }}>
+                <div style={{ flex: 1 }}>
+                  <label className="label">Data</label>
+                  <input type="date" className="input" value={financeForm.date} onChange={e => setFinanceForm({...financeForm, date: e.target.value})} required />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label className="label">Valor (R$)</label>
+                  <input type="text" className="input" value={financeForm.amount} onChange={e => setFinanceForm({...financeForm, amount: e.target.value})} placeholder="0,00" required />
+                </div>
+              </div>
+              <div>
+                <label className="label">Descrição</label>
+                <input type="text" className="input" value={financeForm.description} onChange={e => setFinanceForm({...financeForm, description: e.target.value})} placeholder="Ex: Consulta João Silva" required />
+              </div>
+              <div>
+                <label className="label">Categoria</label>
+                <select className="input" value={financeForm.category} onChange={e => setFinanceForm({...financeForm, category: e.target.value})} required>
+                  {financeForm.type === 'receita' ? (
+                    <>
+                      <option value="Consulta">Consulta Particular</option>
+                      <option value="Convênio">Convênio</option>
+                      <option value="Avaliação">Avaliação</option>
+                      <option value="Outros">Outros</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="Aluguel">Aluguel/Condomínio</option>
+                      <option value="Material">Material de Escritório</option>
+                      <option value="Impostos">Impostos</option>
+                      <option value="Marketing">Marketing/Software</option>
+                      <option value="Outros">Outros</option>
+                    </>
+                  )}
+                </select>
+              </div>
+              <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+                <button type="button" onClick={() => setShowFinanceModal(false)} className="btn btn-outline" style={{ flex: 1 }}>Cancelar</button>
+                <button type="submit" className="btn" style={{ flex: 1 }} disabled={isSubmittingFinance}>
+                  {isSubmittingFinance ? 'Salvando...' : 'Salvar'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
