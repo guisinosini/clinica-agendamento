@@ -131,7 +131,7 @@ export default function AdminDashboard() {
     return date.toISOString().split("T")[0];
   });
   const [showFinanceModal, setShowFinanceModal] = useState(false);
-  const [financeForm, setFinanceForm] = useState({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Consulta", type: "receita", amount: "", due_date: "", is_paid: true });
+  const [financeForm, setFinanceForm] = useState({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Consulta", type: "receita", amount: "", due_date: "", is_paid: true, is_recurring: false, recurring_months: 12 });
   const [isSubmittingFinance, setIsSubmittingFinance] = useState(false);
 
   const fetchFinances = async () => {
@@ -154,23 +154,50 @@ export default function AdminDashboard() {
     e.preventDefault();
     setIsSubmittingFinance(true);
     
-    const payload: any = {
-      date: financeForm.date,
-      description: financeForm.description,
-      category: financeForm.category,
-      type: financeForm.type,
-      amount: parseFloat(financeForm.amount.replace(',', '.')),
-      is_paid: financeForm.is_paid
-    };
+    const amountVal = parseFloat(financeForm.amount.replace(',', '.'));
 
-    if (financeForm.type === 'despesa' && financeForm.due_date) {
-      payload.due_date = financeForm.due_date;
-    }
+    if (financeForm.type === 'despesa' && financeForm.is_recurring && financeForm.recurring_months > 1 && !financeForm.id) {
+       const payloads = [];
+       for (let i = 0; i < financeForm.recurring_months; i++) {
+          const newDate = new Date(financeForm.date + "T00:00:00");
+          newDate.setMonth(newDate.getMonth() + i);
+          
+          let newDueDate = null;
+          if (financeForm.due_date) {
+             newDueDate = new Date(financeForm.due_date + "T00:00:00");
+             newDueDate.setMonth(newDueDate.getMonth() + i);
+          }
 
-    if (financeForm.id) {
-      await supabase.from('finances').update(payload).eq('id', financeForm.id);
+          payloads.push({
+            date: newDate.toISOString().split("T")[0],
+            description: financeForm.description + ` (${i+1}/${financeForm.recurring_months})`,
+            category: financeForm.category,
+            type: financeForm.type,
+            amount: amountVal,
+            is_paid: i === 0 ? financeForm.is_paid : false,
+            due_date: newDueDate ? newDueDate.toISOString().split("T")[0] : null
+          });
+       }
+       await supabase.from('finances').insert(payloads);
     } else {
-      await supabase.from('finances').insert([payload]);
+       const payload: any = {
+         date: financeForm.date,
+         description: financeForm.description,
+         category: financeForm.category,
+         type: financeForm.type,
+         amount: amountVal,
+         is_paid: financeForm.is_paid
+       };
+
+       if (financeForm.type === 'despesa' && financeForm.due_date) {
+         payload.due_date = financeForm.due_date;
+       }
+
+       if (financeForm.id) {
+         await supabase.from('finances').update(payload).eq('id', financeForm.id);
+       } else {
+         await supabase.from('finances').insert([payload]);
+       }
     }
     
     await fetchFinances();
@@ -2669,6 +2696,45 @@ export default function AdminDashboard() {
                 );
               })()}
 
+              {/* Alertas de Vencimento */}
+              {(() => {
+                const upcomingExpenses = financesList.filter(f => f.type === 'despesa' && !f.is_paid && f.due_date).sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+                if (upcomingExpenses.length === 0) return null;
+                return (
+                  <div className="card animate-slide" style={{ padding: "1.5rem", borderLeft: "4px solid #ffc107", backgroundColor: "rgba(255,193,7,0.1)" }}>
+                    <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#856404", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      ⚠️ Despesas Pendentes / Próximas ao Vencimento
+                    </h3>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
+                      {upcomingExpenses.slice(0, 5).map(exp => {
+                         const isLate = new Date(exp.due_date + "T00:00:00").getTime() < new Date().setHours(0,0,0,0);
+                         return (
+                           <div key={exp.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "0.5rem", borderBottom: "1px dashed rgba(133,100,4,0.3)" }}>
+                             <div>
+                               <p style={{ margin: 0, fontWeight: 600, color: "#856404" }}>{exp.description}</p>
+                               <p style={{ margin: 0, fontSize: "0.85rem", color: isLate ? "var(--danger)" : "#856404", fontWeight: isLate ? 700 : 500 }}>
+                                 {isLate ? "Vencido em: " : "Vence em: "} {new Date(exp.due_date + "T00:00:00").toLocaleDateString('pt-BR')}
+                               </p>
+                             </div>
+                             <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                               <p style={{ margin: 0, fontWeight: 700, color: "var(--danger)" }}>R$ {Number(exp.amount).toLocaleString('pt-BR', {minimumFractionDigits:2})}</p>
+                               <button onClick={() => handleTogglePaid(exp.id, exp.is_paid)} className="btn" style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem" }}>
+                                 Marcar Pago
+                               </button>
+                             </div>
+                           </div>
+                         );
+                      })}
+                      {upcomingExpenses.length > 5 && (
+                        <p style={{ fontSize: "0.85rem", color: "#856404", fontStyle: "italic", textAlign: "center", marginTop: "0.5rem", margin: 0 }}>
+                          + {upcomingExpenses.length - 5} despesa(s) pendente(s)
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Gráfico Financeiro */}
               <div className="card" style={{ padding: "1.5rem" }}>
                 <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)", marginBottom: "1.5rem" }}>Visão Geral</h3>
@@ -2697,8 +2763,8 @@ export default function AdminDashboard() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
                   <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)" }}>Transações</h3>
                   <div style={{ display: "flex", gap: "0.5rem" }}>
-                        <button onClick={() => { setFinanceForm({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Consulta", type: "receita", amount: "", due_date: "", is_paid: true }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--success)", color: "var(--success)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>+ Nova Receita</button>
-                        <button onClick={() => { setFinanceForm({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Material", type: "despesa", amount: "", due_date: "", is_paid: false }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--danger)", color: "var(--danger)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>- Nova Despesa</button>
+                    <button onClick={() => { setFinanceForm({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Consulta", type: "receita", amount: "", due_date: "", is_paid: true, is_recurring: false, recurring_months: 12 }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--success)", color: "var(--success)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>+ Nova Receita</button>
+                    <button onClick={() => { setFinanceForm({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Material", type: "despesa", amount: "", due_date: "", is_paid: false, is_recurring: false, recurring_months: 12 }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--danger)", color: "var(--danger)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>- Nova Despesa</button>
                   </div>
                 </div>
 
@@ -2794,10 +2860,28 @@ export default function AdminDashboard() {
               </div>
               
               {financeForm.type === 'despesa' && (
-                <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", marginTop: "-0.5rem", fontSize: "0.95rem", color: "var(--text-main)" }}>
-                  <input type="checkbox" checked={financeForm.is_paid} onChange={e => setFinanceForm({...financeForm, is_paid: e.target.checked})} style={{ width: "18px", height: "18px" }} />
-                  <strong>Esta despesa já foi paga</strong>
-                </label>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.95rem", color: "var(--text-main)" }}>
+                    <input type="checkbox" checked={financeForm.is_paid} onChange={e => setFinanceForm({...financeForm, is_paid: e.target.checked})} style={{ width: "18px", height: "18px" }} />
+                    <strong>Esta despesa já foi paga (1ª parcela)</strong>
+                  </label>
+
+                  {!financeForm.id && (
+                    <div style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)", marginTop: "0.5rem" }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.95rem", color: "var(--text-main)", marginBottom: financeForm.is_recurring ? "1rem" : 0 }}>
+                        <input type="checkbox" checked={financeForm.is_recurring} onChange={e => setFinanceForm({...financeForm, is_recurring: e.target.checked})} style={{ width: "18px", height: "18px" }} />
+                        <strong>Despesa Fixa (Gerar para os próximos meses)</strong>
+                      </label>
+                      
+                      {financeForm.is_recurring && (
+                        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                          <label className="label" style={{ margin: 0 }}>Quantidade de meses:</label>
+                          <input type="number" min="2" max="120" className="input" value={financeForm.recurring_months} onChange={e => setFinanceForm({...financeForm, recurring_months: parseInt(e.target.value) || 12})} style={{ width: "100px" }} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
 
               <div>
