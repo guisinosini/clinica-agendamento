@@ -271,7 +271,7 @@ export default function CadastroPaciente() {
                 required
               />
               <label htmlFor="lgpdConsent" style={{ fontSize: '0.85rem', color: 'var(--text-main)', lineHeight: '1.4', cursor: 'pointer' }}>
-                <strong>Declaro que as informações acima são verdadeiras</strong> e concordo em compartilhar estes dados com a clínica, ciente de que serão armazenados e tratados com segurança, conforme os termos da Lei Geral de Proteção de Dados (LGPD).
+                Declaro que as informações fornecidas são verdadeiras e expresso meu <strong>consentimento livre, informado e inequívoco</strong> para que a clínica colete e realize o tratamento dos meus dados pessoais (e/ou do menor sob minha responsabilidade) <strong>exclusivamente para fins de atendimento em saúde, gestão de agenda e histórico clínico</strong>. Estou ciente de que os dados serão mantidos sob sigilo e segurança, em total conformidade com a <strong>Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018)</strong>, e que posso solicitar sua atualização a qualquer momento.
               </label>
             </div>
 
