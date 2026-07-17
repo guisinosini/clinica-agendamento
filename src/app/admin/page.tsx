@@ -2668,8 +2668,8 @@ export default function AdminDashboard() {
 
               {/* Cards de Resumo */}
               {(() => {
-                const totalReceitas = financesList.filter(f => f.type === 'receita').reduce((acc, curr) => acc + Number(curr.amount), 0);
-                const totalDespesas = financesList.filter(f => f.type === 'despesa').reduce((acc, curr) => acc + Number(curr.amount), 0);
+                const totalReceitas = financesList.filter(f => f.type === 'receita' && f.is_paid).reduce((acc, curr) => acc + Number(curr.amount), 0);
+                const totalDespesas = financesList.filter(f => f.type === 'despesa' && f.is_paid).reduce((acc, curr) => acc + Number(curr.amount), 0);
                 const saldo = totalReceitas - totalDespesas;
                 
                 return (
@@ -2742,8 +2742,8 @@ export default function AdminDashboard() {
                   <div style={{ height: "300px", width: "100%" }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={[
-                        { name: 'Receitas', valor: financesList.filter(f => f.type === 'receita').reduce((a, c) => a + Number(c.amount), 0), fill: 'var(--success)' },
-                        { name: 'Despesas', valor: financesList.filter(f => f.type === 'despesa').reduce((a, c) => a + Number(c.amount), 0), fill: 'var(--danger)' }
+                        { name: 'Receitas', valor: financesList.filter(f => f.type === 'receita' && f.is_paid).reduce((a, c) => a + Number(c.amount), 0), fill: 'var(--success)' },
+                        { name: 'Despesas', valor: financesList.filter(f => f.type === 'despesa' && f.is_paid).reduce((a, c) => a + Number(c.amount), 0), fill: 'var(--danger)' }
                       ]}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
                         <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--text-muted)', fontSize: 12}} dy={10} />
@@ -2790,11 +2790,12 @@ export default function AdminDashboard() {
                         financesList.map(finance => (
                           <tr key={finance.id} style={{ borderBottom: "1px solid var(--border-color)", opacity: (!finance.is_paid && finance.type === 'despesa') ? 0.7 : 1 }}>
                             <td style={{ padding: "1rem", color: "var(--text-main)" }}>
-                              {new Date(finance.date + "T00:00:00").toLocaleDateString('pt-BR')}
-                              {finance.type === 'despesa' && finance.due_date && (
-                                <div style={{ fontSize: "0.75rem", color: finance.is_paid ? "var(--text-muted)" : "var(--danger)", marginTop: "0.2rem", fontWeight: finance.is_paid ? "normal" : "bold" }}>
-                                  Venc: {new Date(finance.due_date + "T00:00:00").toLocaleDateString('pt-BR')}
-                                </div>
+                              {finance.type === 'despesa' ? (
+                                <span style={{ fontWeight: 600 }}>
+                                  {finance.due_date ? new Date(finance.due_date + "T00:00:00").toLocaleDateString('pt-BR') : new Date(finance.date + "T00:00:00").toLocaleDateString('pt-BR')}
+                                </span>
+                              ) : (
+                                new Date(finance.date + "T00:00:00").toLocaleDateString('pt-BR')
                               )}
                             </td>
                             <td style={{ padding: "1rem", color: "var(--text-main)", fontWeight: 500 }}>
