@@ -18,6 +18,7 @@ export default function Home() {
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [patientsCount, setPatientsCount] = useState<number>(0);
+  const [delayedTasksCount, setDelayedTasksCount] = useState<number>(0);
 
   useEffect(() => {
     const handler = (e: any) => {
@@ -34,6 +35,35 @@ export default function Home() {
 
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
+
+  useEffect(() => {
+    if (professional) {
+      const fetchTasks = async () => {
+        const { data } = await supabase
+          .from('task_assignments')
+          .select(`status, task:tasks(due_date)`)
+          .eq('professional_id', professional.id)
+          .eq('status', 'pendente');
+
+        if (data) {
+          let atrasadas = 0;
+          const today = new Date();
+          today.setHours(0,0,0,0);
+          
+          data.forEach((assignment: any) => {
+             if (assignment.task?.due_date) {
+               const dueDate = new Date(assignment.task.due_date + "T00:00:00");
+               if (dueDate.getTime() < today.getTime()) {
+                 atrasadas++;
+               }
+             }
+          });
+          setDelayedTasksCount(atrasadas);
+        }
+      };
+      fetchTasks();
+    }
+  }, [professional]);
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
@@ -442,7 +472,14 @@ export default function Home() {
             }}>
               {card.emoji}
             </div>
-            <h2 style={{ fontSize: "1.05rem", fontWeight: 700, marginBottom: "0.5rem" }}>{card.title}</h2>
+            <h2 style={{ fontSize: "1.05rem", fontWeight: 700, marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              {card.title}
+              {card.title === "Minhas Tarefas" && delayedTasksCount > 0 && (
+                <span className="badge" style={{ backgroundColor: "var(--danger)", color: "white", fontSize: "0.65rem", padding: "0.15rem 0.4rem" }}>
+                  {delayedTasksCount} Atrasada{delayedTasksCount > 1 ? 's' : ''}
+                </span>
+              )}
+            </h2>
             <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", lineHeight: "1.4", flexGrow: 1, marginBottom: "1rem" }}>
               {card.desc}
             </p>

@@ -17,7 +17,7 @@ type CombinedTask = {
   assignedTo: string;
   assignedToName?: string;
   createdByName?: string;
-  status: 'pendente' | 'concluida';
+  status: 'pendente' | 'concluida' | 'atrasada';
   viewed: boolean;
   type: 'minhas' | 'recebidas' | 'atribuidas';
   assignmentId?: string;
@@ -27,6 +27,16 @@ type CombinedTask = {
 };
 
 export default function TarefasPage() {
+  const computeTaskStatus = (dbStatus: string, dueDateStr: string | null | undefined): 'pendente' | 'concluida' | 'atrasada' => {
+    if (dbStatus === 'concluida') return 'concluida';
+    if (!dueDateStr) return 'pendente';
+    const dueDateObj = new Date(dueDateStr + "T00:00:00");
+    const todayObj = new Date();
+    todayObj.setHours(0, 0, 0, 0);
+    if (dueDateObj.getTime() < todayObj.getTime()) return 'atrasada';
+    return 'pendente';
+  };
+
   const { professional, allProfessionals, loading } = useReservation();
   const router = useRouter();
 
@@ -96,7 +106,7 @@ export default function TarefasPage() {
             dueDate: task.due_date,
             createdBy: task.created_by,
             assignedTo: assignment.professional_id,
-            status: assignment.status,
+            status: computeTaskStatus(assignment.status, task.due_date),
             viewed: assignment.viewed,
             type: isMine ? 'minhas' : 'recebidas',
             createdByName: allProfessionals.find(p => p.id === task.created_by)?.name || 'Desconhecido',
@@ -123,7 +133,7 @@ export default function TarefasPage() {
                   createdBy: task.created_by,
                   assignedTo: assignment.professional_id,
                   assignedToName: assignment.professional_id ? (assignment.professional?.name || 'Desconhecido') : 'Administração',
-                  status: assignment.status,
+                  status: computeTaskStatus(assignment.status, task.due_date),
                   viewed: assignment.viewed,
                   type: 'atribuidas',
                   createdByName: professional.name,
@@ -147,7 +157,8 @@ export default function TarefasPage() {
 
       // Ordenar por data
       allTasks.sort((a, b) => {
-        if (a.status !== b.status) return a.status === 'pendente' ? -1 : 1; // pendentes primeiro
+        const getStatusWeight = (status: string) => status === 'atrasada' ? 0 : status === 'pendente' ? 1 : 2;
+        if (a.status !== b.status) return getStatusWeight(a.status) - getStatusWeight(b.status);
         return new Date(a.dueDate || '2099').getTime() - new Date(b.dueDate || '2099').getTime();
       });
 
@@ -278,10 +289,10 @@ export default function TarefasPage() {
 
   const toggleTaskStatus = async (task: CombinedTask) => {
     if (!task.assignmentId) return;
-    const newStatus = task.status === 'pendente' ? 'concluida' : 'pendente';
+    const newStatus = (task.status === 'pendente' || task.status === 'atrasada') ? 'concluida' : 'pendente';
     
     // Optimistic update
-    setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: newStatus } : t));
+    setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: computeTaskStatus(newStatus, task.dueDate) } : t));
 
     try {
       const { error } = await supabase
@@ -347,8 +358,8 @@ export default function TarefasPage() {
       {/* Tabs */}
       <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem", overflowX: "auto", paddingBottom: "0.5rem" }}>
         {['minhas', 'recebidas', 'atribuidas'].map((tab) => {
-          const count = tasks.filter(t => t.type === tab && t.status === 'pendente').length;
-          const hasUnread = tasks.some(t => t.type === tab && !t.viewed && t.status === 'pendente');
+          const count = tasks.filter(t => t.type === tab && (t.status === 'pendente' || t.status === 'atrasada')).length;
+          const hasUnread = tasks.some(t => t.type === tab && !t.viewed && (t.status === 'pendente' || t.status === 'atrasada'));
           
           return (
             <button
@@ -415,6 +426,7 @@ export default function TarefasPage() {
           <select className="input" style={{ padding: "0.4rem" }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
             <option value="">Todos</option>
             <option value="pendente">Pendente</option>
+            <option value="atrasada">Atrasada</option>
             <option value="concluida">Concluída</option>
           </select>
         </div>
@@ -467,6 +479,7 @@ export default function TarefasPage() {
                     {task.priority === 'alta' && <span className="badge" style={{ backgroundColor: "#fee2e2", color: "#991b1b", fontSize: "0.7rem" }}>Alta</span>}
                     {task.priority === 'media' && <span className="badge" style={{ backgroundColor: "#fef3c7", color: "#92400e", fontSize: "0.7rem" }}>Média</span>}
                     {task.priority === 'baixa' && <span className="badge" style={{ backgroundColor: "#dcfce7", color: "#166534", fontSize: "0.7rem" }}>Baixa</span>}
+                    {task.status === 'atrasada' && <span className="badge" style={{ backgroundColor: "var(--danger)", color: "white", fontSize: "0.7rem" }}>⚠️ Atrasada</span>}
                     {task.dueDate && (
                       <span className="badge" style={{ backgroundColor: "var(--bg-color)", border: "1px solid var(--border-color)", fontSize: "0.75rem" }}>
                         📅 Prazo: {new Date(task.dueDate + "T00:00:00").toLocaleDateString('pt-BR')}
@@ -493,8 +506,8 @@ export default function TarefasPage() {
                   {task.type === 'atribuidas' && (
                     <span>
                       <strong>Para:</strong> {task.assignedToName} 
-                      <span style={{ marginLeft: "8px", color: task.status === 'concluida' ? 'var(--success)' : 'var(--warning)' }}>
-                        ({task.status === 'concluida' ? 'Concluída' : 'Pendente'})
+                      <span style={{ marginLeft: "8px", color: task.status === 'concluida' ? 'var(--success)' : task.status === 'atrasada' ? 'var(--danger)' : 'var(--warning)' }}>
+                        ({task.status === 'concluida' ? 'Concluída' : task.status === 'atrasada' ? 'Atrasada' : 'Pendente'})
                       </span>
                     </span>
                   )}

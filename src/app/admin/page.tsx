@@ -111,6 +111,7 @@ export default function AdminDashboard() {
   // Admin Tasks State
   const [adminTasks, setAdminTasks] = useState<any[]>([]);
   const [loadingAdminTasks, setLoadingAdminTasks] = useState(false);
+  const [delayedAdminTasksCount, setDelayedAdminTasksCount] = useState<number>(0);
 
   // Finances State
   const [isFinancesUnlocked, setIsFinancesUnlocked] = useState(false);
@@ -211,10 +212,21 @@ export default function AdminDashboard() {
   }, [activeTab]);
 
   const filteredAdminTasks = useMemo(() => {
-    return adminTasks.filter(t => {
+    return adminTasks.map(t => {
+      let computedStatus = t.status;
+      if (computedStatus === 'pendente' && t.task?.due_date) {
+        const dueDateObj = new Date(t.task.due_date + "T00:00:00");
+        const todayObj = new Date();
+        todayObj.setHours(0, 0, 0, 0);
+        if (dueDateObj.getTime() < todayObj.getTime()) {
+          computedStatus = 'atrasada';
+        }
+      }
+      return { ...t, computedStatus };
+    }).filter(t => {
       if (filterAdminTaskPriority && t.task?.priority !== filterAdminTaskPriority && !(filterAdminTaskPriority === 'media' && !t.task?.priority)) return false;
       if (filterAdminTaskAssignedTo && t.professional_id !== filterAdminTaskAssignedTo && !(filterAdminTaskAssignedTo === 'admin' && t.professional_id === null)) return false;
-      if (filterAdminTaskStatus && t.status !== filterAdminTaskStatus) return false;
+      if (filterAdminTaskStatus && t.computedStatus !== filterAdminTaskStatus) return false;
       return true;
     });
   }, [adminTasks, filterAdminTaskPriority, filterAdminTaskAssignedTo, filterAdminTaskStatus]);
@@ -298,6 +310,31 @@ export default function AdminDashboard() {
       fetchProfessionals();
       fetchPatients();
       setNewResDate(new Date().toISOString().split("T")[0]); // Set default date
+
+      // Fetch global delayed tasks count
+      const fetchDelayedCount = async () => {
+        const { data } = await supabase
+          .from('task_assignments')
+          .select(`status, task:tasks(due_date)`)
+          .eq('status', 'pendente');
+
+        if (data) {
+          let count = 0;
+          const today = new Date();
+          today.setHours(0,0,0,0);
+          
+          data.forEach((assignment: any) => {
+             if (assignment.task?.due_date) {
+               const dueDate = new Date(assignment.task.due_date + "T00:00:00");
+               if (dueDate.getTime() < today.getTime()) {
+                 count++;
+               }
+             }
+          });
+          setDelayedAdminTasksCount(count);
+        }
+      };
+      fetchDelayedCount();
     }
   }, [router]);
 
@@ -658,7 +695,7 @@ export default function AdminDashboard() {
   };
 
   const toggleAdminTaskStatus = async (assignment: any) => {
-    const newStatus = assignment.status === 'pendente' ? 'concluida' : 'pendente';
+    const newStatus = (assignment.status === 'pendente' || assignment.computedStatus === 'atrasada') ? 'concluida' : 'pendente';
     
     // Optimistic update
     setAdminTasks(prev => prev.map(t => t.id === assignment.id ? { ...t, status: newStatus } : t));
@@ -989,6 +1026,11 @@ export default function AdminDashboard() {
                 </button>
                 <button onClick={() => setActiveTab("tarefas")} className={`admin-nav-btn${activeTab === "tarefas" ? " active" : ""}`}>
                   ✅ Tarefas
+                  {delayedAdminTasksCount > 0 && (
+                    <span style={{ marginLeft: "4px", backgroundColor: "var(--danger)", color: "white", padding: "0.1rem 0.4rem", borderRadius: "10px", fontSize: "0.65rem", fontWeight: 700 }}>
+                      {delayedAdminTasksCount}
+                    </span>
+                  )}
                 </button>
                 <button onClick={() => setActiveTab("finances")} className={`admin-nav-btn${activeTab === "finances" ? " active" : ""}`}>
                   💰 Finanças
@@ -1981,6 +2023,7 @@ export default function AdminDashboard() {
               <select className="input" style={{ padding: "0.4rem" }} value={filterAdminTaskStatus} onChange={e => setFilterAdminTaskStatus(e.target.value)}>
                 <option value="">Todos</option>
                 <option value="pendente">Pendente</option>
+                <option value="atrasada">Atrasada</option>
                 <option value="concluida">Concluída</option>
               </select>
             </div>
@@ -2016,6 +2059,7 @@ export default function AdminDashboard() {
                           {(!assignment.task?.priority || assignment.task?.priority === 'media') && <span className="badge" style={{ backgroundColor: "#fef3c7", color: "#92400e", fontSize: "0.6rem" }}>Média</span>}
                           {assignment.task?.priority === 'alta' && <span className="badge" style={{ backgroundColor: "#fee2e2", color: "#991b1b", fontSize: "0.6rem" }}>Alta</span>}
                           {assignment.task?.priority === 'baixa' && <span className="badge" style={{ backgroundColor: "#dcfce7", color: "#166534", fontSize: "0.6rem" }}>Baixa</span>}
+                          {assignment.computedStatus === 'atrasada' && <span className="badge" style={{ backgroundColor: "var(--danger)", color: "white", fontSize: "0.6rem" }}>⚠️ Atrasada</span>}
                         </div>
                         {assignment.task?.due_date && (
                           <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>
@@ -2046,8 +2090,10 @@ export default function AdminDashboard() {
                         {assignment.professional_id === null ? "⚙️ Administração" : (assignment.professional?.name || "Desconhecido")}
                       </td>
                       <td style={{ padding: "1rem" }}>
-                        {assignment.status === 'concluida' ? (
+                        {assignment.computedStatus === 'concluida' ? (
                           <span className="badge" style={{ backgroundColor: "#dcfce7", color: "var(--success, #166534)", fontSize: "0.75rem" }}>✓ Concluída</span>
+                        ) : assignment.computedStatus === 'atrasada' ? (
+                          <span className="badge" style={{ backgroundColor: "var(--danger)", color: "white", fontSize: "0.75rem" }}>⚠️ Atrasada</span>
                         ) : (
                           <span className="badge" style={{ backgroundColor: "var(--bg-color)", color: "var(--text-muted)", border: "1px solid var(--border-color)", fontSize: "0.75rem" }}>⏳ Pendente</span>
                         )}
@@ -2057,12 +2103,12 @@ export default function AdminDashboard() {
                           <button 
                             onClick={() => toggleAdminTaskStatus(assignment)}
                             style={{ 
-                              color: assignment.status === 'pendente' ? "white" : "var(--success)", 
-                              backgroundColor: assignment.status === 'pendente' ? "var(--success)" : "#dcfce7", 
+                              color: assignment.computedStatus === 'pendente' || assignment.computedStatus === 'atrasada' ? "white" : "var(--success)", 
+                              backgroundColor: assignment.computedStatus === 'pendente' || assignment.computedStatus === 'atrasada' ? "var(--success)" : "#dcfce7", 
                               padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" 
                             }}
                           >
-                            {assignment.status === 'pendente' ? 'Concluir' : 'Reabrir'}
+                            {assignment.computedStatus === 'pendente' || assignment.computedStatus === 'atrasada' ? 'Concluir' : 'Reabrir'}
                           </button>
                           <button 
                             onClick={() => openEditAdminTask(assignment)}
