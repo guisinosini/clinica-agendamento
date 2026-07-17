@@ -2654,17 +2654,115 @@ export default function AdminDashboard() {
                 </button>
               </div>
 
-              <div style={{ display: "flex", gap: "1rem", backgroundColor: "var(--bg-color)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", flexWrap: "wrap", alignItems: "center" }}>
-                <h3 style={{ fontSize: "0.95rem", fontWeight: 700, margin: 0, color: "var(--text-main)" }}>Período:</h3>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>De</label>
-                  <input type="date" className="input" style={{ padding: "0.4rem" }} value={financeStartDate} onChange={e => setFinanceStartDate(e.target.value)} />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "var(--bg-color)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", flexWrap: "wrap", gap: "1rem" }}>
+                <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
+                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, margin: 0, color: "var(--text-main)" }}>Período:</h3>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>De</label>
+                    <input type="date" className="input" style={{ padding: "0.4rem" }} value={financeStartDate} onChange={e => setFinanceStartDate(e.target.value)} />
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Até</label>
+                    <input type="date" className="input" style={{ padding: "0.4rem" }} value={financeEndDate} onChange={e => setFinanceEndDate(e.target.value)} />
+                  </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Até</label>
-                  <input type="date" className="input" style={{ padding: "0.4rem" }} value={financeEndDate} onChange={e => setFinanceEndDate(e.target.value)} />
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <button onClick={() => { setFinanceForm({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Consulta", type: "receita", amount: "", due_date: "", is_paid: true, is_recurring: false, recurring_months: 12 }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--success)", color: "var(--success)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>+ Nova Receita</button>
+                  <button onClick={() => { const today = new Date().toISOString().split("T")[0]; setFinanceForm({ id: "", date: today, description: "", category: "Material", type: "despesa", amount: "", due_date: today, is_paid: false, is_recurring: false, recurring_months: 12 }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--danger)", color: "var(--danger)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>- Nova Despesa</button>
                 </div>
               </div>
+
+              {/* Formulário Inline (Expansível) */}
+              {showFinanceModal && (
+                <div className="card animate-slide" style={{ padding: "1.5rem", borderTop: `4px solid ${financeForm.type === 'receita' ? 'var(--success)' : 'var(--danger)'}` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+                    <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)", margin: 0 }}>
+                      {financeForm.id ? "Editar" : "Adicionar"} {financeForm.type === 'receita' ? 'Receita' : 'Despesa'}
+                    </h2>
+                    <button onClick={() => setShowFinanceModal(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "1.5rem" }}>&times;</button>
+                  </div>
+                  <form onSubmit={handleSaveFinance} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                    <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                      {financeForm.type === 'receita' && (
+                        <div style={{ flex: 1, minWidth: "200px" }}>
+                          <label className="label">Data da Receita</label>
+                          <input type="date" className="input" value={financeForm.date} onChange={e => setFinanceForm({...financeForm, date: e.target.value})} required />
+                        </div>
+                      )}
+                      {financeForm.type === 'despesa' && (
+                        <div style={{ flex: 1, minWidth: "200px" }}>
+                          <label className="label">Dia do Vencimento</label>
+                          <input type="date" className="input" value={financeForm.due_date || financeForm.date} onChange={e => setFinanceForm({...financeForm, due_date: e.target.value, date: e.target.value})} required />
+                        </div>
+                      )}
+                      <div style={{ flex: 1, minWidth: "200px" }}>
+                        <label className="label">Valor (R$)</label>
+                        <input type="text" className="input" value={financeForm.amount} onChange={e => setFinanceForm({...financeForm, amount: e.target.value})} placeholder="0,00" required />
+                      </div>
+                    </div>
+                    
+                    {financeForm.type === 'despesa' && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.95rem", color: "var(--text-main)" }}>
+                          <input type="checkbox" checked={financeForm.is_paid} onChange={e => setFinanceForm({...financeForm, is_paid: e.target.checked})} style={{ width: "18px", height: "18px" }} />
+                          <strong>Esta despesa já foi paga (1ª parcela)</strong>
+                        </label>
+
+                        {!financeForm.id && (
+                          <div style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)", marginTop: "0.5rem" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.95rem", color: "var(--text-main)", marginBottom: financeForm.is_recurring ? "1rem" : 0 }}>
+                              <input type="checkbox" checked={financeForm.is_recurring} onChange={e => setFinanceForm({...financeForm, is_recurring: e.target.checked})} style={{ width: "18px", height: "18px" }} />
+                              <strong>Despesa Fixa (Gerar para os próximos meses)</strong>
+                            </label>
+                            
+                            {financeForm.is_recurring && (
+                              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                                <label className="label" style={{ margin: 0 }}>Quantidade de meses:</label>
+                                <input type="number" min="2" max="120" className="input" value={financeForm.recurring_months} onChange={e => setFinanceForm({...financeForm, recurring_months: parseInt(e.target.value) || 12})} style={{ width: "100px" }} />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                      <div style={{ flex: 2, minWidth: "300px" }}>
+                        <label className="label">Descrição</label>
+                        <input type="text" className="input" value={financeForm.description} onChange={e => setFinanceForm({...financeForm, description: e.target.value})} placeholder="Ex: Consulta João Silva" required />
+                      </div>
+                      <div style={{ flex: 1, minWidth: "200px" }}>
+                        <label className="label">Categoria</label>
+                        <select className="input" value={financeForm.category} onChange={e => setFinanceForm({...financeForm, category: e.target.value})} required>
+                          {financeForm.type === 'receita' ? (
+                            <>
+                              <option value="Consulta">Consulta Particular</option>
+                              <option value="Convênio">Convênio</option>
+                              <option value="Avaliação">Avaliação</option>
+                              <option value="Outros">Outros</option>
+                            </>
+                          ) : (
+                            <>
+                              <option value="Aluguel">Aluguel/Condomínio</option>
+                              <option value="Material">Material de Escritório</option>
+                              <option value="Impostos">Impostos</option>
+                              <option value="Marketing">Marketing/Software</option>
+                              <option value="Outros">Outros</option>
+                            </>
+                          )}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem", marginTop: "0.5rem" }}>
+                      <button type="button" onClick={() => setShowFinanceModal(false)} className="btn btn-outline" style={{ padding: "0.5rem 1.5rem" }}>Cancelar</button>
+                      <button type="submit" className="btn" style={{ padding: "0.5rem 2rem" }} disabled={isSubmittingFinance}>
+                        {isSubmittingFinance ? 'Salvando...' : 'Salvar Transação'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
 
               {/* Cards de Resumo */}
               {(() => {
@@ -2761,11 +2859,7 @@ export default function AdminDashboard() {
               {/* Tabela de Transações */}
               <div className="card" style={{ padding: "1.5rem" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
-                  <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)" }}>Transações</h3>
-                  <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <button onClick={() => { setFinanceForm({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Consulta", type: "receita", amount: "", due_date: "", is_paid: true, is_recurring: false, recurring_months: 12 }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--success)", color: "var(--success)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>+ Nova Receita</button>
-                    <button onClick={() => { const today = new Date().toISOString().split("T")[0]; setFinanceForm({ id: "", date: today, description: "", category: "Material", type: "despesa", amount: "", due_date: today, is_paid: false, is_recurring: false, recurring_months: 12 }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--danger)", color: "var(--danger)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>- Nova Despesa</button>
-                  </div>
+                  <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)" }}>Histórico de Transações</h3>
                 </div>
 
                 <div className="table-scroll">
@@ -2852,93 +2946,7 @@ export default function AdminDashboard() {
           )}
         </div>
       )}
-
-      {showFinanceModal && (
-        <div className="modal-overlay">
-          <div className="modal-content animate-slide" style={{ maxWidth: "500px" }}>
-            <h2 style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "1rem" }}>
-              Adicionar {financeForm.type === 'receita' ? 'Receita' : 'Despesa'}
-            </h2>
-            <form onSubmit={handleSaveFinance} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <div style={{ display: "flex", gap: "1rem" }}>
-                {financeForm.type === 'receita' && (
-                  <div style={{ flex: 1 }}>
-                    <label className="label">Data da Receita</label>
-                    <input type="date" className="input" value={financeForm.date} onChange={e => setFinanceForm({...financeForm, date: e.target.value})} required />
-                  </div>
-                )}
-                {financeForm.type === 'despesa' && (
-                  <div style={{ flex: 1 }}>
-                    <label className="label">Dia do Vencimento</label>
-                    <input type="date" className="input" value={financeForm.due_date || financeForm.date} onChange={e => setFinanceForm({...financeForm, due_date: e.target.value, date: e.target.value})} required />
-                  </div>
-                )}
-                <div style={{ flex: 1 }}>
-                  <label className="label">Valor (R$)</label>
-                  <input type="text" className="input" value={financeForm.amount} onChange={e => setFinanceForm({...financeForm, amount: e.target.value})} placeholder="0,00" required />
-                </div>
-              </div>
-              
-              {financeForm.type === 'despesa' && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.95rem", color: "var(--text-main)" }}>
-                    <input type="checkbox" checked={financeForm.is_paid} onChange={e => setFinanceForm({...financeForm, is_paid: e.target.checked})} style={{ width: "18px", height: "18px" }} />
-                    <strong>Esta despesa já foi paga (1ª parcela)</strong>
-                  </label>
-
-                  {!financeForm.id && (
-                    <div style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)", marginTop: "0.5rem" }}>
-                      <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.95rem", color: "var(--text-main)", marginBottom: financeForm.is_recurring ? "1rem" : 0 }}>
-                        <input type="checkbox" checked={financeForm.is_recurring} onChange={e => setFinanceForm({...financeForm, is_recurring: e.target.checked})} style={{ width: "18px", height: "18px" }} />
-                        <strong>Despesa Fixa (Gerar para os próximos meses)</strong>
-                      </label>
-                      
-                      {financeForm.is_recurring && (
-                        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                          <label className="label" style={{ margin: 0 }}>Quantidade de meses:</label>
-                          <input type="number" min="2" max="120" className="input" value={financeForm.recurring_months} onChange={e => setFinanceForm({...financeForm, recurring_months: parseInt(e.target.value) || 12})} style={{ width: "100px" }} />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div>
-                <label className="label">Descrição</label>
-                <input type="text" className="input" value={financeForm.description} onChange={e => setFinanceForm({...financeForm, description: e.target.value})} placeholder="Ex: Consulta João Silva" required />
-              </div>
-              <div>
-                <label className="label">Categoria</label>
-                <select className="input" value={financeForm.category} onChange={e => setFinanceForm({...financeForm, category: e.target.value})} required>
-                  {financeForm.type === 'receita' ? (
-                    <>
-                      <option value="Consulta">Consulta Particular</option>
-                      <option value="Convênio">Convênio</option>
-                      <option value="Avaliação">Avaliação</option>
-                      <option value="Outros">Outros</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="Aluguel">Aluguel/Condomínio</option>
-                      <option value="Material">Material de Escritório</option>
-                      <option value="Impostos">Impostos</option>
-                      <option value="Marketing">Marketing/Software</option>
-                      <option value="Outros">Outros</option>
-                    </>
-                  )}
-                </select>
-              </div>
-              <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-                <button type="button" onClick={() => setShowFinanceModal(false)} className="btn btn-outline" style={{ flex: 1 }}>Cancelar</button>
-                <button type="submit" className="btn" style={{ flex: 1 }} disabled={isSubmittingFinance}>
-                  {isSubmittingFinance ? 'Salvando...' : 'Salvar'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+    </div>
 
     </div>
   );
