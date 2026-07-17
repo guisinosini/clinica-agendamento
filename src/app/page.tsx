@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useReservation } from "../context/ReservationContext";
 import { supabase } from "../lib/supabase";
 
@@ -19,6 +20,13 @@ export default function Home() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [patientsCount, setPatientsCount] = useState<number>(0);
   const [delayedTasksCount, setDelayedTasksCount] = useState<number>(0);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (professional?.email === 'admin@clinica.com') {
+      router.push('/admin');
+    }
+  }, [professional, router]);
 
   useEffect(() => {
     const handler = (e: any) => {
