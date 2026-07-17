@@ -125,6 +125,8 @@ CREATE TABLE finances (
   category TEXT, -- Ex: Consulta, Aluguel, Materiais, Pagamento, etc.
   type TEXT NOT NULL, -- 'receita' ou 'despesa'
   amount DECIMAL(10, 2) NOT NULL,
+  due_date DATE,
+  is_paid BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

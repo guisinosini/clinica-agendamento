@@ -131,7 +131,7 @@ export default function AdminDashboard() {
     return date.toISOString().split("T")[0];
   });
   const [showFinanceModal, setShowFinanceModal] = useState(false);
-  const [financeForm, setFinanceForm] = useState({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Consulta", type: "receita", amount: "" });
+  const [financeForm, setFinanceForm] = useState({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Consulta", type: "receita", amount: "", due_date: "", is_paid: true });
   const [isSubmittingFinance, setIsSubmittingFinance] = useState(false);
 
   const fetchFinances = async () => {
@@ -154,13 +154,18 @@ export default function AdminDashboard() {
     e.preventDefault();
     setIsSubmittingFinance(true);
     
-    const payload = {
+    const payload: any = {
       date: financeForm.date,
       description: financeForm.description,
       category: financeForm.category,
       type: financeForm.type,
-      amount: parseFloat(financeForm.amount.replace(',', '.'))
+      amount: parseFloat(financeForm.amount.replace(',', '.')),
+      is_paid: financeForm.is_paid
     };
+
+    if (financeForm.type === 'despesa' && financeForm.due_date) {
+      payload.due_date = financeForm.due_date;
+    }
 
     if (financeForm.id) {
       await supabase.from('finances').update(payload).eq('id', financeForm.id);
@@ -171,6 +176,11 @@ export default function AdminDashboard() {
     await fetchFinances();
     setShowFinanceModal(false);
     setIsSubmittingFinance(false);
+  };
+
+  const handleTogglePaid = async (financeId: string, currentStatus: boolean) => {
+    await supabase.from('finances').update({ is_paid: !currentStatus }).eq('id', financeId);
+    setFinancesList(prev => prev.map(f => f.id === financeId ? { ...f, is_paid: !currentStatus } : f));
   };
 
   const handleDeleteFinance = async (id: string) => {
@@ -2687,8 +2697,8 @@ export default function AdminDashboard() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
                   <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)" }}>Transações</h3>
                   <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <button onClick={() => { setFinanceForm({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Consulta", type: "receita", amount: "" }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--success)", color: "var(--success)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>+ Nova Receita</button>
-                    <button onClick={() => { setFinanceForm({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Material", type: "despesa", amount: "" }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--danger)", color: "var(--danger)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>- Nova Despesa</button>
+                        <button onClick={() => { setFinanceForm({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Consulta", type: "receita", amount: "", due_date: "", is_paid: true }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--success)", color: "var(--success)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>+ Nova Receita</button>
+                        <button onClick={() => { setFinanceForm({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Material", type: "despesa", amount: "", due_date: "", is_paid: false }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--danger)", color: "var(--danger)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>- Nova Despesa</button>
                   </div>
                 </div>
 
@@ -2712,9 +2722,23 @@ export default function AdminDashboard() {
                         </tr>
                       ) : (
                         financesList.map(finance => (
-                          <tr key={finance.id} style={{ borderBottom: "1px solid var(--border-color)" }}>
-                            <td style={{ padding: "1rem", color: "var(--text-main)" }}>{new Date(finance.date + "T00:00:00").toLocaleDateString('pt-BR')}</td>
-                            <td style={{ padding: "1rem", color: "var(--text-main)", fontWeight: 500 }}>{finance.description}</td>
+                          <tr key={finance.id} style={{ borderBottom: "1px solid var(--border-color)", opacity: (!finance.is_paid && finance.type === 'despesa') ? 0.7 : 1 }}>
+                            <td style={{ padding: "1rem", color: "var(--text-main)" }}>
+                              {new Date(finance.date + "T00:00:00").toLocaleDateString('pt-BR')}
+                              {finance.type === 'despesa' && finance.due_date && (
+                                <div style={{ fontSize: "0.75rem", color: finance.is_paid ? "var(--text-muted)" : "var(--danger)", marginTop: "0.2rem", fontWeight: finance.is_paid ? "normal" : "bold" }}>
+                                  Venc: {new Date(finance.due_date + "T00:00:00").toLocaleDateString('pt-BR')}
+                                </div>
+                              )}
+                            </td>
+                            <td style={{ padding: "1rem", color: "var(--text-main)", fontWeight: 500 }}>
+                              {finance.description}
+                              {finance.type === 'despesa' && (
+                                 <span style={{ marginLeft: "0.5rem", fontSize: "0.7rem", padding: "0.2rem 0.5rem", borderRadius: "10px", backgroundColor: finance.is_paid ? "rgba(40,167,69,0.1)" : "rgba(220,53,69,0.1)", color: finance.is_paid ? "var(--success)" : "var(--danger)" }}>
+                                   {finance.is_paid ? "Pago" : "Pendente"}
+                                 </span>
+                              )}
+                            </td>
                             <td style={{ padding: "1rem" }}>
                                <span className="badge" style={{ backgroundColor: "var(--bg-color)", color: "var(--text-muted)", border: "1px solid var(--border-color)", fontSize: "0.75rem" }}>
                                  {finance.category}
@@ -2723,8 +2747,13 @@ export default function AdminDashboard() {
                             <td style={{ padding: "1rem", color: finance.type === 'receita' ? "var(--success)" : "var(--danger)", fontWeight: 700, textAlign: "right" }}>
                               {finance.type === 'receita' ? '+' : '-'} R$ {Number(finance.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </td>
-                            <td style={{ padding: "1rem", textAlign: "center" }}>
-                              <button onClick={() => handleDeleteFinance(finance.id)} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "1.2rem" }} title="Excluir">
+                            <td style={{ padding: "1rem", textAlign: "center", display: "flex", justifyContent: "center", gap: "0.5rem", alignItems: "center" }}>
+                              {finance.type === 'despesa' && (
+                                <button onClick={() => handleTogglePaid(finance.id, finance.is_paid)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.1rem" }} title={finance.is_paid ? "Marcar como pendente" : "Marcar como pago"}>
+                                  {finance.is_paid ? '↩️' : '✅'}
+                                </button>
+                              )}
+                              <button onClick={() => handleDeleteFinance(finance.id)} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "1.3rem" }} title="Excluir">
                                 &times;
                               </button>
                             </td>
@@ -2749,14 +2778,28 @@ export default function AdminDashboard() {
             <form onSubmit={handleSaveFinance} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div style={{ display: "flex", gap: "1rem" }}>
                 <div style={{ flex: 1 }}>
-                  <label className="label">Data</label>
+                  <label className="label">Data {financeForm.type === 'despesa' ? "da Despesa" : "da Receita"}</label>
                   <input type="date" className="input" value={financeForm.date} onChange={e => setFinanceForm({...financeForm, date: e.target.value})} required />
                 </div>
+                {financeForm.type === 'despesa' && (
+                  <div style={{ flex: 1 }}>
+                    <label className="label">Vencimento (Opcional)</label>
+                    <input type="date" className="input" value={financeForm.due_date || ""} onChange={e => setFinanceForm({...financeForm, due_date: e.target.value})} />
+                  </div>
+                )}
                 <div style={{ flex: 1 }}>
                   <label className="label">Valor (R$)</label>
                   <input type="text" className="input" value={financeForm.amount} onChange={e => setFinanceForm({...financeForm, amount: e.target.value})} placeholder="0,00" required />
                 </div>
               </div>
+              
+              {financeForm.type === 'despesa' && (
+                <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", marginTop: "-0.5rem", fontSize: "0.95rem", color: "var(--text-main)" }}>
+                  <input type="checkbox" checked={financeForm.is_paid} onChange={e => setFinanceForm({...financeForm, is_paid: e.target.checked})} style={{ width: "18px", height: "18px" }} />
+                  <strong>Esta despesa já foi paga</strong>
+                </label>
+              )}
+
               <div>
                 <label className="label">Descrição</label>
                 <input type="text" className="input" value={financeForm.description} onChange={e => setFinanceForm({...financeForm, description: e.target.value})} placeholder="Ex: Consulta João Silva" required />
