@@ -88,6 +88,8 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
               setProfessional({ id: data.id, name: data.name, email: data.email, specialty: data.specialty, avatarUrl: data.avatar_url ?? null });
             }
           });
+        // IMPORTANTE: Busca os dados de novo (agora com a "chave" do login para passar pelo RLS)
+        fetchData();
       }
     });
     
