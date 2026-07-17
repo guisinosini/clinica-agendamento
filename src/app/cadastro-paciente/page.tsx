@@ -39,6 +39,22 @@ const formatCPF = (value: string) => {
     .replace(/(-\d{2})\d+?$/, '$1'); 
 };
 
+const formatPhone = (value: string) => {
+  let v = value.replace(/\D/g, '');
+  if (v.length > 11) v = v.substring(0, 11);
+  
+  if (v.length <= 2) {
+    v = v.replace(/^(\d{1,2})/, '($1');
+  } else if (v.length <= 6) {
+    v = v.replace(/^(\d{2})(\d{1,4})/, '($1) $2');
+  } else if (v.length <= 10) {
+    v = v.replace(/^(\d{2})(\d{4})(\d{1,4})/, '($1) $2-$3');
+  } else {
+    v = v.replace(/^(\d{2})(\d{1})(\d{4})(\d{1,4})/, '($1) $2 $3-$4');
+  }
+  return v;
+};
+
 export default function CadastroPaciente() {
   const [patName, setPatName] = useState("");
   const [patEmail, setPatEmail] = useState("");
@@ -181,7 +197,7 @@ export default function CadastroPaciente() {
             <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
               <div style={{ flex: "1 1 200px" }}>
                 <label className="label">Telefone (WhatsApp) *</label>
-                <input className="input" value={patPhone} onChange={e => setPatPhone(e.target.value)} required placeholder="(11) 99999-9999" />
+                <input className="input" value={patPhone} onChange={e => setPatPhone(formatPhone(e.target.value))} required placeholder="(19) 9 9999-9999" maxLength={16} />
               </div>
               <div style={{ flex: "1 1 200px" }}>
                 <label className="label">E-mail *</label>
