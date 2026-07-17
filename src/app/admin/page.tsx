@@ -36,7 +36,7 @@ const calculateAge = (birthDate: string) => {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { rooms, fetchAllReservations, cancelReservation, updateReservationStatus, addRoom, updateRoom, deleteRoom, loading, addReservations, servicesList, addService, updateService, deleteService } = useReservation();
+  const { rooms, fetchAllReservations, cancelReservation, updateReservationStatus, addRoom, updateRoom, deleteRoom, loading, addReservations, servicesList, addService, updateService, deleteService, professional } = useReservation();
   const allReservations = fetchAllReservations();
   
   const [isAdmin, setIsAdmin] = useState(false);
@@ -299,16 +299,11 @@ export default function AdminDashboard() {
   }, [allReservations, professionalsList, professionalsMap]);
 
   useEffect(() => {
-    // Basic PIN check using sessionStorage
-    const savedPin = sessionStorage.getItem("@Clinica:adminPin");
-    if (savedPin === "1234") {
-      setIsAdmin(true);
-    } else {
-      router.push("/");
-    }
+    // Check real Supabase Auth session for admin
+    if (loading) return; // Wait for context to load
 
-    // Fetch professionals to show their names and list them
-    if (savedPin === "1234") {
+    if (professional?.email === 'admin@clinica.com') {
+      setIsAdmin(true);
       fetchProfessionals();
       fetchPatients();
       setNewResDate(new Date().toISOString().split("T")[0]); // Set default date
@@ -337,8 +332,10 @@ export default function AdminDashboard() {
         }
       };
       fetchDelayedCount();
+    } else {
+      router.push("/");
     }
-  }, [router]);
+  }, [professional, loading, router]);
 
   const fetchProfessionals = async () => {
     const { data } = await supabase.from("professionals").select("*").order("name");

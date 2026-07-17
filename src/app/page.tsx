@@ -272,23 +272,6 @@ export default function Home() {
               <span style={{ fontWeight: 700 }}>Instalar o App</span>
             </button>
             
-            {/* Acesso Admin Oculto/Discreto */}
-            <div style={{ textAlign: "center", marginTop: "1rem" }}>
-              <button
-                onClick={() => {
-                  const pin = window.prompt("Digite o PIN Administrativo:");
-                  if (pin === "1234") { // PIN simples de exemplo
-                    sessionStorage.setItem("@Clinica:adminPin", pin);
-                    window.location.href = "/admin";
-                  } else if (pin) {
-                    alert("PIN Incorreto!");
-                  }
-                }}
-                style={{ fontSize: "0.8rem", color: "var(--text-light)", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
-              >
-                Acesso Administrativo
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -345,6 +328,18 @@ export default function Home() {
       bgColor: "#fff7ed",
     },
   ];
+
+  if (professional.email === 'admin@clinica.com') {
+    dashboardCards.unshift({
+      href: "/admin",
+      emoji: "⚙️",
+      title: "Painel Administrativo",
+      desc: "Gestão completa da clínica, pacientes, finanças e configuração.",
+      btnLabel: "Acessar Painel",
+      btnClass: "btn",
+      bgColor: "#e2e8f0",
+    });
+  }
 
   // Listagem de próximos agendamentos
   const todayDate = new Date().toISOString().split("T")[0];
