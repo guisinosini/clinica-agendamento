@@ -1060,7 +1060,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleExportBackup = () => {
+  const handleExportBackup = async () => {
     let htmlContent = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
       <head>
         <meta charset="utf-8" />
@@ -1101,6 +1101,33 @@ export default function AdminDashboard() {
       htmlContent += `<tr><td>${task.title || ""}</td><td>${task.description || ""}</td><td>${profName}</td><td>${dueDate}</td><td style="text-transform: capitalize;">${task.priority || "media"}</td><td style="text-transform: capitalize;">${assignment.status || "pendente"}</td><td>${assignment.comment || ""}</td></tr>`;
     });
     htmlContent += `</tbody></table><br/>`;
+
+    // 5. Salas
+    htmlContent += `<h2>Salas</h2><table><thead><tr><th style="background-color: #f2f2f2;">Nome</th><th style="background-color: #f2f2f2;">Descrição</th></tr></thead><tbody>`;
+    rooms.forEach(r => {
+      htmlContent += `<tr><td>${r.name}</td><td>${r.description || ''}</td></tr>`;
+    });
+    htmlContent += `</tbody></table><br/>`;
+
+    // 6. Serviços
+    htmlContent += `<h2>Serviços</h2><table><thead><tr><th style="background-color: #f2f2f2;">Nome</th><th style="background-color: #f2f2f2;">Duração (min)</th><th style="background-color: #f2f2f2;">Descrição</th></tr></thead><tbody>`;
+    (servicesList || []).forEach(s => {
+      htmlContent += `<tr><td>${s.name}</td><td>${s.duration || ''}</td><td>${s.description || ''}</td></tr>`;
+    });
+    htmlContent += `</tbody></table><br/>`;
+
+    // 7. Finanças
+    const { data: allFinances } = await supabase.from('finances').select('*').order('date', { ascending: false });
+    if (allFinances) {
+      htmlContent += `<h2>Finanças (Histórico Completo)</h2><table><thead><tr><th style="background-color: #f2f2f2;">Data</th><th style="background-color: #f2f2f2;">Vencimento</th><th style="background-color: #f2f2f2;">Descrição</th><th style="background-color: #f2f2f2;">Categoria</th><th style="background-color: #f2f2f2;">Tipo</th><th style="background-color: #f2f2f2;">Valor (R$)</th><th style="background-color: #f2f2f2;">Pago</th></tr></thead><tbody>`;
+      allFinances.forEach(f => {
+        const dataStr = f.date ? new Date(f.date + "T00:00:00").toLocaleDateString("pt-BR") : "";
+        const vencStr = f.due_date ? new Date(f.due_date + "T00:00:00").toLocaleDateString("pt-BR") : "";
+        const pagoStr = f.is_paid ? "Sim" : "Não";
+        htmlContent += `<tr><td>${dataStr}</td><td>${vencStr}</td><td>${f.description}</td><td>${f.category}</td><td style="text-transform: capitalize;">${f.type}</td><td>${Number(f.amount).toFixed(2).replace('.',',')}</td><td>${pagoStr}</td></tr>`;
+      });
+      htmlContent += `</tbody></table><br/>`;
+    }
 
     htmlContent += `</body></html>`;
 
