@@ -80,6 +80,17 @@ export default function AdminDashboard() {
   const [rescheduleStart, setRescheduleStart] = useState("");
   const [rescheduleRoom, setRescheduleRoom] = useState("");
 
+  // Edit Reservation Form State
+  const [editingResId, setEditingResId] = useState<string | null>(null);
+  const [editResDate, setEditResDate] = useState("");
+  const [editResStart, setEditResStart] = useState("");
+  const [editResRoom, setEditResRoom] = useState("");
+  const [editResProfId, setEditResProfId] = useState("");
+  const [editResPatient, setEditResPatient] = useState("");
+  const [editResService, setEditResService] = useState("");
+
+  const [visibleReservationsCount, setVisibleReservationsCount] = useState(20);
+
   // Patient Form State
   const [editingPatientId, setEditingPatientId] = useState<string | null>(null);
   const [patName, setPatName] = useState("");
@@ -369,6 +380,10 @@ export default function AdminDashboard() {
         return a.startTime.localeCompare(b.startTime);
       });
   }, [allReservations, filterRoom, filterProf, filterStartDate, filterEndDate]);
+
+  useEffect(() => {
+    setVisibleReservationsCount(20);
+  }, [filterRoom, filterProf, filterStartDate, filterEndDate, allReservations]);
 
   const filteredReportData = useMemo(() => {
     return allReservations
@@ -807,6 +822,100 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error(err);
       alert("Ocorreu um erro ao tentar reagendar.");
+    }
+  };
+
+  const handleEditResClick = (res: any) => {
+    setEditingResId(res.id);
+    setEditResDate(res.date);
+    setEditResStart(res.startTime);
+    setEditResRoom(res.roomId);
+    setEditResProfId(res.professionalId || "");
+    setEditResPatient(res.patientName || "");
+    setEditResService(res.service || "");
+  };
+
+  const occupiedAdminEditResSlots = useMemo(() => {
+    if (!editResRoom || !editResDate || !editResProfId) return [];
+    
+    const selectedServiceObj = servicesList?.find(s => s.name === editResService);
+    const duration = editResService ? (selectedServiceObj?.duration || 60) : 30;
+
+    const isSlotOccupied = (slot: string, res: any) => {
+       const slotMinutes = parseInt(slot.split(':')[0]) * 60 + parseInt(slot.split(':')[1]);
+       const startMinutes = parseInt(res.startTime.split(':')[0]) * 60 + parseInt(res.startTime.split(':')[1]);
+       const endMinutes = parseInt(res.endTime.split(':')[0]) * 60 + parseInt(res.endTime.split(':')[1]);
+       
+       const slotEndMinutes = slotMinutes + duration;
+       return slotMinutes < endMinutes && startMinutes < slotEndMinutes;
+    };
+    
+    const activeReservations = allReservations.filter(res => 
+       res.date === editResDate && res.id !== editingResId && (!res.status || res.status === 'agendado' || res.status === 'confirmado' || res.status === 'realizado')
+    );
+    
+    const roomReservations = activeReservations.filter(res => res.roomId === editResRoom);
+    const profReservations = activeReservations.filter(res => res.professionalId === editResProfId);
+
+    return TIME_SLOTS.filter(slot => {
+       return roomReservations.some(res => isSlotOccupied(slot, res)) ||
+              profReservations.some(res => isSlotOccupied(slot, res));
+    });
+  }, [allReservations, editResRoom, editResDate, editingResId, editResProfId, editResService, servicesList]);
+
+  const handleEditResSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingResId || !editResDate || !editResStart || !editResRoom || !editResProfId || !editResService) return;
+
+    const selectedServiceObj = servicesList?.find(s => s.name === editResService);
+    const duration = selectedServiceObj?.duration || 60;
+
+    const [hours, minutes] = editResStart.split(":").map(Number);
+    const totalMinutes = hours * 60 + minutes + duration;
+    const endHours = Math.floor(totalMinutes / 60);
+    const endMins = totalMinutes % 60;
+    const calculatedEnd = `${String(endHours).padStart(2, "0")}:${String(endMins).padStart(2, "0")}`;
+
+    const hasConflict = allReservations.some(existing => {
+        if (existing.id === editingResId) return false;
+        if (existing.date !== editResDate) return false;
+        if (existing.status && existing.status !== 'agendado' && existing.status !== 'confirmado' && existing.status !== 'realizado' && existing.status !== 'indisponivel') return false;
+        
+        if (existing.roomId !== editResRoom && existing.professionalId !== editResProfId) return false;
+        
+        const start1 = hours * 60 + minutes;
+        const end1 = start1 + duration;
+
+        const start2 = parseInt(existing.startTime.split(':')[0]) * 60 + parseInt(existing.startTime.split(':')[1]);
+        const end2 = parseInt(existing.endTime.split(':')[0]) * 60 + parseInt(existing.endTime.split(':')[1]);
+        
+        return start1 < end2 && start2 < end1;
+    });
+
+    if (hasConflict) {
+        alert("Erro: O novo horário conflita com uma reserva existente (mesma sala ou mesmo profissional).");
+        return;
+    }
+
+    try {
+      const { error } = await supabase.from('reservations').update({
+        date: editResDate,
+        start_time: `${editResStart}:00`,
+        end_time: `${calculatedEnd}:00`,
+        room_id: editResRoom,
+        professional_id: editResProfId,
+        patient_name: editResPatient || null,
+        service: editResService
+      }).eq('id', editingResId);
+
+      if (error) throw error;
+      
+      alert("Reserva atualizada com sucesso!");
+      setEditingResId(null);
+      window.location.reload(); 
+    } catch (err) {
+      console.error(err);
+      alert("Ocorreu um erro ao tentar atualizar.");
     }
   };
 
@@ -1273,6 +1382,7 @@ export default function AdminDashboard() {
           {filteredReservations.length === 0 ? (
             <p style={{ color: "var(--text-muted)" }}>Nenhuma reserva encontrada com os filtros selecionados.</p>
           ) : (
+            <>
             <div className="table-scroll">
               <table className="responsive-table" style={{ minWidth: "560px" }}>
                 <thead>
@@ -1285,8 +1395,8 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredReservations.map(res => (
-                    <tr key={res.id} style={{ borderBottom: "1px solid var(--border-color)" }}>
+                  {filteredReservations.slice(0, visibleReservationsCount).map(res => (
+                    <tr key={res.id} style={{ borderBottom: "2px solid var(--border-color)", borderTop: "2px solid var(--border-color)", backgroundColor: "var(--card-bg)" }}>
                       <td style={{ padding: "1rem", fontWeight: 600 }}>{res.date.split('-').reverse().join('/')}</td>
                       <td style={{ padding: "1rem" }}>{res.startTime} - {res.endTime}</td>
                       <td style={{ padding: "1rem", fontWeight: 500, color: "var(--primary)" }}>
@@ -1335,6 +1445,12 @@ export default function AdminDashboard() {
                                 </button>
                               )}
                               <button 
+                                onClick={() => handleEditResClick(res)}
+                                style={{ color: "white", backgroundColor: "var(--primary)", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
+                              >
+                                Editar
+                              </button>
+                              <button 
                                 onClick={() => handleRescheduleClick(res)}
                                 style={{ color: "white", backgroundColor: "#f59e0b", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
                               >
@@ -1355,6 +1471,18 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             </div>
+            {visibleReservationsCount < filteredReservations.length && (
+              <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
+                <button 
+                  onClick={() => setVisibleReservationsCount(prev => prev + 20)}
+                  className="btn btn-outline"
+                  style={{ borderRadius: "2rem", padding: "0.6rem 1.5rem", fontWeight: 700 }}
+                >
+                  Carregar mais reservas ({filteredReservations.length - visibleReservationsCount} ocultas)
+                </button>
+              </div>
+            )}
+            </>
           )}
         </div>
       )}
@@ -2371,6 +2499,104 @@ export default function AdminDashboard() {
               )}
               <button type="submit" className="btn" style={{ marginTop: "1rem", backgroundColor: "#f59e0b", color: "white" }}>
                 Confirmar Reagendamento
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE EDIÇÃO DE RESERVA */}
+      {editingResId && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 999, padding: "1rem"
+        }}>
+          <div className="card animate-slide" style={{ maxWidth: "500px", width: "100%", position: "relative", boxShadow: "var(--clay-card-hover)", maxHeight: "90vh", overflowY: "auto" }}>
+            <button 
+              onClick={() => setEditingResId(null)}
+              style={{ position: "absolute", top: "1rem", right: "1rem", color: "var(--text-muted)", fontSize: "1.5rem", background: "none", border: "none", cursor: "pointer" }}
+            >
+              &times;
+            </button>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "1.5rem", color: "var(--text-main)" }}>Editar Reserva</h2>
+            <form onSubmit={handleEditResSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label className="label">Profissional</label>
+                  <select className="input" value={editResProfId} onChange={e => setEditResProfId(e.target.value)} required>
+                    <option value="">Selecione...</option>
+                    {professionalsList.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Sala</label>
+                  <select className="input" value={editResRoom} onChange={e => setEditResRoom(e.target.value)} required>
+                    <option value="">Selecione...</option>
+                    {rooms.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                  </select>
+                </div>
+              </div>
+              
+              <div>
+                <label className="label">Paciente (Opcional)</label>
+                <select className="input" value={editResPatient} onChange={e => setEditResPatient(e.target.value)}>
+                  <option value="">(Sem paciente / Selecione...)</option>
+                  {patientsList.map(pat => <option key={pat.id} value={pat.name}>{pat.name}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label className="label">Serviço</label>
+                <select className="input" value={editResService} onChange={e => setEditResService(e.target.value)} required>
+                  <option value="">(Selecione um serviço...)</option>
+                  {servicesList?.map(svc => (
+                    <option key={svc.id} value={svc.name}>
+                      {svc.name}{svc.duration ? ` (${svc.duration} min)` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="label">Data</label>
+                <input type="date" className="input" value={editResDate} onChange={e => setEditResDate(e.target.value)} required />
+              </div>
+              
+              {editResDate && editResRoom && editResProfId && editResService && (
+                <div className="animate-fade">
+                  <label className="label">Escolha o horário</label>
+                  <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: "0.4rem", maxHeight: "150px", overflowY: "auto", padding: "0.5rem", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)" }}>
+                    {TIME_SLOTS.map(slot => {
+                      const isOccupied = occupiedAdminEditResSlots.includes(slot);
+                      const isSelected = editResStart === slot;
+                      return (
+                        <button
+                          key={slot}
+                          type="button"
+                          disabled={isOccupied && !isSelected}
+                          onClick={() => setEditResStart(slot)}
+                          style={{
+                            padding: "0.5rem", borderRadius: "var(--radius-sm)", fontWeight: 600, fontSize: "0.85rem",
+                            border: "1px solid",
+                            borderColor: (isOccupied && !isSelected) ? "var(--border-color)" : isSelected ? "var(--primary)" : "var(--border-color)",
+                            background: (isOccupied && !isSelected) ? "var(--primary-light)" : isSelected ? "var(--primary)" : "var(--bg-color)",
+                            color: (isOccupied && !isSelected) ? "var(--text-light)" : isSelected ? "white" : "var(--text-secondary)",
+                            cursor: (isOccupied && !isSelected) ? "not-allowed" : "pointer",
+                            textDecoration: (isOccupied && !isSelected) ? "line-through" : "none"
+                          }}
+                        >
+                          {slot}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              
+              <button type="submit" className="btn" style={{ marginTop: "1rem" }}>
+                Salvar Alterações
               </button>
             </form>
           </div>
