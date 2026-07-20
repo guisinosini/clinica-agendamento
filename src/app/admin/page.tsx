@@ -328,6 +328,34 @@ export default function AdminDashboard() {
     return TIME_SLOTS.filter(slot => activeReservations.some(res => isSlotOccupied(slot, res)));
   }, [allReservations, rescheduleRoom, rescheduleDate, reschedulingId, servicesList]);
 
+  const occupiedAdminEditResSlots = useMemo(() => {
+    if (!editResRoom || !editResDate || !editResProfId) return [];
+    
+    const selectedServiceObj = servicesList?.find(s => s.name === editResService);
+    const duration = editResService ? (selectedServiceObj?.duration || 60) : 30;
+
+    const isSlotOccupied = (slot: string, res: any) => {
+       const slotMinutes = parseInt(slot.split(':')[0]) * 60 + parseInt(slot.split(':')[1]);
+       const startMinutes = parseInt(res.startTime.split(':')[0]) * 60 + parseInt(res.startTime.split(':')[1]);
+       const endMinutes = parseInt(res.endTime.split(':')[0]) * 60 + parseInt(res.endTime.split(':')[1]);
+       
+       const slotEndMinutes = slotMinutes + duration;
+       return slotMinutes < endMinutes && startMinutes < slotEndMinutes;
+    };
+    
+    const activeReservations = allReservations.filter(res => 
+       res.date === editResDate && res.id !== editingResId && (!res.status || res.status === 'agendado' || res.status === 'confirmado' || res.status === 'realizado')
+    );
+    
+    const roomReservations = activeReservations.filter(res => res.roomId === editResRoom);
+    const profReservations = activeReservations.filter(res => res.professionalId === editResProfId);
+
+    return TIME_SLOTS.filter(slot => {
+       return roomReservations.some(res => isSlotOccupied(slot, res)) ||
+              profReservations.some(res => isSlotOccupied(slot, res));
+    });
+  }, [allReservations, editResRoom, editResDate, editingResId, editResProfId, editResService, servicesList]);
+
   const fetchAdminTasks = async () => {
     setLoadingAdminTasks(true);
     const { data: assignmentsData, error } = await supabase
@@ -835,33 +863,7 @@ export default function AdminDashboard() {
     setEditResService(res.service || "");
   };
 
-  const occupiedAdminEditResSlots = useMemo(() => {
-    if (!editResRoom || !editResDate || !editResProfId) return [];
-    
-    const selectedServiceObj = servicesList?.find(s => s.name === editResService);
-    const duration = editResService ? (selectedServiceObj?.duration || 60) : 30;
 
-    const isSlotOccupied = (slot: string, res: any) => {
-       const slotMinutes = parseInt(slot.split(':')[0]) * 60 + parseInt(slot.split(':')[1]);
-       const startMinutes = parseInt(res.startTime.split(':')[0]) * 60 + parseInt(res.startTime.split(':')[1]);
-       const endMinutes = parseInt(res.endTime.split(':')[0]) * 60 + parseInt(res.endTime.split(':')[1]);
-       
-       const slotEndMinutes = slotMinutes + duration;
-       return slotMinutes < endMinutes && startMinutes < slotEndMinutes;
-    };
-    
-    const activeReservations = allReservations.filter(res => 
-       res.date === editResDate && res.id !== editingResId && (!res.status || res.status === 'agendado' || res.status === 'confirmado' || res.status === 'realizado')
-    );
-    
-    const roomReservations = activeReservations.filter(res => res.roomId === editResRoom);
-    const profReservations = activeReservations.filter(res => res.professionalId === editResProfId);
-
-    return TIME_SLOTS.filter(slot => {
-       return roomReservations.some(res => isSlotOccupied(slot, res)) ||
-              profReservations.some(res => isSlotOccupied(slot, res));
-    });
-  }, [allReservations, editResRoom, editResDate, editingResId, editResProfId, editResService, servicesList]);
 
   const handleEditResSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
