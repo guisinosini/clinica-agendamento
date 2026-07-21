@@ -39,6 +39,9 @@ CREATE TABLE reservations (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- Adiciona a coluna patient_id (referenciando a tabela patients que é criada mais abaixo)
+ALTER TABLE reservations ADD COLUMN patient_id UUID;
+
 -- Otimização: Índice para buscas rápidas de disponibilidade (evita conflitos de horário)
 CREATE INDEX idx_reservations_lookup ON reservations(room_id, date, start_time);
 
@@ -102,6 +105,8 @@ CREATE POLICY "Permitir inserção de pacientes" ON patients FOR INSERT WITH CHE
 CREATE POLICY "Permitir atualização de pacientes" ON patients FOR UPDATE USING (true);
 CREATE POLICY "Permitir deleção de pacientes" ON patients FOR DELETE USING (true);
 
+-- Adiciona a chave estrangeira na tabela reservations agora que patients existe
+ALTER TABLE reservations ADD CONSTRAINT fk_reservation_patient FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE SET NULL;
 -- Criação da tabela de Serviços
 CREATE TABLE services (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
