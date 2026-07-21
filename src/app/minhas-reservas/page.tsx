@@ -71,12 +71,34 @@ export default function ProfessionalAgendaPage() {
       // Limite de segurança (máximo de 100 repetições para evitar loops infinitos)
       const maxBlocks = 100;
       let count = 0;
+      let hasConflict = false;
 
       while (currentDate <= endDate && count < maxBlocks) {
+        const dateStr = format(currentDate, "yyyy-MM-dd");
+        
+        // Verificar se há agendamento para o profissional neste horário
+        const conflict = myReservations.some(res => {
+          if (res.date !== dateStr) return false;
+          // Ignorar agendamentos cancelados, faltas ou reagendados
+          if (res.status === 'cancelado' || res.status === 'falta' || res.status === 'reagendado') return false;
+          
+          const startMins = parseInt(res.startTime.split(':')[0]) * 60 + parseInt(res.startTime.split(':')[1]);
+          const endMins = parseInt(res.endTime.split(':')[0]) * 60 + parseInt(res.endTime.split(':')[1]);
+          const blockStartMins = parseInt(blockStartTime.split(':')[0]) * 60 + parseInt(blockStartTime.split(':')[1]);
+          const blockEndMins = parseInt(blockEndTime.split(':')[0]) * 60 + parseInt(blockEndTime.split(':')[1]);
+          
+          return (startMins < blockEndMins && blockStartMins < endMins);
+        });
+
+        if (conflict) {
+          hasConflict = true;
+          break;
+        }
+
         blocksToCreate.push({
           roomId: null,
           professionalId: professional!.id,
-          date: format(currentDate, "yyyy-MM-dd"),
+          date: dateStr,
           startTime: blockStartTime,
           endTime: blockEndTime,
           patientName: `Bloqueado: ${blockReason || 'Indisponível'}`,
@@ -89,6 +111,11 @@ export default function ProfessionalAgendaPage() {
         if (blockRecurrence === "monthly") currentDate = addMonths(currentDate, 1);
         
         count++;
+      }
+
+      if (hasConflict) {
+        alert("Você não pode bloquear este horário. Já existe um paciente agendado para este período.");
+        return;
       }
 
       await addReservations(blocksToCreate);

@@ -74,11 +74,7 @@ export default function AdminDashboard() {
   const [newResPatient, setNewResPatient] = useState("");
   const [newResService, setNewResService] = useState("");
 
-  // Reschedule Form State
-  const [reschedulingId, setReschedulingId] = useState<string | null>(null);
-  const [rescheduleDate, setRescheduleDate] = useState("");
-  const [rescheduleStart, setRescheduleStart] = useState("");
-  const [rescheduleRoom, setRescheduleRoom] = useState("");
+
 
   // Edit Reservation Form State
   const [editingResId, setEditingResId] = useState<string | null>(null);
@@ -304,29 +300,6 @@ export default function AdminDashboard() {
     });
   }, [allReservations, newResRoomId, newResDate, newResProfId, newResService, servicesList]);
 
-  const occupiedAdminRescheduleSlots = useMemo(() => {
-    if (!rescheduleRoom || !rescheduleDate) return [];
-    
-    const originalRes = allReservations.find(r => r.id === reschedulingId);
-    const serviceName = originalRes?.service;
-    const selectedServiceObj = servicesList?.find(s => s.name === serviceName);
-    const duration = serviceName ? (selectedServiceObj?.duration || 60) : 30;
-
-    const isSlotOccupied = (slot: string, res: any) => {
-       const slotMinutes = parseInt(slot.split(':')[0]) * 60 + parseInt(slot.split(':')[1]);
-       const startMinutes = parseInt(res.startTime.split(':')[0]) * 60 + parseInt(res.startTime.split(':')[1]);
-       const endMinutes = parseInt(res.endTime.split(':')[0]) * 60 + parseInt(res.endTime.split(':')[1]);
-       
-       const slotEndMinutes = slotMinutes + duration;
-       return slotMinutes < endMinutes && startMinutes < slotEndMinutes;
-    };
-    
-    const activeReservations = allReservations.filter(res => 
-       res.roomId === rescheduleRoom && res.date === rescheduleDate && res.id !== reschedulingId && (!res.status || res.status === 'agendado' || res.status === 'confirmado' || res.status === 'realizado')
-    );
-    
-    return TIME_SLOTS.filter(slot => activeReservations.some(res => isSlotOccupied(slot, res)));
-  }, [allReservations, rescheduleRoom, rescheduleDate, reschedulingId, servicesList]);
 
   const occupiedAdminEditResSlots = useMemo(() => {
     if (!editResRoom || !editResDate || !editResProfId) return [];
@@ -787,69 +760,6 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error(err);
       alert("Erro ao criar reserva.");
-    }
-  };
-
-  const handleRescheduleClick = (res: any) => {
-    setReschedulingId(res.id);
-    setRescheduleDate(res.date);
-    setRescheduleStart(res.startTime);
-    setRescheduleRoom(res.roomId);
-  };
-
-  const handleRescheduleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!reschedulingId || !rescheduleDate || !rescheduleStart || !rescheduleRoom) return;
-
-    const originalRes = allReservations.find(r => r.id === reschedulingId);
-    const serviceName = originalRes?.service;
-    const selectedServiceObj = servicesList?.find(s => s.name === serviceName);
-    const duration = selectedServiceObj?.duration || 60;
-
-    const [hours, minutes] = rescheduleStart.split(":").map(Number);
-    const totalMinutes = hours * 60 + minutes + duration;
-    const endHours = Math.floor(totalMinutes / 60);
-    const endMins = totalMinutes % 60;
-    const calculatedEnd = `${String(endHours).padStart(2, "0")}:${String(endMins).padStart(2, "0")}`;
-
-    const hasExternalConflict = allReservations.some(existing => {
-        if (existing.id === reschedulingId) return false;
-        if (existing.date !== rescheduleDate) return false;
-        if (existing.status && existing.status !== 'agendado' && existing.status !== 'confirmado' && existing.status !== 'realizado' && existing.status !== 'indisponivel') return false;
-        
-        if (existing.roomId !== rescheduleRoom && existing.professionalId !== originalRes?.professionalId) return false;
-        
-        const start1 = hours * 60 + minutes;
-        const end1 = start1 + duration;
-
-        const start2 = parseInt(existing.startTime.split(':')[0]) * 60 + parseInt(existing.startTime.split(':')[1]);
-        const end2 = parseInt(existing.endTime.split(':')[0]) * 60 + parseInt(existing.endTime.split(':')[1]);
-        
-        return start1 < end2 && start2 < end1;
-    });
-
-    if (hasExternalConflict) {
-        alert("Erro: O novo horário conflita com uma reserva existente.");
-        return;
-    }
-
-    try {
-      const { error } = await supabase.from('reservations').update({
-        date: rescheduleDate,
-        start_time: `${rescheduleStart}:00`,
-        end_time: `${calculatedEnd}:00`,
-        room_id: rescheduleRoom,
-        status: 'reagendado'
-      }).eq('id', reschedulingId);
-
-      if (error) throw error;
-      
-      alert("Reserva reagendada com sucesso!");
-      setReschedulingId(null);
-      window.location.reload(); 
-    } catch (err) {
-      console.error(err);
-      alert("Ocorreu um erro ao tentar reagendar.");
     }
   };
 
@@ -1479,12 +1389,7 @@ export default function AdminDashboard() {
                               >
                                 Editar
                               </button>
-                              <button 
-                                onClick={() => handleRescheduleClick(res)}
-                                style={{ color: "white", backgroundColor: "#f59e0b", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
-                              >
-                                Reagendar
-                              </button>
+
                               <button 
                                 onClick={() => handleCancelReservation(res.id)}
                                 style={{ color: "white", backgroundColor: "var(--danger)", padding: "0.4rem 0.8rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
@@ -2468,71 +2373,6 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* MODAL DE REAGENDAMENTO */}
-      {reschedulingId && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          zIndex: 999, padding: "1rem"
-        }}>
-          <div className="card animate-slide" style={{ maxWidth: "400px", width: "100%", position: "relative", boxShadow: "var(--clay-card-hover)" }}>
-            <button 
-              onClick={() => setReschedulingId(null)}
-              style={{ position: "absolute", top: "1rem", right: "1rem", color: "var(--text-muted)", fontSize: "1.5rem" }}
-            >
-              &times;
-            </button>
-            <h2 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "1.5rem", color: "var(--text-main)" }}>Reagendar Sessão</h2>
-            <form onSubmit={handleRescheduleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <div>
-                <label className="label">Nova Sala</label>
-                <select className="input" value={rescheduleRoom} onChange={e => setRescheduleRoom(e.target.value)} required>
-                  <option value="">Selecione...</option>
-                  {rooms.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="label">Nova Data</label>
-                <input type="date" className="input" value={rescheduleDate} onChange={e => setRescheduleDate(e.target.value)} required />
-              </div>
-              {rescheduleDate && rescheduleRoom && (
-                <div className="animate-fade">
-                  <label className="label">Escolha o novo horário</label>
-                  <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: "0.4rem", maxHeight: "200px", overflowY: "auto", padding: "0.5rem", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)" }}>
-                    {TIME_SLOTS.map(slot => {
-                      const isOccupied = occupiedAdminRescheduleSlots.includes(slot);
-                      const isSelected = rescheduleStart === slot;
-                      return (
-                        <button
-                          key={slot}
-                          type="button"
-                          disabled={isOccupied}
-                          onClick={() => setRescheduleStart(slot)}
-                          style={{
-                            padding: "0.5rem", borderRadius: "var(--radius-sm)", fontWeight: 600, fontSize: "0.85rem",
-                            border: "1px solid",
-                            borderColor: isOccupied ? "var(--border-color)" : isSelected ? "var(--primary)" : "var(--border-color)",
-                            background: isOccupied ? "var(--primary-light)" : isSelected ? "var(--primary)" : "var(--bg-color)",
-                            color: isOccupied ? "var(--text-light)" : isSelected ? "white" : "var(--text-secondary)",
-                            cursor: isOccupied ? "not-allowed" : "pointer",
-                            textDecoration: isOccupied ? "line-through" : "none"
-                          }}
-                        >
-                          {slot}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              <button type="submit" className="btn" style={{ marginTop: "1rem", backgroundColor: "#f59e0b", color: "white" }}>
-                Confirmar Reagendamento
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* MODAL DE EDIÇÃO DE RESERVA */}
       {editingResId && (
