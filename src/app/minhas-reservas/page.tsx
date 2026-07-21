@@ -153,6 +153,7 @@ export default function ProfessionalAgendaPage() {
   const periodReservations = myReservations
     .filter(res => res.date >= startStr && res.date <= endStr)
     .filter(res => filterService ? res.service === filterService : true)
+    .filter(res => res.status !== 'reagendado')
     .sort((a, b) => {
       if (a.date !== b.date) return a.date.localeCompare(b.date);
       return a.startTime.localeCompare(b.startTime);
