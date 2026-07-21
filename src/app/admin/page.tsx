@@ -626,9 +626,29 @@ export default function AdminDashboard() {
         alert("Erro ao atualizar paciente.");
       }
     } else {
-      const { error } = await supabase.from("patients").insert([payload]);
+      // Gera o código sequencial XXXX/AA
+      const currentYear = new Date().getFullYear().toString().slice(-2);
+      const { data: lastPatient } = await supabase
+        .from("patients")
+        .select("code")
+        .like("code", `%/${currentYear}`)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      let nextSeq = 1;
+      if (lastPatient && lastPatient.length > 0 && lastPatient[0].code) {
+        const lastSeq = parseInt(lastPatient[0].code.split('/')[0], 10);
+        if (!isNaN(lastSeq)) {
+          nextSeq = lastSeq + 1;
+        }
+      }
+      
+      const newCode = `${nextSeq.toString().padStart(4, '0')}/${currentYear}`;
+      const payloadWithCode = { ...payload, code: newCode };
+
+      const { error } = await supabase.from("patients").insert([payloadWithCode]);
       if (!error) {
-        alert("Paciente cadastrado com sucesso!");
+        alert(`Paciente cadastrado com sucesso! CÓDIGO: ${newCode}`);
       } else {
         alert("Erro ao cadastrar paciente.");
       }
@@ -2003,7 +2023,7 @@ export default function AdminDashboard() {
                             title="Clique para ver o cadastro completo"
                             style={{ fontWeight: 700, color: "var(--primary)", background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: "1.1rem", textDecoration: "underline", textAlign: "left" }}
                           >
-                            {pat.name}
+                            {pat.name} {pat.code && <span style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginLeft: "0.5rem" }}>[{pat.code}]</span>}
                           </button>
                           {pat.gender && <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>({pat.gender})</span>}
                           {pat.healthPlan && (
@@ -2623,9 +2643,16 @@ export default function AdminDashboard() {
             </div>
 
             <h2 className="no-print" style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--primary)", marginBottom: "1.5rem", paddingRight: "2rem" }}>
-              {viewingPatient.name}
+              {viewingPatient.name} {viewingPatient.code && <span style={{ color: "var(--text-muted)" }}>[{viewingPatient.code}]</span>}
             </h2>
-            <h2 className="only-print" style={{ fontSize: "1.6rem", fontWeight: 800, marginBottom: "1rem", color: "#000" }}>Paciente: {viewingPatient.name}</h2>
+            <div className="only-print" style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "1rem" }}>
+              <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#000", margin: 0 }}>Paciente: {viewingPatient.name}</h2>
+              {viewingPatient.code && (
+                <h2 style={{ fontSize: "2rem", fontWeight: 900, margin: 0, color: "#000", border: "2px solid #000", padding: "0.2rem 0.8rem", borderRadius: "8px" }}>
+                  CÓD.: {viewingPatient.code}
+                </h2>
+              )}
+            </div>
 
             <div className="print-grid" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               

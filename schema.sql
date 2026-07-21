@@ -77,6 +77,7 @@ CREATE POLICY "Permitir deleção de profissionais" ON professionals FOR DELETE 
 -- Criação da tabela de Pacientes
 CREATE TABLE patients (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  code TEXT UNIQUE,
   name TEXT NOT NULL,
   email TEXT,
   phone TEXT,

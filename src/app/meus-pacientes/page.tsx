@@ -305,7 +305,7 @@ export default function MeusPacientesPage() {
                           style={{ fontWeight: 800, fontSize: "1.1rem", color: "var(--primary)", marginBottom: "0.2rem", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: "4px", textDecorationColor: "var(--primary-light)" }}
                           title="Ver cadastro do paciente"
                         >
-                          {pat.name}
+                          {pat.name} {pat.code && <span style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginLeft: "0.5rem", textDecoration: "none", display: "inline-block" }}>[{pat.code}]</span>}
                         </h3>
                         {pat.healthPlan && (
                           <span className="badge badge-primary" style={{ fontSize: "0.7rem", padding: "0.15rem 0.4rem" }}>
@@ -362,7 +362,7 @@ export default function MeusPacientesPage() {
                           style={{ fontWeight: 800, fontSize: "1.1rem", color: "var(--primary)", marginBottom: "0.2rem", textDecoration: "line-through underline", textDecorationColor: "var(--border-color)", cursor: "pointer", textUnderlineOffset: "4px" }}
                           title="Ver cadastro do paciente"
                         >
-                          {pat.name}
+                          {pat.name} {pat.code && <span style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginLeft: "0.5rem", textDecoration: "none", display: "inline-block" }}>[{pat.code}]</span>}
                         </h3>
                         <span className="badge" style={{ backgroundColor: "#dcfce7", color: "#166534", fontSize: "0.7rem", padding: "0.15rem 0.4rem", display: "inline-flex", alignItems: "center", gap: "0.2rem" }}>
                           ✓ Alta Médica
@@ -432,8 +432,17 @@ export default function MeusPacientesPage() {
               <p style={{ fontSize: "1rem", margin: "0.5rem 0 0 0", color: "#333" }}>Clínica de Psicologia</p>
             </div>
 
-            <h2 className="no-print" style={{ fontSize: "1.4rem", fontWeight: 800, marginBottom: "0.5rem", color: "var(--primary)" }}>{viewingPatient.name}</h2>
-            <h2 className="only-print" style={{ fontSize: "1.6rem", fontWeight: 800, marginBottom: "1rem", color: "#000" }}>Paciente: {viewingPatient.name}</h2>
+            <h2 className="no-print" style={{ fontSize: "1.4rem", fontWeight: 800, marginBottom: "0.5rem", color: "var(--primary)" }}>
+              {viewingPatient.name} {viewingPatient.code && <span style={{ color: "var(--text-muted)" }}>[{viewingPatient.code}]</span>}
+            </h2>
+            <div className="only-print" style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "1rem" }}>
+              <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#000", margin: 0 }}>Paciente: {viewingPatient.name}</h2>
+              {viewingPatient.code && (
+                <h2 style={{ fontSize: "2rem", fontWeight: 900, margin: 0, color: "#000", border: "2px solid #000", padding: "0.2rem 0.8rem", borderRadius: "8px" }}>
+                  CÓD.: {viewingPatient.code}
+                </h2>
+              )}
+            </div>
 
             <div className="no-print" style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
               <span className="badge" style={{ backgroundColor: "var(--bg-color)", border: "1px solid var(--border-color)" }}>
