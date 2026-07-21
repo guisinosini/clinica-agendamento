@@ -106,6 +106,26 @@ CREATE POLICY "Permitir inserção de pacientes" ON patients FOR INSERT WITH CHE
 CREATE POLICY "Permitir atualização de pacientes" ON patients FOR UPDATE USING (true);
 CREATE POLICY "Permitir deleção de pacientes" ON patients FOR DELETE USING (true);
 
+-- Script de Migração: Gerar códigos sequenciais retroativos para pacientes antigos
+-- Execute este bloco para preencher a coluna 'code' de pacientes que já existiam antes da atualização
+/*
+WITH numbered_patients AS (
+  SELECT 
+    id,
+    ROW_NUMBER() OVER (
+      PARTITION BY to_char(created_at, 'YY') 
+      ORDER BY created_at ASC
+    ) as seq_num,
+    to_char(created_at, 'YY') as year_suffix
+  FROM patients
+)
+UPDATE patients
+SET code = LPAD(numbered_patients.seq_num::text, 4, '0') || '/' || numbered_patients.year_suffix
+FROM numbered_patients
+WHERE patients.id = numbered_patients.id
+AND patients.code IS NULL;
+*/
+
 -- Adiciona a chave estrangeira na tabela reservations agora que patients existe
 ALTER TABLE reservations ADD CONSTRAINT fk_reservation_patient FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE SET NULL;
 -- Criação da tabela de Serviços
