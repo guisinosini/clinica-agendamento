@@ -2637,9 +2637,29 @@ export default function AdminDashboard() {
               &times;
             </button>
             
-            <div className="only-print" style={{ textAlign: "center", marginBottom: "2rem", borderBottom: "2px solid #000", paddingBottom: "1rem" }}>
+            {/* Cabeçalho destacável para impressão */}
+            <div className="only-print" style={{ marginBottom: "2rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", border: "2px solid #000", padding: "1rem", borderRadius: "8px" }}>
+                <div>
+                  <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#000", margin: 0 }}>{viewingPatient.name}</h2>
+                  <p style={{ margin: "0.5rem 0 0 0", color: "#333", fontSize: "1rem" }}>Clínica de Psicologia</p>
+                </div>
+                {viewingPatient.code && (
+                  <div style={{ textAlign: "right" }}>
+                    <p style={{ margin: "0 0 0.2rem 0", fontSize: "0.9rem", color: "#555" }}>Código do Paciente</p>
+                    <h2 style={{ fontSize: "2.2rem", fontWeight: 900, margin: 0, color: "#000" }}>{viewingPatient.code}</h2>
+                  </div>
+                )}
+              </div>
+              <div style={{ textAlign: "center", marginTop: "1.5rem", borderBottom: "2px dashed #999", position: "relative" }}>
+                <span style={{ position: "absolute", top: "-10px", left: "50%", transform: "translateX(-50%)", backgroundColor: "white", padding: "0 10px", color: "#666", fontSize: "0.85rem" }}>
+                  ✂️ Recorte aqui ✂️
+                </span>
+              </div>
+            </div>
+
+            <div className="only-print" style={{ textAlign: "center", marginBottom: "2rem", borderBottom: "2px solid #000", paddingBottom: "1rem", marginTop: "2rem" }}>
               <h1 style={{ fontSize: "1.8rem", fontWeight: "bold", margin: 0, color: "#000", textTransform: "uppercase" }}>Ficha de Cadastro do Paciente</h1>
-              <p style={{ fontSize: "1rem", margin: "0.5rem 0 0 0", color: "#333" }}>Clínica de Psicologia</p>
             </div>
 
             <h2 className="no-print" style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--primary)", marginBottom: "1.5rem", paddingRight: "2rem" }}>
@@ -2647,11 +2667,6 @@ export default function AdminDashboard() {
             </h2>
             <div className="only-print" style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "1rem" }}>
               <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#000", margin: 0 }}>Paciente: {viewingPatient.name}</h2>
-              {viewingPatient.code && (
-                <h2 style={{ fontSize: "2rem", fontWeight: 900, margin: 0, color: "#000", border: "2px solid #000", padding: "0.2rem 0.8rem", borderRadius: "8px" }}>
-                  CÓD.: {viewingPatient.code}
-                </h2>
-              )}
             </div>
 
             <div className="print-grid" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
