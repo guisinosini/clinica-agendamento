@@ -107,24 +107,9 @@ CREATE POLICY "Permitir atualização de pacientes" ON patients FOR UPDATE USING
 CREATE POLICY "Permitir deleção de pacientes" ON patients FOR DELETE USING (true);
 
 -- Script de Migração: Gerar códigos sequenciais retroativos para pacientes antigos
--- Execute este bloco para preencher a coluna 'code' de pacientes que já existiam antes da atualização
-/*
-WITH numbered_patients AS (
-  SELECT 
-    id,
-    ROW_NUMBER() OVER (
-      PARTITION BY to_char(created_at, 'YY') 
-      ORDER BY created_at ASC
-    ) as seq_num,
-    to_char(created_at, 'YY') as year_suffix
-  FROM patients
-)
-UPDATE patients
-SET code = LPAD(numbered_patients.seq_num::text, 4, '0') || '/' || numbered_patients.year_suffix
-FROM numbered_patients
-WHERE patients.id = numbered_patients.id
-AND patients.code IS NULL;
-*/
+-- O script completo e seguro foi movido para o arquivo fix_patients_codes.sql na raiz do projeto.
+-- Execute o arquivo fix_patients_codes.sql para preencher a coluna 'code' de pacientes sem código, 
+-- garantindo que a sequência do ano continue a partir do maior código existente.
 
 -- Adiciona a chave estrangeira na tabela reservations agora que patients existe
 ALTER TABLE reservations ADD CONSTRAINT fk_reservation_patient FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE SET NULL;
