@@ -110,7 +110,27 @@ export default function CadastroPaciente() {
       lgpd_consent: lgpdConsent
     };
 
-    const { error: dbError } = await supabase.from("patients").insert([payload]);
+    // Gera o código sequencial XXXX/AA
+    const currentYear = new Date().getFullYear().toString().slice(-2);
+    const { data: lastPatient } = await supabase
+      .from("patients")
+      .select("code")
+      .like("code", `%/${currentYear}`)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    let nextSeq = 1;
+    if (lastPatient && lastPatient.length > 0 && lastPatient[0].code) {
+      const lastSeq = parseInt(lastPatient[0].code.split('/')[0], 10);
+      if (!isNaN(lastSeq)) {
+        nextSeq = lastSeq + 1;
+      }
+    }
+    
+    const newCode = `${nextSeq.toString().padStart(4, '0')}/${currentYear}`;
+    const payloadWithCode = { ...payload, code: newCode };
+
+    const { error: dbError } = await supabase.from("patients").insert([payloadWithCode]);
     
     setLoading(false);
 
