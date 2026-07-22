@@ -48,6 +48,8 @@ export default function AdminDashboard() {
   
   // Filters State
   const [filterRoom, setFilterRoom] = useState<string>("");
+  const [filterPatientName, setFilterPatientName] = useState<string>("");
+  const [filterService, setFilterService] = useState<string>("");
   const [filterProf, setFilterProf] = useState<string>("");
   const [filterStartDate, setFilterStartDate] = useState<string>("");
   const [filterEndDate, setFilterEndDate] = useState<string>("");
@@ -372,6 +374,8 @@ export default function AdminDashboard() {
       .filter(res => {
         if (filterRoom && res.roomId !== filterRoom) return false;
         if (filterProf && res.professionalId !== filterProf) return false;
+        if (filterPatientName && !(res.patientName?.toLowerCase().includes(filterPatientName.toLowerCase()))) return false;
+        if (filterService && res.service !== filterService) return false;
         if (filterStartDate && res.date < filterStartDate) return false;
         if (filterEndDate && res.date > filterEndDate) return false;
         return true;
@@ -380,11 +384,11 @@ export default function AdminDashboard() {
         if (a.date !== b.date) return a.date.localeCompare(b.date);
         return a.startTime.localeCompare(b.startTime);
       });
-  }, [allReservations, filterRoom, filterProf, filterStartDate, filterEndDate]);
+  }, [allReservations, filterRoom, filterProf, filterStartDate, filterEndDate, filterPatientName, filterService]);
 
   useEffect(() => {
     setVisibleReservationsCount(20);
-  }, [filterRoom, filterProf, filterStartDate, filterEndDate, allReservations]);
+  }, [filterRoom, filterProf, filterStartDate, filterEndDate, filterPatientName, filterService, allReservations]);
 
   const filteredReportData = useMemo(() => {
     return allReservations
@@ -1335,6 +1339,27 @@ export default function AdminDashboard() {
                   <option key={room.id} value={room.id}>{room.name}</option>
                 ))}
               </select>
+
+              <select
+                className="input"
+                style={{ padding: "0.5rem", width: "auto" }}
+                value={filterService}
+                onChange={e => setFilterService(e.target.value)}
+              >
+                <option value="">Todos os Serviços</option>
+                {servicesList.map(srv => (
+                  <option key={srv.id} value={srv.name}>{srv.name}</option>
+                ))}
+              </select>
+
+              <input 
+                type="text"
+                placeholder="Buscar por paciente..."
+                className="input"
+                style={{ padding: "0.5rem", width: "auto" }}
+                value={filterPatientName}
+                onChange={e => setFilterPatientName(e.target.value)}
+              />
             </div>
           </div>
 
