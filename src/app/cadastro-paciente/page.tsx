@@ -114,19 +114,20 @@ export default function CadastroPaciente() {
 
     // Gera o código sequencial XXXX/AA
     const currentYear = new Date().getFullYear().toString().slice(-2);
-    const { data: lastPatient } = await supabase
+    const { data: allPatients } = await supabase
       .from("patients")
       .select("code")
-      .like("code", `%/${currentYear}`)
-      .order("code", { ascending: false })
-      .limit(1);
+      .like("code", `%/${currentYear}`);
 
     let nextSeq = 1;
-    if (lastPatient && lastPatient.length > 0 && lastPatient[0].code) {
-      const lastSeq = parseInt(lastPatient[0].code.split('/')[0], 10);
-      if (!isNaN(lastSeq)) {
-        nextSeq = lastSeq + 1;
-      }
+    if (allPatients && allPatients.length > 0) {
+      const maxSeq = allPatients.reduce((max, pat) => {
+        if (!pat.code) return max;
+        const seq = parseInt(pat.code.split('/')[0], 10);
+        if (!isNaN(seq) && seq > max) return seq;
+        return max;
+      }, 0);
+      nextSeq = maxSeq + 1;
     }
     
     const newCode = `${nextSeq.toString().padStart(4, '0')}/${currentYear}`;
