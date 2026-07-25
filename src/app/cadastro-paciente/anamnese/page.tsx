@@ -98,11 +98,11 @@ function AnamneseForm() {
   }, [patientId]);
 
   const handleChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
   };
 
   const handleCheckbox = (field: string, option: string) => {
-    setFormData(prev => {
+    setFormData((prev: any) => {
       const list = prev[field] || [];
       if (list.includes(option)) {
         return { ...prev, [field]: list.filter((item: string) => item !== option) };
@@ -113,7 +113,7 @@ function AnamneseForm() {
   };
 
   const handleSubFieldChange = (category: string, field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
       [category]: {
         ...prev[category],
