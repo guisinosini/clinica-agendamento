@@ -143,11 +143,11 @@ export default function CadastroPaciente() {
     if (!dbError && insertedPatient) {
       router.push(`/cadastro-paciente/anamnese?patientId=${insertedPatient.id}`);
     } else {
-      if (dbError.code === '23505' && dbError.message.includes('cpf')) {
+      if (dbError?.code === '23505' && dbError?.message?.includes('cpf')) {
         setError("Este CPF já está cadastrado em nossa clínica.");
       } else {
         setError("Ocorreu um erro ao enviar os dados. Tente novamente.");
-        console.error(dbError);
+        console.error("Erro Supabase:", dbError, "Retorno Insert:", insertedPatient);
       }
     }
   };
