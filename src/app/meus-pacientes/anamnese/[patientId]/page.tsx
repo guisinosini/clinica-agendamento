@@ -147,17 +147,23 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                <div>
                   <label className="label">Humor Deprimido/Anedonia:</label>
-                  <select className="input" value={formData.socioemocionais?.humorDeprimido || ""} onChange={(e) => handleSubFieldChange("socioemocionais", "humorDeprimido", e.target.value)}>
-                    <option value="">Selecione...</option>
-                    <option value="Nunca">Nunca</option><option value="Às vezes">Às vezes</option><option value="Sempre">Sempre</option>
-                  </select>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    {["Nunca", "Às vezes", "Sempre"].map(opt => (
+                      <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.9rem', cursor: 'pointer' }}>
+                        <input type="radio" name="humor" checked={formData.socioemocionais?.humorDeprimido === opt} onChange={() => handleSubFieldChange("socioemocionais", "humorDeprimido", opt)} /> {opt}
+                      </label>
+                    ))}
+                  </div>
                </div>
                <div>
                   <label className="label">Irritabilidade / Labilidade:</label>
-                  <select className="input" value={formData.socioemocionais?.irritabilidade || ""} onChange={(e) => handleSubFieldChange("socioemocionais", "irritabilidade", e.target.value)}>
-                    <option value="">Selecione...</option>
-                    <option value="Nunca">Nunca</option><option value="Às vezes">Às vezes</option><option value="Sempre">Sempre</option>
-                  </select>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    {["Nunca", "Às vezes", "Sempre"].map(opt => (
+                      <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.9rem', cursor: 'pointer' }}>
+                        <input type="radio" name="irritabilidade" checked={formData.socioemocionais?.irritabilidade === opt} onChange={() => handleSubFieldChange("socioemocionais", "irritabilidade", opt)} /> {opt}
+                      </label>
+                    ))}
+                  </div>
                </div>
                <div><label className="label">Notas Adicionais do Profissional (Autopercepção e Observações Clínicas):</label><textarea className="input" style={{ minHeight: '120px' }} value={formData.autopercepcao} onChange={e => handleChange("autopercepcao", e.target.value)} /></div>
             </div>

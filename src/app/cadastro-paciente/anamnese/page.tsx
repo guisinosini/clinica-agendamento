@@ -154,23 +154,27 @@ function AnamneseForm() {
     );
   }
 
-  const renderFrequenciaSelect = (category: string, field: string, label: string) => (
-    <div style={{ marginBottom: "1rem" }}>
-      <label className="label">{label}</label>
-      <select 
-        className="input" 
-        value={formData[category]?.[field] || ""} 
-        onChange={(e) => handleSubFieldChange(category, field, e.target.value)}
-      >
-        <option value="">Selecione...</option>
-        <option value="Nunca">Nunca</option>
-        <option value="Raramente">Raramente</option>
-        <option value="Às vezes">Às vezes</option>
-        <option value="Frequentemente">Frequentemente</option>
-        <option value="Sempre">Sempre</option>
-      </select>
-    </div>
-  );
+  const renderFrequenciaSelect = (category: string, field: string, label: string) => {
+    const opcoes = ["Nunca", "Raramente", "Às vezes", "Frequentemente", "Sempre"];
+    return (
+      <div style={{ marginBottom: "1rem" }}>
+        <label className="label" style={{ marginBottom: "0.5rem", display: "block" }}>{label}</label>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          {opcoes.map(opt => (
+            <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.9rem', cursor: 'pointer' }}>
+              <input 
+                type="radio" 
+                name={`${category}_${field}`}
+                checked={formData[category]?.[field] === opt}
+                onChange={() => handleSubFieldChange(category, field, opt)}
+              />
+              {opt}
+            </label>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="container" style={{ padding: '3rem 1rem', display: 'flex', justifyContent: 'center', backgroundColor: 'var(--bg-color)', minHeight: '100vh' }}>
