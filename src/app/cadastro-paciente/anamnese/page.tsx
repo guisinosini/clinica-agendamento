@@ -146,8 +146,11 @@ function AnamneseForm() {
         <div className="card animate-fade" style={{ maxWidth: '500px', width: '100%', textAlign: 'center', padding: '3rem 2rem' }}>
           <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📋</div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--success)', marginBottom: '1rem' }}>Anamnese Concluída!</h1>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
             Muito obrigado por preencher todas as informações. Elas serão fundamentais para o seu atendimento.
+          </p>
+          <p style={{ color: 'var(--primary)', fontWeight: 600, fontSize: '1.1rem' }}>
+            Agora você pode fechar essa tela.
           </p>
         </div>
       </div>
