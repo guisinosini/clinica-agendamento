@@ -118,7 +118,7 @@ export default function CadastroPaciente() {
       .from("patients")
       .select("code")
       .like("code", `%/${currentYear}`)
-      .order("created_at", { ascending: false })
+      .order("code", { ascending: false })
       .limit(1);
 
     let nextSeq = 1;
