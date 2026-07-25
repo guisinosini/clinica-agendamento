@@ -146,3 +146,17 @@ CREATE POLICY "Leitura pública para finances" ON finances FOR SELECT USING (tru
 CREATE POLICY "Inserção pública para finances" ON finances FOR INSERT WITH CHECK (true);
 CREATE POLICY "Atualização pública para finances" ON finances FOR UPDATE USING (true);
 CREATE POLICY "Deleção pública para finances" ON finances FOR DELETE USING (true);
+
+-- Criação da tabela de Anamneses
+CREATE TABLE anamneses (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  patient_id UUID REFERENCES patients(id) ON DELETE CASCADE,
+  responses JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE anamneses ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Leitura pública para anamneses" ON anamneses FOR SELECT USING (true);
+CREATE POLICY "Permitir inserção de anamneses" ON anamneses FOR INSERT WITH CHECK (true);
+CREATE POLICY "Permitir atualização de anamneses" ON anamneses FOR UPDATE USING (true);
+CREATE POLICY "Permitir deleção de anamneses" ON anamneses FOR DELETE USING (true);

@@ -324,14 +324,23 @@ export default function MeusPacientesPage() {
                       )}
                     </div>
 
-                    <div style={{ display: "flex", gap: "0.5rem" }}>
-                      <button 
-                        onClick={() => setPrintingPatient(pat)}
-                        className="btn btn-outline"
-                        style={{ flex: 1, padding: "0.5rem", fontSize: "0.85rem" }}
-                      >
-                        📄 Relatório
-                      </button>
+                    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                      <div style={{ display: "flex", gap: "0.5rem", width: "100%" }}>
+                        <button 
+                          onClick={() => setPrintingPatient(pat)}
+                          className="btn btn-outline"
+                          style={{ flex: 1, padding: "0.5rem", fontSize: "0.85rem" }}
+                        >
+                          📄 Relatório
+                        </button>
+                        <Link 
+                          href={`/meus-pacientes/anamnese/${pat.id}`}
+                          className="btn btn-outline"
+                          style={{ flex: 1, padding: "0.5rem", fontSize: "0.85rem", textDecoration: 'none', textAlign: 'center' }}
+                        >
+                          📋 Anamnese
+                        </Link>
+                      </div>
                       <button 
                         onClick={() => handleConcludeProcess(pat.id, pat.name)}
                         className="btn"

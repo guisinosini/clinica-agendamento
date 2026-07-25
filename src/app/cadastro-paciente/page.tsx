@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
 const calculateAge = (birthDate: string) => {
@@ -56,6 +57,7 @@ const formatPhone = (value: string) => {
 };
 
 export default function CadastroPaciente() {
+  const router = useRouter();
   const [patName, setPatName] = useState("");
   const [patEmail, setPatEmail] = useState("");
   const [patPhone, setPatPhone] = useState("");
@@ -130,12 +132,16 @@ export default function CadastroPaciente() {
     const newCode = `${nextSeq.toString().padStart(4, '0')}/${currentYear}`;
     const payloadWithCode = { ...payload, code: newCode };
 
-    const { error: dbError } = await supabase.from("patients").insert([payloadWithCode]);
+    const { data: insertedPatient, error: dbError } = await supabase
+      .from("patients")
+      .insert([payloadWithCode])
+      .select("id")
+      .single();
     
     setLoading(false);
 
-    if (!dbError) {
-      setSuccess(true);
+    if (!dbError && insertedPatient) {
+      router.push(`/cadastro-paciente/anamnese?patientId=${insertedPatient.id}`);
     } else {
       if (dbError.code === '23505' && dbError.message.includes('cpf')) {
         setError("Este CPF já está cadastrado em nossa clínica.");
@@ -145,20 +151,6 @@ export default function CadastroPaciente() {
       }
     }
   };
-
-  if (success) {
-    return (
-      <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '2rem' }}>
-        <div className="card animate-fade" style={{ maxWidth: '500px', width: '100%', textAlign: 'center', padding: '3rem 2rem' }}>
-          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🎉</div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--success)', marginBottom: '1rem' }}>Cadastro Enviado com Sucesso!</h1>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-            Seus dados foram recebidos pela clínica. Você já pode fechar esta página.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="container" style={{ padding: '3rem 1rem', display: 'flex', justifyContent: 'center', backgroundColor: 'var(--bg-color)', minHeight: '100vh' }}>
