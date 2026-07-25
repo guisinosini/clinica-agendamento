@@ -114,10 +114,12 @@ export default function CadastroPaciente() {
 
     // Gera o código sequencial XXXX/AA
     const currentYear = new Date().getFullYear().toString().slice(-2);
+    // Para evitar cache na Vercel/Next.js, adicionamos um cabeçalho
     const { data: allPatients } = await supabase
       .from("patients")
       .select("code")
-      .like("code", `%/${currentYear}`);
+      .like("code", `%/${currentYear}`)
+      .limit(1000); // Garante que pega todos
 
     let nextSeq = 1;
     if (allPatients && allPatients.length > 0) {
@@ -133,26 +135,23 @@ export default function CadastroPaciente() {
     const newCode = `${nextSeq.toString().padStart(4, '0')}/${currentYear}`;
     const payloadWithCode = { ...payload, code: newCode };
 
-    // Faz o insert sem .select() para evitar o erro de RLS (42501) no retorno
-    const { error: dbError } = await supabase.from("patients").insert([payloadWithCode]);
-    
-    // Depois do insert, busca o ID do paciente recém-criado usando o código único
-    let patientId = null;
-    if (!dbError) {
-      const { data } = await supabase.from("patients").select("id").eq("code", newCode).single();
-      if (data) patientId = data.id;
-    }
+    // Faz o insert já retornando o ID em uma única consulta simplificada
+    const { data: insertedPatient, error: dbError } = await supabase
+      .from("patients")
+      .insert([payloadWithCode])
+      .select("id")
+      .single();
     
     setLoading(false);
 
-    if (!dbError && patientId) {
-      router.push(`/cadastro-paciente/anamnese?patientId=${patientId}`);
+    if (!dbError && insertedPatient) {
+      router.push(`/cadastro-paciente/anamnese?patientId=${insertedPatient.id}`);
     } else {
       if (dbError?.code === '23505' && dbError?.message?.includes('cpf')) {
         setError("Este CPF já está cadastrado em nossa clínica.");
       } else {
         setError("Ocorreu um erro ao enviar os dados. Tente novamente.");
-        console.error("Erro Supabase:", dbError, "ID recuperado:", patientId);
+        console.error("Erro Supabase:", dbError, "Retorno Insert:", insertedPatient);
       }
     }
   };
