@@ -132,22 +132,26 @@ export default function CadastroPaciente() {
     const newCode = `${nextSeq.toString().padStart(4, '0')}/${currentYear}`;
     const payloadWithCode = { ...payload, code: newCode };
 
-    const { data: insertedPatient, error: dbError } = await supabase
-      .from("patients")
-      .insert([payloadWithCode])
-      .select("id")
-      .single();
+    // Faz o insert sem .select() para evitar o erro de RLS (42501) no retorno
+    const { error: dbError } = await supabase.from("patients").insert([payloadWithCode]);
+    
+    // Depois do insert, busca o ID do paciente recém-criado usando o código único
+    let patientId = null;
+    if (!dbError) {
+      const { data } = await supabase.from("patients").select("id").eq("code", newCode).single();
+      if (data) patientId = data.id;
+    }
     
     setLoading(false);
 
-    if (!dbError && insertedPatient) {
-      router.push(`/cadastro-paciente/anamnese?patientId=${insertedPatient.id}`);
+    if (!dbError && patientId) {
+      router.push(`/cadastro-paciente/anamnese?patientId=${patientId}`);
     } else {
       if (dbError?.code === '23505' && dbError?.message?.includes('cpf')) {
         setError("Este CPF já está cadastrado em nossa clínica.");
       } else {
         setError("Ocorreu um erro ao enviar os dados. Tente novamente.");
-        console.error("Erro Supabase:", dbError, "Retorno Insert:", insertedPatient);
+        console.error("Erro Supabase:", dbError, "ID recuperado:", patientId);
       }
     }
   };
