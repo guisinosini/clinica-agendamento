@@ -119,7 +119,7 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
       @media print {
         @page { margin: 1cm; }
         body { background: white !important; color: black !important; font-size: 10pt !important; line-height: 1.3 !important; }
-        .screen-only, header, .card, .btn { display: none !important; }
+        .screen-only, header, nav, .navbar, .card, .btn { display: none !important; }
         .print-report { display: block !important; width: 100%; }
         .print-header { border-bottom: 2px solid black; padding-bottom: 10px; margin-bottom: 10px; }
         .print-title { font-size: 12pt; font-weight: bold; border-bottom: 1px solid #ccc; margin: 10px 0 4px 0; padding-bottom: 2px; }
