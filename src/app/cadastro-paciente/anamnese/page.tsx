@@ -6,14 +6,18 @@ import { supabase } from "../../../lib/supabase";
 
 const SECTIONS = [
   "Termo de Sigilo",
-  "Queixa Principal",
-  "Histórico do Desenvolvimento",
-  "Histórico Escolar",
-  "Histórico Ocupacional (Trabalho)",
-  "História Médica e Psiquiátrica",
+  "Queixa Principal e Histórico da Queixa",
+  "História do Desenvolvimento (Gestação, parto e primeira infância)",
+  "História Escolar e Acadêmica",
+  "História Ocupacional",
+  "História Médica e de Saúde Geral",
+  "História Psiquiátrica e Psicoterapêutica",
   "História Familiar",
-  "Avaliação Cognitiva e Emocional",
-  "Rotina e Expectativas"
+  "Investigação Dirigida por Função Cognitiva",
+  "Aspectos Socioemocionais, Comportamentais e Personalidade",
+  "Sono, Alimentação e Hábitos",
+  "Rotina, Autonomia e Atividades de Vida Diária",
+  "Expectativas quanto à Avaliação"
 ];
 
 function AnamneseForm() {
@@ -29,68 +33,90 @@ function AnamneseForm() {
 
   // Estado unificado para todas as respostas
   const [formData, setFormData] = useState<any>({
-    // Seção 2
+    // 1. Queixa Principal e Histórico da Queixa
     queixaPrincipal: "",
     inicioSintomas: "",
     gatilhoInicio: "",
     progressao: "",
     contextosEvidente: "",
     melhorouPiorou: "",
-    areasImpacto: [],
-    // Seção 3
-    gestacao: [],
+    areasImpacto: [], // Desempenho acadêmico, Desempenho profissional, Relações familiares, Relações sociais/amizades, Autonomia para AVDs, Regulação emocional, Sono, Autoestima, Outro
+    areasImpactoOutro: "",
+
+    // 2. História do Desenvolvimento
+    gestacao: [], // Planejada, Não planejada, Pré-natal regular, Intercorrências (infecções, uso de substâncias, medicações), Prematuridade, A termo
     intercorrenciasGestacao: "",
-    parto: [],
+    parto: [], // Normal, Cesárea, Fórceps, Necessidade de UTI neonatal, Icterícia/outras intercorrências
     pesoApgar: "",
     marcosMotor: "",
     marcosLinguagem: "",
-    sensorialAlimentar: [],
-    // Seção 4 e 5
+    sensorialAlimentar: [], // Seletividade/ restrição alimentar, Hipersensibilidade a sons/texturas/luzes, Atraso no controle esfincteriano, Distúrbio de sono precoce, Sem alterações relatadas
+    
+    // 3. História Escolar e Acadêmica
     idadeIngressoEscolar: "",
-    historicoDesempenho: [],
+    historicoDesempenho: [], // Repetência, Necessidade de reforço escolar, Encaminhamento anterior para AEE/psicopedagogia, Relatos de professores sobre desatenção, Relatos de dificuldade de leitura/escrita, Relatos de dificuldade em matemática, Bom desempenho geral, Dificuldade específica em uma disciplina
     disciplinaDificuldade: "",
     comportamentoSala: "",
     laudosAnteriores: "",
+    
+    // 4. História Ocupacional
     cargoAtual: "",
-    queixasTrabalho: [],
+    queixasTrabalho: [], // Dificuldade de organização/planejamento, Esquecimentos frequentes, Dificuldade de concentração em reuniões, Lentidão para concluir tarefas, Conflitos interpessoais, Absenteísmo, Quedas de produtividade recentes, Sem queixas ocupacionais
     historicoMudancasEmprego: "",
-    // Seção 6 e 7
-    condicoesMedicas: [],
+    
+    // 5. História Médica e de Saúde Geral
+    condicoesMedicas: [], // Hipertensão, Diabetes, Dislipidemia, Cardiopatia, Epilepsia/convulsões, TCE (traumatismo cranioencefálico), AVC/AIT, Enxaqueca, Distúrbios da tireoide, Apneia do sono, Doença autoimune, Nenhuma relatada
     detalhesMedicos: "",
     cirurgiasPrevias: "",
     medicacoesAtual: "",
     examesRealizados: "",
-    usoSubstancias: [],
+    usoSubstancias: [], // Álcool, Tabaco, Outras substâncias psicoativas, Nenhum uso relatado
     frequenciaSubstancias: "",
+    
+    // 6. História Psiquiátrica e Psicoterapêutica
     diagnosticosPsiquiatricos: "",
     acompanhamentoAtual: "",
     historicoPsicoterapia: "",
-    antecedentesPsiquiatricos: [],
+    antecedentesRelevantes: [], // Ideação suicida prévia, Tentativa de suicídio prévia, Automutilação, Internação psiquiátrica prévia, Episódios de humor exaltado, Episódios depressivos, Crises de ansiedade/pânico, Sintomas psicóticos relatados, Nenhum antecedente relevante
     detalhesAntecedentes: "",
-    // Seção 8
+    
+    // 7. História Familiar
     composicaoFamiliar: "",
-    antecedentesFamiliares: [],
+    antecedentesFamiliares: [], // TDAH, TEA, Deficiência intelectual, Transtornos de aprendizagem, Transtornos de humor, Transtornos de ansiedade, Esquizofrenia/psicose, Demências, Epilepsia, Uso abusivo de substâncias, Nenhum antecedente relatado
     grauParentescoAntecedentes: "",
     dinamicaFamiliar: "",
-    // Seção 9 e 10
-    atencao: {},
-    funcoesExecutivas: {},
-    memoria: {},
-    linguagem: {},
-    visuoconstrucao: [],
-    praxias: [],
-    socioemocionais: {},
-    coping: "",
+    
+    // 8. Investigação Dirigida por Função Cognitiva
+    atencao: {}, // manterFoco, distraiFacilmente, cometeErros, alternarTarefas
+    exemplosAtencao: "",
+    funcoesExecutivas: {}, // planejar, iniciarTarefas, impulsividade, rigidez, autoMonitorar
+    exemplosExecutivas: "",
+    memoria: {}, // esquecimentoCompromissos, lembrarEventos, repeticaoPerguntas, reterInstrucoes
+    dificuldadeAprenderEvocar: "",
+    exemplosMemoria: "",
+    linguagem: [], // anomia, trocasFonologicas, gagueira, compreensao, leitura, escrita, semQueixas
+    exemplosLinguagem: "",
+    visuoconstrucao: [], // orientacaoEspacial, desenhar, montar, estimar, semQueixas
+    praxias: [], // coordenacaoFina, desajeitamentoGlobal, imitarGestos, semQueixas
+    
+    // 9. Aspectos Socioemocionais, Comportamentais e de Personalidade
+    socioemocionais: {}, // irritabilidade, ansiedade, humorDeprimido, isolamento, interpretarSinais, rigidezInteresses
+    estrategiasCoping: "",
     autopercepcao: "",
-    estereotipias: "",
-    comportamentosAtipicos: "",
-    // Seção 11, 12 e 13
+    estereotipias: "", // CUSTOM
+    comportamentosAtipicos: "", // CUSTOM
+    
+    // 10. Sono, Alimentação e Hábitos
     sonoHorario: "",
-    alteracoesSono: [],
+    alteracoesSono: [], // Insônia inicial, Despertares noturnos, Sonolência diurna excessiva, Ronco/apneia relatada, Pesadelos/parassonias, Sono preservado
     padraoAlimentar: "",
     atividadeFisica: "",
-    apoioTerceiros: [],
+    
+    // 11. Rotina, Autonomia e Atividades de Vida Diária
+    apoioTerceiros: [], // Higiene pessoal, Alimentação, Administração de medicações, Administração financeira, Uso de transporte, Gestão de compromissos/agenda, Tarefas domésticas, Nenhum apoio necessário
     detalhesApoio: "",
+    
+    // 12. Expectativas quanto à Avaliação
     expectativasAvaliacao: "",
     documentosTrazidos: ""
   });
@@ -190,7 +216,7 @@ function AnamneseForm() {
   const renderFrequenciaSelect = (category: string, field: string, label: string) => {
     const opcoes = ["Nunca", "Raramente", "Às vezes", "Frequentemente", "Sempre"];
     return (
-      <div style={{ marginBottom: "1rem" }}>
+      <div style={{ marginBottom: "1.2rem", paddingBottom: "1.2rem", borderBottom: "1px dashed var(--border-color)" }}>
         <label className="label" style={{ marginBottom: "0.5rem", display: "block" }}>{label}</label>
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           {opcoes.map(opt => (
@@ -205,6 +231,19 @@ function AnamneseForm() {
             </label>
           ))}
         </div>
+      </div>
+    );
+  };
+
+  const renderGridCheckboxes = (field: string, options: string[], columns: number = 2) => {
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: '0.5rem', marginBottom: '1rem' }}>
+        {options.map(opt => (
+          <label key={opt} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer', lineHeight: '1.3' }}>
+            <input type="checkbox" checked={formData[field]?.includes(opt)} onChange={() => handleCheckbox(field, opt)} style={{ marginTop: '0.2rem' }} />
+            {opt}
+          </label>
+        ))}
       </div>
     );
   };
@@ -250,7 +289,7 @@ function AnamneseForm() {
           <div className="animate-fade">
             <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[1]}</h2>
             
-            <label className="label">Queixa principal (suas próprias palavras):</label>
+            <label className="label">Queixa principal (verbatim do informante):</label>
             <textarea className="input" style={{ minHeight: '80px', marginBottom: '1rem' }} value={formData.queixaPrincipal} onChange={e => handleChange("queixaPrincipal", e.target.value)}></textarea>
 
             <label className="label">Desde quando foi notada? Início súbito ou insidioso?</label>
@@ -262,39 +301,44 @@ function AnamneseForm() {
             <label className="label">A queixa é progressiva, estável ou flutuante ao longo do tempo?</label>
             <input className="input" style={{ marginBottom: '1rem' }} value={formData.progressao} onChange={e => handleChange("progressao", e.target.value)} />
 
+            <label className="label">Contextos em que a dificuldade é mais evidente (escola, trabalho, casa, social):</label>
+            <input className="input" style={{ marginBottom: '1rem' }} value={formData.contextosEvidente} onChange={e => handleChange("contextosEvidente", e.target.value)} />
+
             <label className="label">O que já melhorou, piorou ou permaneceu igual desde o início?</label>
             <input className="input" style={{ marginBottom: '1.5rem' }} value={formData.melhorouPiorou} onChange={e => handleChange("melhorouPiorou", e.target.value)} />
 
             <label className="label">Áreas em que a queixa mais impacta (selecione as opções):</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-              {["Desempenho acadêmico", "Desempenho profissional", "Relações familiares", "Relações sociais/amizades", "Autonomia para atividades diárias", "Regulação emocional", "Sono", "Autoestima"].map(opt => (
-                <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={formData.areasImpacto.includes(opt)} onChange={() => handleCheckbox("areasImpacto", opt)} />
-                  {opt}
-                </label>
-              ))}
-            </div>
+            {renderGridCheckboxes("areasImpacto", [
+              "Desempenho acadêmico", "Desempenho profissional", "Relações familiares", 
+              "Relações sociais/amizades", "Autonomia para atividades diárias", "Regulação emocional", 
+              "Sono", "Autoestima", "Outro"
+            ])}
+            {formData.areasImpacto?.includes("Outro") && (
+              <input className="input" placeholder="Detalhe as outras áreas" style={{ marginBottom: '1rem' }} value={formData.areasImpactoOutro} onChange={e => handleChange("areasImpactoOutro", e.target.value)} />
+            )}
           </div>
         )}
 
         {/* STEP 2: Desenvolvimento */}
         {currentStep === 2 && (
           <div className="animate-fade">
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[2]}</h2>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-main)' }}>{SECTIONS[2]}</h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Preencher quando aplicável (avaliação de crianças/adolescentes ou suspeita de condição de neurodesenvolvimento em adultos, por relato retrospectivo).</p>
             
-            <label className="label">Gestação e Parto:</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1rem' }}>
-              {["Planejada", "Não planejada", "Pré-natal regular", "Prematuridade", "Parto Normal", "Cesárea", "Necessidade de UTI neonatal"].map(opt => (
-                <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={formData.gestacao.includes(opt)} onChange={() => handleCheckbox("gestacao", opt)} />
-                  {opt}
-                </label>
-              ))}
-            </div>
+            <label className="label">Gestação:</label>
+            {renderGridCheckboxes("gestacao", [
+              "Planejada", "Não planejada", "Pré-natal regular", 
+              "Intercorrências (infecções, uso de substâncias, medicações)", "Prematuridade", "A termo"
+            ])}
             
             <label className="label">Detalhar intercorrências gestacionais, se houver:</label>
             <textarea className="input" style={{ minHeight: '60px', marginBottom: '1rem' }} value={formData.intercorrenciasGestacao} onChange={e => handleChange("intercorrenciasGestacao", e.target.value)}></textarea>
             
+            <label className="label">Parto:</label>
+            {renderGridCheckboxes("parto", [
+              "Normal", "Cesárea", "Fórceps", "Necessidade de UTI neonatal", "Icterícia/outras intercorrências"
+            ])}
+
             <label className="label">Peso e Apgar ao nascer (se disponível):</label>
             <input className="input" style={{ marginBottom: '1rem' }} value={formData.pesoApgar} onChange={e => handleChange("pesoApgar", e.target.value)} />
             
@@ -302,7 +346,13 @@ function AnamneseForm() {
             <input className="input" style={{ marginBottom: '1rem' }} value={formData.marcosMotor} onChange={e => handleChange("marcosMotor", e.target.value)} />
 
             <label className="label">Marcos da linguagem (primeiras palavras, frases, fluência) — idades:</label>
-            <input className="input" style={{ marginBottom: '1rem' }} value={formData.marcosLinguagem} onChange={e => handleChange("marcosLinguagem", e.target.value)} />
+            <input className="input" style={{ marginBottom: '1.5rem' }} value={formData.marcosLinguagem} onChange={e => handleChange("marcosLinguagem", e.target.value)} />
+
+            <label className="label">Desenvolvimento sensorial/alimentar na infância:</label>
+            {renderGridCheckboxes("sensorialAlimentar", [
+              "Seletividade/ restrição alimentar", "Hipersensibilidade a sons/texturas/luzes", "Atraso no controle esfincteriano", 
+              "Distúrbio de sono precoce", "Sem alterações relatadas"
+            ])}
           </div>
         )}
 
@@ -314,38 +364,42 @@ function AnamneseForm() {
             <label className="label">Idade de ingresso escolar / adaptação inicial:</label>
             <input className="input" style={{ marginBottom: '1rem' }} value={formData.idadeIngressoEscolar} onChange={e => handleChange("idadeIngressoEscolar", e.target.value)} />
             
-            <label className="label">Histórico Escolar:</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1rem' }}>
-              {["Repetência", "Necessidade de reforço", "Bom desempenho geral", "Relatos de desatenção", "Dificuldade leitura/escrita"].map(opt => (
-                <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={formData.historicoDesempenho.includes(opt)} onChange={() => handleCheckbox("historicoDesempenho", opt)} />
-                  {opt}
-                </label>
-              ))}
-            </div>
+            <label className="label">Histórico de desempenho:</label>
+            {renderGridCheckboxes("historicoDesempenho", [
+              "Repetência", "Necessidade de reforço escolar", "Encaminhamento anterior para AEE/psicopedagogia", 
+              "Relatos de professores sobre desatenção", "Relatos de dificuldade de leitura/escrita", "Relatos de dificuldade em matemática", 
+              "Bom desempenho geral", "Dificuldade específica em uma disciplina"
+            ])}
             
-            <label className="label">Disciplina(s) de maior dificuldade e natureza do erro:</label>
+            <label className="label">Disciplina(s) de maior dificuldade e natureza do erro (ex.: troca de letras, lentidão, esquecimento de regras):</label>
             <input className="input" style={{ marginBottom: '1rem' }} value={formData.disciplinaDificuldade} onChange={e => handleChange("disciplinaDificuldade", e.target.value)} />
+
+            <label className="label">Comportamento em sala de aula relatado por professores (agitação, dispersão, isolamento, oposição):</label>
+            <input className="input" style={{ marginBottom: '1rem' }} value={formData.comportamentoSala} onChange={e => handleChange("comportamentoSala", e.target.value)} />
+            
+            <label className="label">Já realizou avaliação psicopedagógica, fonoaudiológica ou neuropsicológica prévia? Resultados/laudos anteriores:</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '1rem' }} value={formData.laudosAnteriores} onChange={e => handleChange("laudosAnteriores", e.target.value)}></textarea>
           </div>
         )}
 
         {/* STEP 4: Histórico Ocupacional */}
         {currentStep === 4 && (
           <div className="animate-fade">
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[4]}</h2>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-main)' }}>{SECTIONS[4]}</h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>(quando aplicável)</p>
             
             <label className="label">Cargo atual e tempo na função:</label>
             <input className="input" style={{ marginBottom: '1rem' }} value={formData.cargoAtual} onChange={e => handleChange("cargoAtual", e.target.value)} />
 
             <label className="label">Queixas no ambiente de trabalho:</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1rem' }}>
-              {["Dificuldade de organização", "Esquecimentos frequentes", "Conflitos interpessoais", "Quedas de produtividade"].map(opt => (
-                <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={formData.queixasTrabalho.includes(opt)} onChange={() => handleCheckbox("queixasTrabalho", opt)} />
-                  {opt}
-                </label>
-              ))}
-            </div>
+            {renderGridCheckboxes("queixasTrabalho", [
+              "Dificuldade de organização/planejamento", "Esquecimentos frequentes", "Dificuldade de concentração em reuniões", 
+              "Lentidão para concluir tarefas", "Conflitos interpessoais", "Absenteísmo", 
+              "Quedas de produtividade recentes", "Sem queixas ocupacionais"
+            ])}
+
+            <label className="label">Histórico de mudanças/perdas de emprego relacionadas à queixa atual:</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '1rem' }} value={formData.historicoMudancasEmprego} onChange={e => handleChange("historicoMudancasEmprego", e.target.value)}></textarea>
           </div>
         )}
 
@@ -355,83 +409,160 @@ function AnamneseForm() {
             <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[5]}</h2>
             
             <label className="label">Condições médicas relevantes:</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '1rem' }}>
-              {["Hipertensão", "Diabetes", "Cardiopatia", "Epilepsia", "Enxaqueca", "TCE", "Apneia do sono", "Distúrbios da tireoide", "Nenhuma"].map(opt => (
-                <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={formData.condicoesMedicas.includes(opt)} onChange={() => handleCheckbox("condicoesMedicas", opt)} />
-                  {opt}
-                </label>
-              ))}
-            </div>
+            {renderGridCheckboxes("condicoesMedicas", [
+              "Hipertensão", "Diabetes", "Dislipidemia", 
+              "Cardiopatia", "Epilepsia/convulsões", "TCE (traumatismo cranioencefálico)", 
+              "AVC/AIT", "Enxaqueca", "Distúrbios da tireoide", 
+              "Apneia do sono", "Doença autoimune", "Nenhuma relatada"
+            ], 3)}
 
-            <label className="label">Medicações em uso atual (nome, dose, tempo):</label>
+            <label className="label">Detalhar diagnóstico, data e tratamento das condições marcadas acima:</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '1rem' }} value={formData.detalhesMedicos} onChange={e => handleChange("detalhesMedicos", e.target.value)}></textarea>
+
+            <label className="label">Cirurgias prévias (especialmente com anestesia geral) e complicações:</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '1rem' }} value={formData.cirurgiasPrevias} onChange={e => handleChange("cirurgiasPrevias", e.target.value)}></textarea>
+
+            <label className="label">Medicações em uso atual (nome, dose, tempo de uso) — atenção a fármacos com efeito cognitivo:</label>
             <textarea className="input" style={{ minHeight: '60px', marginBottom: '1rem' }} value={formData.medicacoesAtual} onChange={e => handleChange("medicacoesAtual", e.target.value)}></textarea>
 
-            <label className="label">Diagnósticos psiquiátricos prévios ou atuais:</label>
-            <input className="input" style={{ marginBottom: '1rem' }} value={formData.diagnosticosPsiquiatricos} onChange={e => handleChange("diagnosticosPsiquiatricos", e.target.value)} />
-
-            <label className="label">Histórico de psicoterapia (abordagem, tempo, motivo):</label>
-            <input className="input" style={{ marginBottom: '1rem' }} value={formData.historicoPsicoterapia} onChange={e => handleChange("historicoPsicoterapia", e.target.value)} />
+            <label className="label">Exames complementares já realizados (neuroimagem, EEG, laboratoriais) e resultados, se conhecidos:</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '1.5rem' }} value={formData.examesRealizados} onChange={e => handleChange("examesRealizados", e.target.value)}></textarea>
             
             <label className="label">Uso de substâncias:</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '1rem' }}>
-              {["Álcool", "Tabaco", "Outras substâncias", "Nenhum uso"].map(opt => (
-                <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={formData.usoSubstancias.includes(opt)} onChange={() => handleCheckbox("usoSubstancias", opt)} />
-                  {opt}
-                </label>
-              ))}
-            </div>
+            {renderGridCheckboxes("usoSubstancias", [
+              "Álcool", "Tabaco", "Outras substâncias psicoativas", "Nenhum uso relatado"
+            ], 3)}
+
+            <label className="label">Detalhar frequência, quantidade e tempo de uso:</label>
+            <input className="input" style={{ marginBottom: '1rem' }} value={formData.frequenciaSubstancias} onChange={e => handleChange("frequenciaSubstancias", e.target.value)} />
           </div>
         )}
 
-        {/* STEP 6: História Familiar */}
+        {/* STEP 6: História Psiquiátrica */}
         {currentStep === 6 && (
           <div className="animate-fade">
             <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[6]}</h2>
             
-            <label className="label">Composição familiar / estrutura de convívio atual:</label>
-            <textarea className="input" style={{ minHeight: '60px', marginBottom: '1rem' }} value={formData.composicaoFamiliar} onChange={e => handleChange("composicaoFamiliar", e.target.value)}></textarea>
+            <label className="label">Diagnósticos psiquiátricos prévios ou atuais (autorrelato/laudo):</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '1rem' }} value={formData.diagnosticosPsiquiatricos} onChange={e => handleChange("diagnosticosPsiquiatricos", e.target.value)}></textarea>
 
-            <label className="label">Antecedentes familiares (parentesco em 1º e 2º grau):</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1rem' }}>
-              {["TDAH", "TEA", "Transtornos de aprendizagem", "Transtornos de humor", "Demências", "Epilepsia", "Esquizofrenia/psicose", "Nenhum"].map(opt => (
-                <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={formData.antecedentesFamiliares.includes(opt)} onChange={() => handleCheckbox("antecedentesFamiliares", opt)} />
-                  {opt}
-                </label>
-              ))}
-            </div>
+            <label className="label">Acompanhamento psiquiátrico atual (profissional, tempo, medicação psicotrópica em uso):</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '1rem' }} value={formData.acompanhamentoAtual} onChange={e => handleChange("acompanhamentoAtual", e.target.value)}></textarea>
 
-            <label className="label">Detalhar grau de parentesco dos itens marcados:</label>
-            <input className="input" style={{ marginBottom: '1rem' }} value={formData.grauParentescoAntecedentes} onChange={e => handleChange("grauParentescoAntecedentes", e.target.value)} />
-            
-            <label className="label">Dinâmica familiar atual (conflitos, suporte, mudanças recentes):</label>
-            <textarea className="input" style={{ minHeight: '60px', marginBottom: '1rem' }} value={formData.dinamicaFamiliar} onChange={e => handleChange("dinamicaFamiliar", e.target.value)}></textarea>
+            <label className="label">Histórico de psicoterapia (abordagem, tempo, motivo de início/término):</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '1.5rem' }} value={formData.historicoPsicoterapia} onChange={e => handleChange("historicoPsicoterapia", e.target.value)}></textarea>
+
+            <label className="label">Antecedentes relevantes:</label>
+            {renderGridCheckboxes("antecedentesRelevantes", [
+              "Ideação suicida prévia", "Tentativa de suicídio prévia", "Automutilação", 
+              "Internação psiquiátrica prévia", "Episódios de humor exaltado", "Episódios depressivos", 
+              "Crises de ansiedade/pânico", "Sintomas psicóticos relatados", "Nenhum antecedente relevante"
+            ], 3)}
+
+            <label className="label">Detalhar antecedentes marcados acima (datas, contexto, desfecho):</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '1rem' }} value={formData.detalhesAntecedentes} onChange={e => handleChange("detalhesAntecedentes", e.target.value)}></textarea>
           </div>
         )}
 
-        {/* STEP 7: Cognitiva e Emocional */}
+        {/* STEP 7: História Familiar */}
         {currentStep === 7 && (
           <div className="animate-fade">
             <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[7]}</h2>
             
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '1rem' }}>Atenção e Funções Executivas</h3>
+            <label className="label">Composição familiar / estrutura de convívio atual:</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '1.5rem' }} value={formData.composicaoFamiliar} onChange={e => handleChange("composicaoFamiliar", e.target.value)}></textarea>
+
+            <label className="label">Antecedentes familiares (parentesco em 1º e 2º grau):</label>
+            {renderGridCheckboxes("antecedentesFamiliares", [
+              "TDAH", "TEA", "Deficiência intelectual", 
+              "Transtornos de aprendizagem", "Transtornos de humor", "Transtornos de ansiedade", 
+              "Esquizofrenia/psicose", "Demências", "Epilepsia", 
+              "Uso abusivo de substâncias", "Nenhum antecedente relatado"
+            ], 3)}
+
+            <label className="label">Detalhar grau de parentesco e diagnóstico de cada item marcado:</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '1.5rem' }} value={formData.grauParentescoAntecedentes} onChange={e => handleChange("grauParentescoAntecedentes", e.target.value)}></textarea>
+            
+            <label className="label">Dinâmica familiar atual (conflitos, suporte, mudanças recentes relevantes):</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '1rem' }} value={formData.dinamicaFamiliar} onChange={e => handleChange("dinamicaFamiliar", e.target.value)}></textarea>
+          </div>
+        )}
+
+        {/* STEP 8: Função Cognitiva */}
+        {currentStep === 8 && (
+          <div className="animate-fade">
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-main)' }}>{SECTIONS[8]}</h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Seção estruturada para corresponder aos domínios analisados.</p>
+            
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>9.1 Atenção</h3>
             {renderFrequenciaSelect("atencao", "manterFoco", "Dificuldade em manter o foco em tarefas longas")}
             {renderFrequenciaSelect("atencao", "distraiFacilmente", "Distrai-se facilmente com estímulos externos")}
+            {renderFrequenciaSelect("atencao", "cometeErros", "Comete erros por desatenção a detalhes")}
+            {renderFrequenciaSelect("atencao", "alternarTarefas", "Dificuldade em alternar entre duas tarefas simultâneas")}
+            <label className="label" style={{ marginTop: '0.5rem' }}>Exemplos concretos do cotidiano que ilustrem a queixa atencional:</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '2rem' }} value={formData.exemplosAtencao} onChange={e => handleChange("exemplosAtencao", e.target.value)}></textarea>
+
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>9.2 Funções Executivas</h3>
             {renderFrequenciaSelect("funcoesExecutivas", "planejar", "Dificuldade em planejar e organizar atividades/rotina")}
             {renderFrequenciaSelect("funcoesExecutivas", "iniciarTarefas", "Dificuldade em iniciar tarefas (procrastinação)")}
+            {renderFrequenciaSelect("funcoesExecutivas", "impulsividade", "Impulsividade em decisões ou falas")}
+            {renderFrequenciaSelect("funcoesExecutivas", "rigidez", "Rigidez/dificuldade em se adaptar a mudanças de plano")}
+            {renderFrequenciaSelect("funcoesExecutivas", "autoMonitorar", "Dificuldade em auto monitorar erros durante uma tarefa")}
+            <label className="label" style={{ marginTop: '0.5rem' }}>Exemplos concretos que ilustrem a queixa executiva:</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '2rem' }} value={formData.exemplosExecutivas} onChange={e => handleChange("exemplosExecutivas", e.target.value)}></textarea>
+
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>9.3 Memória</h3>
+            {renderFrequenciaSelect("memoria", "esquecimentoCompromissos", "Esquecimento de compromissos/combinados (memória prospectiva)")}
+            {renderFrequenciaSelect("memoria", "lembrarEventos", "Dificuldade em lembrar eventos recentes (memória episódica)")}
+            {renderFrequenciaSelect("memoria", "repeticaoPerguntas", "Repetição de perguntas/assuntos já conversados")}
+            {renderFrequenciaSelect("memoria", "reterInstrucoes", "Dificuldade em reter instruções recém-dadas (memória operacional)")}
+            <label className="label" style={{ marginTop: '0.5rem' }}>A dificuldade é mais para aprender informação nova ou para evocar o que já foi aprendido?</label>
+            <input className="input" style={{ marginBottom: '1rem' }} value={formData.dificuldadeAprenderEvocar} onChange={e => handleChange("dificuldadeAprenderEvocar", e.target.value)} />
+            <label className="label">Exemplos concretos que ilustrem a queixa de memória:</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '2rem' }} value={formData.exemplosMemoria} onChange={e => handleChange("exemplosMemoria", e.target.value)}></textarea>
+
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>9.4 Linguagem</h3>
+            {renderGridCheckboxes("linguagem", [
+              "Dificuldade em encontrar palavras (anomia)", "Trocas fonológicas na fala", "Gagueira/disfluência", 
+              "Dificuldade de compreensão de instruções verbais complexas", "Dificuldade em leitura", "Dificuldade em escrita/ortografia", 
+              "Sem queixas de linguagem"
+            ])}
+            <label className="label" style={{ marginTop: '0.5rem' }}>Detalhar exemplos e frequência das dificuldades marcadas:</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '2rem' }} value={formData.exemplosLinguagem} onChange={e => handleChange("exemplosLinguagem", e.target.value)}></textarea>
+
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>9.5 Visuoconstrução e Habilidades Visuoespaciais</h3>
+            {renderGridCheckboxes("visuoconstrucao", [
+              "Dificuldade de orientação espacial/direção", "Dificuldade em desenhar/copiar figuras", "Dificuldade em montar quebra-cabeças ou objetos", 
+              "Dificuldade em estimar distâncias/tamanhos", "Sem queixas visuoespaciais"
+            ])}
+
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginTop: '2rem' }}>9.6 Praxias e Coordenação Motora</h3>
+            {renderGridCheckboxes("praxias", [
+              "Dificuldade em coordenação motora fina (escrita, botões)", "Desajeitamento motor global", "Dificuldade em imitar gestos/sequências motoras", 
+              "Sem queixas motoras/práxicas"
+            ])}
+          </div>
+        )}
+
+        {/* STEP 9: Socioemocionais */}
+        {currentStep === 9 && (
+          <div className="animate-fade">
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[9]}</h2>
             
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '1rem', marginTop: '1.5rem' }}>Memória</h3>
-            {renderFrequenciaSelect("memoria", "esquecimentoEventos", "Dificuldade em lembrar eventos recentes (memória episódica)")}
-            {renderFrequenciaSelect("memoria", "repeticaoAssuntos", "Repetição de perguntas/assuntos já conversados")}
-            
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '1rem', marginTop: '1.5rem' }}>Socioemocionais</h3>
             {renderFrequenciaSelect("socioemocionais", "irritabilidade", "Irritabilidade/labilidade emocional")}
             {renderFrequenciaSelect("socioemocionais", "ansiedade", "Ansiedade antecipatória ou generalizada")}
             {renderFrequenciaSelect("socioemocionais", "humorDeprimido", "Humor deprimido/anedonia")}
+            {renderFrequenciaSelect("socioemocionais", "isolamento", "Isolamento social")}
+            {renderFrequenciaSelect("socioemocionais", "interpretarSinais", "Dificuldade em interpretar sinais sociais/nuances (ex.: ironia, expressões faciais)")}
+            {renderFrequenciaSelect("socioemocionais", "rigidezInteresses", "Rigidez de interesses/rotinas ou interesses restritos e intensos")}
 
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '1rem', marginTop: '1.5rem' }}>Comportamentos</h3>
+            <label className="label" style={{ marginTop: '0.5rem' }}>Estratégias de enfrentamento (coping) habitualmente utilizadas:</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '1.5rem' }} value={formData.estrategiasCoping} onChange={e => handleChange("estrategiasCoping", e.target.value)}></textarea>
+
+            <label className="label">Autopercepção do paciente sobre suas dificuldades e pontos fortes:</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '2rem' }} value={formData.autopercepcao} onChange={e => handleChange("autopercepcao", e.target.value)}></textarea>
+
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>Perguntas Adicionais</h3>
             <label className="label">O paciente apresenta estereotipias? (Movimentos com o corpo, como chacoalhar das mãos, balançar o tronco para frente e para trás, sons com a boca, entre outros):</label>
             <textarea className="input" style={{ minHeight: '60px', marginBottom: '1rem' }} value={formData.estereotipias} onChange={e => handleChange("estereotipias", e.target.value)}></textarea>
 
@@ -440,48 +571,79 @@ function AnamneseForm() {
           </div>
         )}
 
-        {/* STEP 8: Rotina e Expectativas */}
-        {currentStep === 8 && (
+        {/* STEP 10: Sono, Alimentação e Hábitos */}
+        {currentStep === 10 && (
           <div className="animate-fade">
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[8]}</h2>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[10]}</h2>
             
-            <label className="label">Horário habitual de dormir/acordar e qualidade do sono:</label>
-            <input className="input" style={{ marginBottom: '1rem' }} value={formData.sonoHorario} onChange={e => handleChange("sonoHorario", e.target.value)} />
+            <label className="label">Horário habitual de dormir/acordar e qualidade percebida do sono:</label>
+            <input className="input" style={{ marginBottom: '1.5rem' }} value={formData.sonoHorario} onChange={e => handleChange("sonoHorario", e.target.value)} />
             
-            <label className="label">Padrão alimentar e apetite (alterações recentes):</label>
-            <input className="input" style={{ marginBottom: '1rem' }} value={formData.padraoAlimentar} onChange={e => handleChange("padraoAlimentar", e.target.value)} />
+            <label className="label">Alterações do sono:</label>
+            {renderGridCheckboxes("alteracoesSono", [
+              "Insônia inicial", "Despertares noturnos", "Sonolência diurna excessiva", 
+              "Ronco/apneia relatada", "Pesadelos/parassonias", "Sono preservado"
+            ], 3)}
+            
+            <label className="label" style={{ marginTop: '1.5rem' }}>Padrão alimentar e apetite (alterações recentes):</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '1rem' }} value={formData.padraoAlimentar} onChange={e => handleChange("padraoAlimentar", e.target.value)}></textarea>
             
             <label className="label">Nível de atividade física habitual:</label>
             <input className="input" style={{ marginBottom: '1.5rem' }} value={formData.atividadeFisica} onChange={e => handleChange("atividadeFisica", e.target.value)} />
+          </div>
+        )}
+
+        {/* STEP 11: Rotina e AVDs */}
+        {currentStep === 11 && (
+          <div className="animate-fade">
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[11]}</h2>
             
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '1rem' }}>Expectativas quanto à Avaliação</h3>
+            <label className="label">Necessita de apoio de terceiros para:</label>
+            {renderGridCheckboxes("apoioTerceiros", [
+              "Higiene pessoal", "Alimentação", "Administração de medicações", 
+              "Administração financeira", "Uso de transporte", "Gestão de compromissos/agenda", 
+              "Tarefas domésticas", "Nenhum apoio necessário"
+            ], 3)}
+            
+            <label className="label" style={{ marginTop: '1.5rem' }}>Detalhar o tipo e a frequência do apoio necessário nos itens marcados:</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '1rem' }} value={formData.detalhesApoio} onChange={e => handleChange("detalhesApoio", e.target.value)}></textarea>
+          </div>
+        )}
+
+        {/* STEP 12: Expectativas e Arquivos */}
+        {currentStep === 12 && (
+          <div className="animate-fade">
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[12]}</h2>
+            
             <label className="label">O que o paciente/responsável espera compreender ou resolver com este processo avaliativo?</label>
-            <textarea className="input" style={{ minHeight: '80px', marginBottom: '1rem' }} value={formData.expectativasAvaliacao} onChange={e => handleChange("expectativasAvaliacao", e.target.value)}></textarea>
+            <textarea className="input" style={{ minHeight: '80px', marginBottom: '1.5rem' }} value={formData.expectativasAvaliacao} onChange={e => handleChange("expectativasAvaliacao", e.target.value)}></textarea>
             
-            <label className="label">Há laudos, receituários ou documentos trazidos para anexar ao processo?</label>
-            <input className="input" style={{ marginBottom: '1rem' }} value={formData.documentosTrazidos} onChange={e => handleChange("documentosTrazidos", e.target.value)} />
+            <label className="label">Há laudos, receituários ou documentos escolares/profissionais trazidos para anexar ao processo?</label>
+            <input className="input" style={{ marginBottom: '1.5rem' }} value={formData.documentosTrazidos} onChange={e => handleChange("documentosTrazidos", e.target.value)} />
             
-            <label className="label" style={{ marginTop: '1rem' }}>Anexar Arquivos (Laudos, fotos, encaminhamentos, exames):</label>
-            <input 
-              type="file" 
-              multiple 
-              onChange={(e) => setFiles(e.target.files ? Array.from(e.target.files) : [])}
-              className="input" 
-              style={{ marginBottom: '1rem', padding: '0.5rem', background: 'var(--bg-color)' }} 
-            />
-            {files.length > 0 && (
-              <div style={{ marginBottom: '1rem', fontSize: '0.9rem', backgroundColor: 'var(--primary-light)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
-                <strong style={{ color: 'var(--primary)' }}>Arquivos selecionados ({files.length}):</strong>
-                <ul style={{ paddingLeft: '1.5rem', marginTop: '0.5rem', color: 'var(--text-main)' }}>
-                  {files.map((f, i) => <li key={i}>{f.name}</li>)}
-                </ul>
-              </div>
-            )}
+            <div style={{ backgroundColor: 'var(--primary-light)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px dashed var(--primary-mid)' }}>
+              <label className="label" style={{ marginBottom: '0.5rem', color: 'var(--primary)' }}>Anexar Arquivos (Laudos, fotos, encaminhamentos, exames):</label>
+              <input 
+                type="file" 
+                multiple 
+                onChange={(e) => setFiles(e.target.files ? Array.from(e.target.files) : [])}
+                className="input" 
+                style={{ padding: '0.5rem', background: 'var(--bg-color)', border: '1px solid var(--border-color)' }} 
+              />
+              {files.length > 0 && (
+                <div style={{ marginTop: '1rem', fontSize: '0.9rem' }}>
+                  <strong style={{ color: 'var(--text-main)' }}>Arquivos selecionados ({files.length}):</strong>
+                  <ul style={{ paddingLeft: '1.5rem', marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
+                    {files.map((f, i) => <li key={i}>{f.name}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {/* CONTROLES DO WIZARD */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
           {currentStep > 0 ? (
             <button 
               className="btn btn-outline" 
@@ -505,7 +667,7 @@ function AnamneseForm() {
               className="btn" 
               onClick={saveAnamnese}
               disabled={loading || !patientId}
-              style={{ backgroundColor: 'var(--success)', borderColor: 'var(--success)' }}
+              style={{ backgroundColor: 'var(--success)', borderColor: 'var(--success)', color: 'white', boxShadow: '0 4px 10px rgba(16, 185, 129, 0.3)' }}
             >
               {loading ? "Salvando..." : "Finalizar e Salvar"}
             </button>
