@@ -20,7 +20,7 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
     idadeIngressoEscolar: "", historicoDesempenho: [], disciplinaDificuldade: "", comportamentoSala: "", laudosAnteriores: "", cargoAtual: "", queixasTrabalho: [], historicoMudancasEmprego: "",
     condicoesMedicas: [], detalhesMedicos: "", cirurgiasPrevias: "", medicacoesAtual: "", examesRealizados: "", usoSubstancias: [], frequenciaSubstancias: "", diagnosticosPsiquiatricos: "", acompanhamentoAtual: "", historicoPsicoterapia: "", antecedentesPsiquiatricos: [], detalhesAntecedentes: "",
     composicaoFamiliar: "", antecedentesFamiliares: [], grauParentescoAntecedentes: "", dinamicaFamiliar: "",
-    atencao: {}, funcoesExecutivas: {}, memoria: {}, linguagem: {}, visuoconstrucao: [], praxias: [], socioemocionais: {}, coping: "", autopercepcao: "",
+    atencao: {}, funcoesExecutivas: {}, memoria: {}, linguagem: {}, visuoconstrucao: [], praxias: [], socioemocionais: {}, coping: "", autopercepcao: "", estereotipias: "", comportamentosAtipicos: "",
     sonoHorario: "", alteracoesSono: [], padraoAlimentar: "", atividadeFisica: "", apoioTerceiros: [], detalhesApoio: "", expectativasAvaliacao: "", documentosTrazidos: ""
   });
 

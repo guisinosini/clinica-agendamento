@@ -81,6 +81,8 @@ function AnamneseForm() {
     socioemocionais: {},
     coping: "",
     autopercepcao: "",
+    estereotipias: "",
+    comportamentosAtipicos: "",
     // Seção 11, 12 e 13
     sonoHorario: "",
     alteracoesSono: [],
@@ -420,6 +422,13 @@ function AnamneseForm() {
             {renderFrequenciaSelect("socioemocionais", "irritabilidade", "Irritabilidade/labilidade emocional")}
             {renderFrequenciaSelect("socioemocionais", "ansiedade", "Ansiedade antecipatória ou generalizada")}
             {renderFrequenciaSelect("socioemocionais", "humorDeprimido", "Humor deprimido/anedonia")}
+
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '1rem', marginTop: '1.5rem' }}>Comportamentos</h3>
+            <label className="label">O paciente apresenta estereotipias? (Movimentos com o corpo, como chacoalhar das mãos, balançar o tronco para frente e para trás, sons com a boca, entre outros):</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '1rem' }} value={formData.estereotipias} onChange={e => handleChange("estereotipias", e.target.value)}></textarea>
+
+            <label className="label">O paciente apresenta comportamentos atípicos? (Comportamentos que você observa como diferente ou incomum):</label>
+            <textarea className="input" style={{ minHeight: '60px', marginBottom: '1rem' }} value={formData.comportamentosAtipicos} onChange={e => handleChange("comportamentosAtipicos", e.target.value)}></textarea>
           </div>
         )}
 
