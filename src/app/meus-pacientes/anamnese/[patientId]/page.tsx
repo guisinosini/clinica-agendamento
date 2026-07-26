@@ -113,17 +113,20 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `
+      @media screen {
+        .print-report { display: none !important; }
+      }
       @media print {
-        body { background: white !important; }
-        .container { padding: 0 !important; max-width: 100% !important; margin: 0 !important; }
-        .card { box-shadow: none !important; border: none !important; padding: 0 !important; }
-        header, .print-hide { display: none !important; }
-        .print-sections { gap: 1.5rem !important; }
-        .print-title { border-bottom: 2px solid black !important; color: black !important; font-size: 14pt !important; margin-bottom: 0.5rem !important; }
-        .label { color: black !important; font-weight: bold !important; font-size: 10pt !important; margin-bottom: 0.2rem !important; }
-        .input { border: 1px solid #ddd !important; resize: none !important; background: transparent !important; font-size: 10pt !important; padding: 0.3rem !important; min-height: auto !important; }
-        textarea.input { height: 40px !important; }
-        input[type="checkbox"], input[type="radio"] { appearance: auto !important; -webkit-print-color-adjust: exact !important; }
+        @page { margin: 1cm; }
+        body { background: white !important; color: black !important; font-size: 10pt !important; line-height: 1.3 !important; }
+        .screen-only, header, .card, .btn { display: none !important; }
+        .print-report { display: block !important; width: 100%; }
+        .print-header { border-bottom: 2px solid black; padding-bottom: 10px; margin-bottom: 10px; }
+        .print-title { font-size: 12pt; font-weight: bold; border-bottom: 1px solid #ccc; margin: 10px 0 4px 0; padding-bottom: 2px; }
+        .print-item { margin-bottom: 4px; }
+        .print-label { font-weight: bold; display: inline; margin-right: 5px; }
+        .print-value { display: inline; }
+        .print-section { page-break-inside: avoid; }
       }
     `;
     document.head.appendChild(style);
@@ -386,6 +389,95 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
           </button>
         </div>
 
+      </div>
+
+      <div className="print-report">
+        {patient && (
+          <div className="print-header">
+            <h1 style={{ fontSize: "16pt", margin: 0 }}>Anamnese Clínica - {patient.name}</h1>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", marginTop: "10px", fontSize: "10pt" }}>
+              <div><strong>Código do Paciente:</strong> {patient.code || "-"}</div>
+              <div><strong>Data de Nascimento:</strong> {patient.birthDate || "-"}</div>
+              <div><strong>Responsável/Pais:</strong> {patient.guardianName || patient.parentsName || "-"}</div>
+              <div><strong>Convênio:</strong> {patient.healthPlan || "-"}</div>
+              <div><strong>Escolaridade:</strong> {patient.schoolGrade || "-"}</div>
+              <div><strong>Data de Impressão:</strong> {new Date().toLocaleDateString("pt-BR")}</div>
+            </div>
+          </div>
+        )}
+
+        <div className="print-section">
+          <h2 className="print-title">Queixa Principal</h2>
+          <div className="print-item"><span className="print-label">Queixa principal (suas próprias palavras):</span><span className="print-value">{formData.queixaPrincipal}</span></div>
+          <div className="print-item"><span className="print-label">Desde quando foi notada? Início súbito ou insidioso?</span><span className="print-value">{formData.inicioSintomas}</span></div>
+          <div className="print-item"><span className="print-label">Gatilho associado ao início:</span><span className="print-value">{formData.gatilhoInicio}</span></div>
+          <div className="print-item"><span className="print-label">Progressão ao longo do tempo:</span><span className="print-value">{formData.progressao}</span></div>
+          <div className="print-item"><span className="print-label">O que já melhorou/piorou:</span><span className="print-value">{formData.melhorouPiorou}</span></div>
+          <div className="print-item"><span className="print-label">Áreas em que mais impacta:</span><span className="print-value">{formData.areasImpacto?.join(", ")}</span></div>
+        </div>
+
+        <div className="print-section">
+          <h2 className="print-title">Desenvolvimento</h2>
+          <div className="print-item"><span className="print-label">Gestação e Parto:</span><span className="print-value">{formData.gestacao?.join(", ")}</span></div>
+          <div className="print-item"><span className="print-label">Intercorrências gestacionais:</span><span className="print-value">{formData.intercorrenciasGestacao}</span></div>
+          <div className="print-item"><span className="print-label">Peso e Apgar ao nascer:</span><span className="print-value">{formData.pesoApgar}</span></div>
+          <div className="print-item"><span className="print-label">Marcos do desenvolvimento motor:</span><span className="print-value">{formData.marcosMotor}</span></div>
+          <div className="print-item"><span className="print-label">Marcos da linguagem:</span><span className="print-value">{formData.marcosLinguagem}</span></div>
+        </div>
+
+        <div className="print-section">
+          <h2 className="print-title">Escolar e Ocupacional</h2>
+          <div className="print-item"><span className="print-label">Idade de ingresso escolar / adaptação inicial:</span><span className="print-value">{formData.idadeIngressoEscolar}</span></div>
+          <div className="print-item"><span className="print-label">Histórico Escolar:</span><span className="print-value">{formData.historicoDesempenho?.join(", ")}</span></div>
+          <div className="print-item"><span className="print-label">Disciplinas de maior dificuldade:</span><span className="print-value">{formData.disciplinaDificuldade}</span></div>
+          <div className="print-item"><span className="print-label">Cargo atual e tempo na função:</span><span className="print-value">{formData.cargoAtual}</span></div>
+          <div className="print-item"><span className="print-label">Queixas no ambiente de trabalho:</span><span className="print-value">{formData.queixasTrabalho?.join(", ")}</span></div>
+        </div>
+
+        <div className="print-section">
+          <h2 className="print-title">Médica e Psiquiátrica</h2>
+          <div className="print-item"><span className="print-label">Condições médicas relevantes:</span><span className="print-value">{formData.condicoesMedicas?.join(", ")}</span></div>
+          <div className="print-item"><span className="print-label">Medicações em uso atual (nome, dose, tempo):</span><span className="print-value">{formData.medicacoesAtual}</span></div>
+          <div className="print-item"><span className="print-label">Diagnósticos psiquiátricos prévios ou atuais:</span><span className="print-value">{formData.diagnosticosPsiquiatricos}</span></div>
+          <div className="print-item"><span className="print-label">Histórico de psicoterapia:</span><span className="print-value">{formData.historicoPsicoterapia}</span></div>
+          <div className="print-item"><span className="print-label">Uso de substâncias:</span><span className="print-value">{formData.usoSubstancias?.join(", ")}</span></div>
+        </div>
+
+        <div className="print-section">
+          <h2 className="print-title">História Familiar</h2>
+          <div className="print-item"><span className="print-label">Composição familiar / estrutura atual:</span><span className="print-value">{formData.composicaoFamiliar}</span></div>
+          <div className="print-item"><span className="print-label">Antecedentes familiares:</span><span className="print-value">{formData.antecedentesFamiliares?.join(", ")}</span></div>
+          <div className="print-item"><span className="print-label">Detalhar grau de parentesco:</span><span className="print-value">{formData.grauParentescoAntecedentes}</span></div>
+          <div className="print-item"><span className="print-label">Dinâmica familiar atual (conflitos, suporte):</span><span className="print-value">{formData.dinamicaFamiliar}</span></div>
+        </div>
+
+        <div className="print-section">
+          <h2 className="print-title">Cognitiva, Emocional e Comportamental</h2>
+          <div className="print-item"><span className="print-label">Dificuldade em manter foco:</span><span className="print-value">{formData.atencao?.manterFoco}</span></div>
+          <div className="print-item"><span className="print-label">Distrai-se facilmente:</span><span className="print-value">{formData.atencao?.distraiFacilmente}</span></div>
+          <div className="print-item"><span className="print-label">Dificuldade em planejar/organizar:</span><span className="print-value">{formData.funcoesExecutivas?.planejar}</span></div>
+          <div className="print-item"><span className="print-label">Dificuldade em iniciar tarefas:</span><span className="print-value">{formData.funcoesExecutivas?.iniciarTarefas}</span></div>
+          <div className="print-item"><span className="print-label">Esquecimento de eventos recentes:</span><span className="print-value">{formData.memoria?.esquecimentoEventos}</span></div>
+          <div className="print-item"><span className="print-label">Repetição de assuntos:</span><span className="print-value">{formData.memoria?.repeticaoAssuntos}</span></div>
+          
+          <div className="print-item"><span className="print-label">Irritabilidade / Labilidade emocional:</span><span className="print-value">{formData.socioemocionais?.irritabilidade}</span></div>
+          <div className="print-item"><span className="print-label">Ansiedade (antecipatória/generalizada):</span><span className="print-value">{formData.socioemocionais?.ansiedade}</span></div>
+          <div className="print-item"><span className="print-label">Humor deprimido / Anedonia:</span><span className="print-value">{formData.socioemocionais?.humorDeprimido}</span></div>
+          
+          <div className="print-item"><span className="print-label">Estereotipias (movimentos/chacoalhos):</span><span className="print-value">{formData.estereotipias}</span></div>
+          <div className="print-item"><span className="print-label">Comportamentos atípicos:</span><span className="print-value">{formData.comportamentosAtipicos}</span></div>
+          
+          <div className="print-item"><span className="print-label">Notas Adicionais do Profissional:</span><span className="print-value">{formData.autopercepcao}</span></div>
+        </div>
+
+        <div className="print-section">
+          <h2 className="print-title">Rotina e Expectativas</h2>
+          <div className="print-item"><span className="print-label">Horário de dormir e qualidade do sono:</span><span className="print-value">{formData.sonoHorario}</span></div>
+          <div className="print-item"><span className="print-label">Padrão alimentar e apetite:</span><span className="print-value">{formData.padraoAlimentar}</span></div>
+          <div className="print-item"><span className="print-label">Nível de atividade física:</span><span className="print-value">{formData.atividadeFisica}</span></div>
+          <div className="print-item"><span className="print-label">Expectativas quanto à Avaliação:</span><span className="print-value">{formData.expectativasAvaliacao}</span></div>
+          <div className="print-item"><span className="print-label">Documentos trazidos (Laudos, etc):</span><span className="print-value">{formData.documentosTrazidos}</span></div>
+        </div>
       </div>
     </div>
   );
