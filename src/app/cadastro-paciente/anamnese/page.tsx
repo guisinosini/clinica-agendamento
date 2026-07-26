@@ -24,6 +24,7 @@ function AnamneseForm() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
 
   // Estado unificado para todas as respostas
   const [formData, setFormData] = useState<any>({
@@ -127,9 +128,35 @@ function AnamneseForm() {
     setLoading(true);
     setError("");
     
+    let uploadedUrls: string[] = [];
+    
+    if (files.length > 0) {
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${patientId}_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `${patientId}/${fileName}`;
+
+        const { error: uploadError, data } = await supabase.storage
+          .from('patient-documents')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          console.error("Erro no upload do arquivo:", file.name, uploadError);
+        } else if (data) {
+          const { data: urlData } = supabase.storage.from('patient-documents').getPublicUrl(filePath);
+          uploadedUrls.push(urlData.publicUrl);
+        }
+      }
+    }
+
+    const finalFormData = {
+      ...formData,
+      documentosAnexos: uploadedUrls
+    };
+    
     const { error: dbError } = await supabase
       .from("anamneses")
-      .insert([{ patient_id: patientId, responses: formData }]);
+      .insert([{ patient_id: patientId, responses: finalFormData }]);
 
     setLoading(false);
     if (dbError) {
@@ -416,6 +443,23 @@ function AnamneseForm() {
             
             <label className="label">Há laudos, receituários ou documentos trazidos para anexar ao processo?</label>
             <input className="input" style={{ marginBottom: '1rem' }} value={formData.documentosTrazidos} onChange={e => handleChange("documentosTrazidos", e.target.value)} />
+            
+            <label className="label" style={{ marginTop: '1rem' }}>Anexar Arquivos (Laudos, fotos, encaminhamentos, exames):</label>
+            <input 
+              type="file" 
+              multiple 
+              onChange={(e) => setFiles(e.target.files ? Array.from(e.target.files) : [])}
+              className="input" 
+              style={{ marginBottom: '1rem', padding: '0.5rem', background: 'var(--bg-color)' }} 
+            />
+            {files.length > 0 && (
+              <div style={{ marginBottom: '1rem', fontSize: '0.9rem', backgroundColor: 'var(--primary-light)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+                <strong style={{ color: 'var(--primary)' }}>Arquivos selecionados ({files.length}):</strong>
+                <ul style={{ paddingLeft: '1.5rem', marginTop: '0.5rem', color: 'var(--text-main)' }}>
+                  {files.map((f, i) => <li key={i}>{f.name}</li>)}
+                </ul>
+              </div>
+            )}
           </div>
         )}
 

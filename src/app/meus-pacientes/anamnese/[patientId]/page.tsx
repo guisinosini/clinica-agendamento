@@ -352,6 +352,31 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
             
             <label className="label">Há laudos, receituários ou documentos trazidos para anexar ao processo?</label>
             <input className="input" style={{ marginBottom: '1rem' }} value={formData.documentosTrazidos} onChange={e => handleChange("documentosTrazidos", e.target.value)} />
+
+            {formData.documentosAnexos && formData.documentosAnexos.length > 0 && (
+              <div style={{ marginTop: '1.5rem', backgroundColor: 'var(--primary-light)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--primary-mid)' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  📎 Documentos Anexados pelo Paciente
+                </h3>
+                <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingLeft: 0, listStyle: 'none' }}>
+                  {formData.documentosAnexos.map((url: string, idx: number) => {
+                    const fileName = url.split('/').pop()?.split('?')[0] || `Documento ${idx + 1}`;
+                    return (
+                      <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <a 
+                          href={url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ color: 'var(--primary)', textDecoration: 'underline', fontWeight: 500 }}
+                        >
+                          📄 {decodeURIComponent(fileName)}
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
           </section>
 </div>
 

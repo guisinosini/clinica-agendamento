@@ -74,6 +74,14 @@ CREATE POLICY "Permitir deleção de profissionais" ON professionals FOR DELETE 
 -- CREATE POLICY "Upload de avatares" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'avatars');
 -- CREATE POLICY "Atualizar avatar" ON storage.objects FOR UPDATE USING (bucket_id = 'avatars');
 
+-- STORAGE: Criar bucket para documentos de pacientes (Anamnese)
+-- Execute no painel do Supabase > Storage > New Bucket:
+-- Nome: patient-documents | Public: true
+-- Depois execute:
+-- CREATE POLICY "Documentos públicos" ON storage.objects FOR SELECT USING (bucket_id = 'patient-documents');
+-- CREATE POLICY "Upload de documentos" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'patient-documents');
+-- CREATE POLICY "Atualizar documentos" ON storage.objects FOR UPDATE USING (bucket_id = 'patient-documents');
+
 -- Criação da tabela de Pacientes
 CREATE TABLE patients (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
