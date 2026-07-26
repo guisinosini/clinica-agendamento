@@ -266,7 +266,7 @@ function AnamneseForm() {
 
             <label className="label">Áreas em que a queixa mais impacta (selecione as opções):</label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-              {["Desempenho acadêmico", "Desempenho profissional", "Relações familiares", "Relações sociais/amizades", "Autonomia para AVDs", "Regulação emocional", "Sono", "Autoestima"].map(opt => (
+              {["Desempenho acadêmico", "Desempenho profissional", "Relações familiares", "Relações sociais/amizades", "Autonomia para atividades diárias", "Regulação emocional", "Sono", "Autoestima"].map(opt => (
                 <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer' }}>
                   <input type="checkbox" checked={formData.areasImpacto.includes(opt)} onChange={() => handleCheckbox("areasImpacto", opt)} />
                   {opt}
