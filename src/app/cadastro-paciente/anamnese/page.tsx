@@ -8,7 +8,8 @@ const SECTIONS = [
   "Termo de Sigilo",
   "Queixa Principal",
   "Histórico do Desenvolvimento",
-  "Histórico Escolar e Ocupacional",
+  "Histórico Escolar",
+  "Histórico Ocupacional (Trabalho)",
   "História Médica e Psiquiátrica",
   "História Familiar",
   "Avaliação Cognitiva e Emocional",
@@ -305,7 +306,7 @@ function AnamneseForm() {
           </div>
         )}
 
-        {/* STEP 3: Escolar e Ocupacional */}
+        {/* STEP 3: Histórico Escolar */}
         {currentStep === 3 && (
           <div className="animate-fade">
             <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[3]}</h2>
@@ -325,6 +326,13 @@ function AnamneseForm() {
             
             <label className="label">Disciplina(s) de maior dificuldade e natureza do erro:</label>
             <input className="input" style={{ marginBottom: '1rem' }} value={formData.disciplinaDificuldade} onChange={e => handleChange("disciplinaDificuldade", e.target.value)} />
+          </div>
+        )}
+
+        {/* STEP 4: Histórico Ocupacional */}
+        {currentStep === 4 && (
+          <div className="animate-fade">
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[4]}</h2>
             
             <label className="label">Cargo atual e tempo na função:</label>
             <input className="input" style={{ marginBottom: '1rem' }} value={formData.cargoAtual} onChange={e => handleChange("cargoAtual", e.target.value)} />
@@ -341,10 +349,10 @@ function AnamneseForm() {
           </div>
         )}
 
-        {/* STEP 4: Médica e Psiquiátrica */}
-        {currentStep === 4 && (
+        {/* STEP 5: Médica e Psiquiátrica */}
+        {currentStep === 5 && (
           <div className="animate-fade">
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[4]}</h2>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[5]}</h2>
             
             <label className="label">Condições médicas relevantes:</label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -377,10 +385,10 @@ function AnamneseForm() {
           </div>
         )}
 
-        {/* STEP 5: História Familiar */}
-        {currentStep === 5 && (
+        {/* STEP 6: História Familiar */}
+        {currentStep === 6 && (
           <div className="animate-fade">
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[5]}</h2>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[6]}</h2>
             
             <label className="label">Composição familiar / estrutura de convívio atual:</label>
             <textarea className="input" style={{ minHeight: '60px', marginBottom: '1rem' }} value={formData.composicaoFamiliar} onChange={e => handleChange("composicaoFamiliar", e.target.value)}></textarea>
@@ -403,10 +411,10 @@ function AnamneseForm() {
           </div>
         )}
 
-        {/* STEP 6: Cognitiva e Emocional */}
-        {currentStep === 6 && (
+        {/* STEP 7: Cognitiva e Emocional */}
+        {currentStep === 7 && (
           <div className="animate-fade">
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[6]}</h2>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[7]}</h2>
             
             <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '1rem' }}>Atenção e Funções Executivas</h3>
             {renderFrequenciaSelect("atencao", "manterFoco", "Dificuldade em manter o foco em tarefas longas")}
@@ -432,10 +440,10 @@ function AnamneseForm() {
           </div>
         )}
 
-        {/* STEP 7: Rotina e Expectativas */}
-        {currentStep === 7 && (
+        {/* STEP 8: Rotina e Expectativas */}
+        {currentStep === 8 && (
           <div className="animate-fade">
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[7]}</h2>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-main)' }}>{SECTIONS[8]}</h2>
             
             <label className="label">Horário habitual de dormir/acordar e qualidade do sono:</label>
             <input className="input" style={{ marginBottom: '1rem' }} value={formData.sonoHorario} onChange={e => handleChange("sonoHorario", e.target.value)} />

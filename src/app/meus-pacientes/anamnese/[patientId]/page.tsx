@@ -221,7 +221,7 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
 
         
           <section>
-            <h2 className="print-title" style={{ fontSize: '1.2rem', fontWeight: 700, borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1rem', color: 'var(--primary)' }}>Escolar e Ocupacional</h2>
+            <h2 className="print-title" style={{ fontSize: '1.2rem', fontWeight: 700, borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1rem', color: 'var(--primary)' }}>Histórico Escolar</h2>
             
             <label className="label">Idade de ingresso escolar / adaptação inicial:</label>
             <input className="input" style={{ marginBottom: '1rem' }} value={formData.idadeIngressoEscolar} onChange={e => handleChange("idadeIngressoEscolar", e.target.value)} />
@@ -238,7 +238,11 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
             
             <label className="label">Disciplina(s) de maior dificuldade e natureza do erro:</label>
             <input className="input" style={{ marginBottom: '1rem' }} value={formData.disciplinaDificuldade} onChange={e => handleChange("disciplinaDificuldade", e.target.value)} />
-            
+          </section>
+
+          <section>
+            <h2 className="print-title" style={{ fontSize: '1.2rem', fontWeight: 700, borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1rem', color: 'var(--primary)' }}>Histórico Ocupacional (Trabalho)</h2>
+
             <label className="label">Cargo atual e tempo na função:</label>
             <input className="input" style={{ marginBottom: '1rem' }} value={formData.cargoAtual} onChange={e => handleChange("cargoAtual", e.target.value)} />
 
@@ -426,10 +430,14 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
         </div>
 
         <div className="print-section">
-          <h2 className="print-title">Escolar e Ocupacional</h2>
+          <h2 className="print-title">Histórico Escolar</h2>
           <div className="print-item"><span className="print-label">Idade de ingresso escolar / adaptação inicial:</span><span className="print-value">{formData.idadeIngressoEscolar}</span></div>
           <div className="print-item"><span className="print-label">Histórico Escolar:</span><span className="print-value">{formData.historicoDesempenho?.join(", ")}</span></div>
           <div className="print-item"><span className="print-label">Disciplinas de maior dificuldade:</span><span className="print-value">{formData.disciplinaDificuldade}</span></div>
+        </div>
+
+        <div className="print-section">
+          <h2 className="print-title">Histórico Ocupacional (Trabalho)</h2>
           <div className="print-item"><span className="print-label">Cargo atual e tempo na função:</span><span className="print-value">{formData.cargoAtual}</span></div>
           <div className="print-item"><span className="print-label">Queixas no ambiente de trabalho:</span><span className="print-value">{formData.queixasTrabalho?.join(", ")}</span></div>
         </div>
