@@ -1372,7 +1372,7 @@ export default function AdminDashboard() {
                 <thead>
                   <tr style={{ borderBottom: "2px solid var(--border-color)", textAlign: "left" }}>
                     <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Data</th>
-                    <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Horário</th>
+                    <th style={{ padding: "1rem", color: "var(--text-secondary)", minWidth: "140px" }}>Horário</th>
                     <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Profissional</th>
                     <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Sala / Paciente</th>
                     <th style={{ padding: "1rem", color: "var(--text-secondary)", textAlign: "right" }}>Ações</th>
@@ -1390,15 +1390,25 @@ export default function AdminDashboard() {
                         {res.status === 'indisponivel' ? (
                           <div style={{ fontWeight: 600, color: "var(--danger)" }}>Sem Sala (Bloqueio)</div>
                         ) : (
-                          <div style={{ fontWeight: 600 }}>{getRoomName(res.roomId)}</div>
-                        )}
-                        {(res.patientName || res.service) && (
-                          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>
-                            {res.patientName && <span>{res.patientName}</span>}
-                            {res.patientName && res.service && <span> • </span>}
-                            {res.service && <span>{res.service}</span>}
+                          <div 
+                            onClick={() => {
+                              if (res.patientName) {
+                                const p = patientsList.find((x: any) => x.name === res.patientName);
+                                if (p) setViewingPatient(p);
+                                else alert("Cadastro do paciente não encontrado.");
+                              }
+                            }}
+                            style={{ fontWeight: 700, color: "var(--primary)", cursor: res.patientName ? "pointer" : "default", textDecoration: res.patientName ? "underline" : "none", textUnderlineOffset: "4px" }}
+                            title={res.patientName ? "Ver cadastro do paciente" : ""}
+                          >
+                            {res.patientName || "Paciente Não Informado"}
                           </div>
                         )}
+                        <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>
+                          {res.status !== 'indisponivel' && <span>{getRoomName(res.roomId)}</span>}
+                          {res.status !== 'indisponivel' && res.service && <span> • </span>}
+                          {res.service && <span>{res.service}</span>}
+                        </div>
                       </td>
                       <td style={{ padding: "1rem", textAlign: "right" }}>
                         <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap" }}>
