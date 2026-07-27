@@ -20,6 +20,35 @@ import {
   subMonths
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { supabase } from "../../lib/supabase";
+import { Patient } from "../../types";
+
+const calculateAge = (birthDate: string) => {
+  if (!birthDate) return null;
+  const birth = new Date(birthDate + "T00:00:00");
+  const today = new Date();
+  
+  let years = today.getFullYear() - birth.getFullYear();
+  let months = today.getMonth() - birth.getMonth();
+  
+  if (today.getDate() < birth.getDate()) {
+    months--;
+  }
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+  
+  if (years === 0 && months === 0) return "Menos de 1 mês";
+  
+  let ageStr = "";
+  if (years > 0) ageStr += `${years} ano${years > 1 ? 's' : ''}`;
+  if (months > 0) {
+    if (years > 0) ageStr += " e ";
+    ageStr += `${months} mês${months > 1 ? 'es' : ''}`;
+  }
+  return ageStr;
+};
 
 export default function ProfessionalAgendaPage() {
   const { reservations, cancelReservation, updateReservationStatus, rooms, professional, loading, addReservations, servicesList } = useReservation();
@@ -39,6 +68,32 @@ export default function ProfessionalAgendaPage() {
   const [blockReason, setBlockReason] = useState("");
   const [blockRecurrence, setBlockRecurrence] = useState<"none" | "daily" | "weekly" | "monthly">("none");
   const [blockRecurrenceEnd, setBlockRecurrenceEnd] = useState("");
+
+  const [viewingPatient, setViewingPatient] = useState<Patient | null>(null);
+  const [isLoadingPatient, setIsLoadingPatient] = useState(false);
+
+  const handlePatientClick = async (patientName: string | undefined) => {
+    if (!patientName) return;
+    setIsLoadingPatient(true);
+    try {
+      const { data, error } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('name', patientName)
+        .single();
+        
+      if (data && !error) {
+        setViewingPatient(data);
+      } else {
+        alert("Cadastro do paciente não encontrado.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao buscar paciente.");
+    } finally {
+      setIsLoadingPatient(false);
+    }
+  };
 
   const { TIME_SLOTS } = require("../../context/ReservationContext");
 
@@ -345,7 +400,11 @@ export default function ProfessionalAgendaPage() {
                               {res.status === 'realizado' && <span className="badge" style={{ backgroundColor: "#dcfce7", color: "#166534", fontSize: "0.6rem", padding: "0.1rem 0.3rem" }}>✓</span>}
                               {res.status === 'falta' && <span className="badge" style={{ backgroundColor: "var(--danger-light)", color: "var(--danger)", fontSize: "0.6rem", padding: "0.1rem 0.3rem" }}>Falta</span>}
                             </div>
-                            <div style={{ fontWeight: 700, color: isBlocked ? 'var(--danger)' : (res.status === 'realizado' || res.status === 'falta' ? 'var(--text-muted)' : 'var(--primary)'), whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            <div 
+                              onClick={() => !isBlocked && handlePatientClick(res.patientName)}
+                              style={{ fontWeight: 700, color: isBlocked ? 'var(--danger)' : (res.status === 'realizado' || res.status === 'falta' ? 'var(--text-muted)' : 'var(--primary)'), whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", cursor: isBlocked ? "default" : "pointer", textDecoration: isBlocked ? "none" : "underline", textUnderlineOffset: "2px" }}
+                              title={isBlocked ? "" : "Ver cadastro do paciente"}
+                            >
                               {res.patientName || "Paciente"}
                             </div>
                             <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -405,7 +464,11 @@ export default function ProfessionalAgendaPage() {
                   {/* Detalhes */}
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.2rem", flexWrap: "wrap" }}>
-                      <h4 style={{ fontSize: "1.1rem", fontWeight: 700, color: isBlocked ? "var(--danger)" : (res.status === 'falta' || res.status === 'reagendado' || res.status === 'realizado' ? "var(--text-muted)" : "var(--primary)") }}>
+                      <h4 
+                        onClick={() => !isBlocked && handlePatientClick(res.patientName)}
+                        style={{ fontSize: "1.1rem", fontWeight: 700, color: isBlocked ? "var(--danger)" : (res.status === 'falta' || res.status === 'reagendado' || res.status === 'realizado' ? "var(--text-muted)" : "var(--primary)"), cursor: isBlocked ? "default" : "pointer", textDecoration: isBlocked ? "none" : "underline", textUnderlineOffset: "4px" }}
+                        title={isBlocked ? "" : "Ver cadastro do paciente"}
+                      >
                         {res.patientName || "Paciente Não Informado"}
                       </h4>
                       {isBlocked && <span className="badge" style={{ backgroundColor: "var(--danger)", color: "white", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>Bloqueado</span>}
@@ -544,6 +607,179 @@ export default function ProfessionalAgendaPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE PACIENTE */}
+      {viewingPatient && (
+        <div id="prof-modal-overlay" style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }} onClick={() => setViewingPatient(null)}>
+          <style>{`
+            .only-print { display: none; }
+            @media print {
+              body * { visibility: hidden; }
+              #prof-modal-overlay { align-items: flex-start !important; padding: 0 !important; background: transparent !important; }
+              #print-patient-modal, #print-patient-modal * { visibility: visible; }
+              #print-patient-modal { 
+                position: absolute; left: 0; top: 0; width: 100%; 
+                max-width: none !important; max-height: none !important; overflow: visible !important;
+                padding: 0 !important; margin: 0 !important; box-shadow: none !important;
+                background: white !important; border: none !important; display: block !important;
+              }
+              .no-print { display: none !important; }
+              .only-print { display: block !important; }
+              
+              .print-grid { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 1rem !important; align-items: start; }
+              .print-full { grid-column: 1 / -1 !important; }
+              .data-box { background: transparent !important; border: 1px solid #ccc !important; break-inside: avoid; box-shadow: none !important; }
+              .data-box h4 { color: #000 !important; border-bottom: 1px solid #ddd; padding-bottom: 0.4rem; margin-bottom: 0.8rem !important; font-size: 1rem !important; }
+              .data-box p { font-size: 0.95rem !important; color: #333 !important; }
+            }
+          `}</style>
+          <div id="print-patient-modal" className="card animate-slide" style={{ maxWidth: "600px", width: "100%", maxHeight: "90vh", overflowY: "auto", position: "relative", backgroundColor: "var(--card-bg)" }} onClick={e => e.stopPropagation()}>
+            <button 
+              onClick={() => setViewingPatient(null)}
+              className="no-print"
+              style={{ position: "absolute", top: "1rem", right: "1rem", background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)", zIndex: 10 }}
+            >
+              ✕
+            </button>
+
+            {/* Cabeçalho destacável para impressão */}
+            <div className="only-print" style={{ marginBottom: "2rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", border: "2px solid #000", padding: "1rem", borderRadius: "8px" }}>
+                <div>
+                  <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#000", margin: 0 }}>{viewingPatient.name}</h2>
+                  <p style={{ margin: "0.5rem 0 0 0", color: "#333", fontSize: "1rem" }}>Clínica de Psicologia</p>
+                </div>
+                {viewingPatient.code && (
+                  <div style={{ textAlign: "right" }}>
+                    <p style={{ margin: "0 0 0.2rem 0", fontSize: "0.9rem", color: "#555" }}>Código do Paciente</p>
+                    <h2 style={{ fontSize: "2.2rem", fontWeight: 900, margin: 0, color: "#000" }}>{viewingPatient.code}</h2>
+                  </div>
+                )}
+              </div>
+              <div style={{ textAlign: "center", marginTop: "1.5rem", borderBottom: "2px dashed #999", position: "relative" }}>
+                <span style={{ position: "absolute", top: "-10px", left: "50%", transform: "translateX(-50%)", backgroundColor: "white", padding: "0 10px", color: "#666", fontSize: "0.85rem" }}>
+                  ✂️ Recorte aqui ✂️
+                </span>
+              </div>
+            </div>
+
+            <div className="only-print" style={{ textAlign: "center", marginBottom: "2rem", borderBottom: "2px solid #000", paddingBottom: "1rem", marginTop: "2rem" }}>
+              <h1 style={{ fontSize: "1.8rem", fontWeight: "bold", margin: 0, color: "#000", textTransform: "uppercase" }}>Ficha de Cadastro do Paciente</h1>
+            </div>
+
+            <h2 className="no-print" style={{ fontSize: "1.4rem", fontWeight: 800, marginBottom: "0.5rem", color: "var(--primary)" }}>
+              {viewingPatient.name} {viewingPatient.code && <span style={{ color: "var(--text-muted)" }}>[{viewingPatient.code}]</span>}
+            </h2>
+            <div className="only-print" style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "1rem" }}>
+              <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#000", margin: 0 }}>Paciente: {viewingPatient.name}</h2>
+            </div>
+
+            <div className="no-print" style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
+              <span className="badge" style={{ backgroundColor: "var(--bg-color)", border: "1px solid var(--border-color)" }}>
+                {viewingPatient.status === 'concluido' ? '✓ Alta' : 'Em Tratamento'}
+              </span>
+              {viewingPatient.healthPlan && (
+                <span className="badge badge-primary">
+                  {viewingPatient.healthPlan} {viewingPatient.healthPlanNumber ? `- ${viewingPatient.healthPlanNumber}` : ""}
+                </span>
+              )}
+            </div>
+
+            <div className="print-grid" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              
+              <div className="only-print data-box print-full" style={{ display: "none", padding: "1rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+                 <h4 style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Status e Convênio</h4>
+                 <div style={{ display: "flex", gap: "2rem" }}>
+                    <p style={{ margin: 0 }}><strong>Status:</strong> {viewingPatient.status === 'concluido' ? 'Alta' : 'Em Tratamento'}</p>
+                    <p style={{ margin: 0 }}><strong>Convênio:</strong> {viewingPatient.healthPlan || "Particular"} {viewingPatient.healthPlanNumber ? `(Nº: ${viewingPatient.healthPlanNumber})` : ""}</p>
+                 </div>
+              </div>
+
+              {(viewingPatient.email || viewingPatient.phone) && (
+                <div className="data-box" style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+                  <h4 style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Contato</h4>
+                  {viewingPatient.phone && <p style={{ fontSize: "0.95rem", margin: "0 0 0.3rem 0" }}><strong>Telefone:</strong> {viewingPatient.phone}</p>}
+                  {viewingPatient.email && <p style={{ fontSize: "0.95rem", margin: 0 }}><strong>E-mail:</strong> {viewingPatient.email}</p>}
+                </div>
+              )}
+
+              {(viewingPatient.birthDate || viewingPatient.gender || viewingPatient.cpf) && (
+                <div className="data-box" style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+                  <h4 style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Dados Pessoais</h4>
+                  {viewingPatient.cpf && <p style={{ fontSize: "0.95rem", margin: "0 0 0.3rem 0" }}><strong>CPF:</strong> {viewingPatient.cpf}</p>}
+                  {viewingPatient.birthDate && <p style={{ fontSize: "0.95rem", margin: "0 0 0.3rem 0" }}><strong>Nascimento:</strong> {new Date(viewingPatient.birthDate + "T00:00:00").toLocaleDateString("pt-BR")} <span style={{ fontSize: "0.85rem", color: "#555", marginLeft: "0.3rem" }}>({calculateAge(viewingPatient.birthDate)})</span></p>}
+                  {viewingPatient.gender && <p style={{ fontSize: "0.95rem", margin: 0 }}><strong>Gênero:</strong> {viewingPatient.gender}</p>}
+                </div>
+              )}
+
+              {(viewingPatient.guardianName || viewingPatient.parentsName || viewingPatient.parentsProfession) && (
+                <div className="data-box" style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+                  <h4 style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Responsáveis</h4>
+                  {viewingPatient.guardianName && <p style={{ fontSize: "0.95rem", margin: "0 0 0.3rem 0" }}><strong>Responsável Direto:</strong> {viewingPatient.guardianName}</p>}
+                  {viewingPatient.parentsName && <p style={{ fontSize: "0.95rem", margin: "0 0 0.3rem 0" }}><strong>Nome dos Pais:</strong> {viewingPatient.parentsName}</p>}
+                  {viewingPatient.parentsProfession && <p style={{ fontSize: "0.95rem", margin: 0 }}><strong>Profissão dos Pais:</strong> {viewingPatient.parentsProfession}</p>}
+                </div>
+              )}
+
+              {(viewingPatient.schoolName || viewingPatient.schoolGrade || viewingPatient.schoolType) && (
+                <div className="data-box" style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+                  <h4 style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Dados Escolares</h4>
+                  {viewingPatient.schoolName && <p style={{ fontSize: "0.95rem", margin: "0 0 0.3rem 0" }}><strong>Escola:</strong> {viewingPatient.schoolName}</p>}
+                  {viewingPatient.schoolGrade && <p style={{ fontSize: "0.95rem", margin: "0 0 0.3rem 0" }}><strong>Série/Ano:</strong> {viewingPatient.schoolGrade}</p>}
+                  {viewingPatient.schoolType && <p style={{ fontSize: "0.95rem", margin: 0 }}><strong>Tipo:</strong> {viewingPatient.schoolType}</p>}
+                </div>
+              )}
+
+              {viewingPatient.address && (
+                <div className="data-box print-full" style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+                  <h4 style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Endereço</h4>
+                  <p style={{ fontSize: "0.95rem", margin: 0 }}>{viewingPatient.address}</p>
+                </div>
+              )}
+
+              <div className="data-box print-full" style={{ padding: "1rem", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+                <h4 style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Termos e Consentimento (LGPD)</h4>
+                <p style={{ fontSize: "0.95rem", margin: 0, color: viewingPatient.lgpd_consent ? "var(--success)" : "var(--danger)", fontWeight: 600 }}>
+                  {viewingPatient.lgpd_consent ? "✓ Termos de aceite LGPD e veracidade das informações concordados pelo paciente." : "✗ Aceite pendente ou não registrado."}
+                </p>
+              </div>
+
+              {viewingPatient.notes && (
+                <div className="data-box print-full" style={{ padding: "1rem", backgroundColor: "var(--primary-light)", borderRadius: "var(--radius-sm)", border: "1px solid var(--primary-light)" }}>
+                  <h4 style={{ fontSize: "0.8rem", color: "var(--primary)", textTransform: "uppercase", marginBottom: "0.5rem", fontWeight: 700 }}>Anotações da Clínica</h4>
+                  <p style={{ fontSize: "0.9rem", margin: 0, color: "var(--text-main)", whiteSpace: "pre-wrap" }}>{viewingPatient.notes}</p>
+                </div>
+              )}
+              
+              <div className="only-print print-full data-box" style={{ display: "none", marginTop: "1rem" }}>
+                  <h4 style={{ fontSize: "1rem", color: "#000", textTransform: "uppercase", borderBottom: "1px solid #ddd", paddingBottom: "0.4rem", marginBottom: "1rem", fontWeight: 700 }}>Datas das Sessões</h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "2.5rem", marginTop: "1.5rem" }}>
+                      <div style={{ borderBottom: "1px solid #999", width: "100%" }}></div>
+                      <div style={{ borderBottom: "1px solid #999", width: "100%" }}></div>
+                      <div style={{ borderBottom: "1px solid #999", width: "100%" }}></div>
+                      <div style={{ borderBottom: "1px solid #999", width: "100%" }}></div>
+                      <div style={{ borderBottom: "1px solid #999", width: "100%" }}></div>
+                      <div style={{ borderBottom: "1px solid #999", width: "100%" }}></div>
+                      <div style={{ borderBottom: "1px solid #999", width: "100%" }}></div>
+                  </div>
+              </div>
+            </div>
+
+            <div className="no-print" style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
+              <button onClick={() => window.print()} className="btn btn-outline" style={{ flex: 1 }}>
+                🖨️ Imprimir Cadastro
+              </button>
+              <button onClick={() => setViewingPatient(null)} className="btn" style={{ flex: 1 }}>
+                Fechar Cadastro
+              </button>
+            </div>
+            
+            <div className="only-print" style={{ display: "none", marginTop: "3rem", textAlign: "center", borderTop: "1px dashed #ccc", paddingTop: "1rem" }}>
+              <p style={{ fontSize: "0.85rem", color: "#666" }}>Impresso em: {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR')}</p>
+            </div>
           </div>
         </div>
       )}
