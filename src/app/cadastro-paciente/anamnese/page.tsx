@@ -237,11 +237,11 @@ function AnamneseForm() {
 
   const renderGridCheckboxes = (field: string, options: string[], columns: number = 2) => {
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: '0.5rem', marginBottom: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: '0.8rem', marginBottom: '1rem' }}>
         {options.map(opt => (
           <label key={opt} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer', lineHeight: '1.3' }}>
-            <input type="checkbox" checked={formData[field]?.includes(opt)} onChange={() => handleCheckbox(field, opt)} style={{ marginTop: '0.2rem' }} />
-            {opt}
+            <input type="checkbox" checked={formData[field]?.includes(opt)} onChange={() => handleCheckbox(field, opt)} style={{ marginTop: '0.2rem', flexShrink: 0 }} />
+            <span style={{ wordBreak: 'break-word' }}>{opt}</span>
           </label>
         ))}
       </div>
@@ -254,9 +254,9 @@ function AnamneseForm() {
         
         {/* PROGRESS BAR */}
         <div style={{ marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', gap: '1rem', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--primary)' }}>Passo {currentStep + 1} de {SECTIONS.length}</span>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{SECTIONS[currentStep]}</span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'right' }}>{SECTIONS[currentStep]}</span>
           </div>
           <div style={{ height: '6px', backgroundColor: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
             <div style={{ height: '100%', backgroundColor: 'var(--primary)', width: `${((currentStep + 1) / SECTIONS.length) * 100}%`, transition: 'width 0.3s ease' }}></div>
@@ -643,7 +643,7 @@ function AnamneseForm() {
         )}
 
         {/* CONTROLES DO WIZARD */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
           {currentStep > 0 ? (
             <button 
               className="btn btn-outline" 
@@ -652,7 +652,7 @@ function AnamneseForm() {
             >
               ← Voltar
             </button>
-          ) : <div></div>}
+          ) : <div style={{ width: 0 }}></div>}
           
           {currentStep < SECTIONS.length - 1 ? (
             <button 
