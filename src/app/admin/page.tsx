@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useReservation, NEXT_DAYS, TIME_SLOTS } from "../../context/ReservationContext";
 import { supabase } from "../../lib/supabase";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import * as XLSX from 'xlsx';
 
 const calculateAge = (birthDate: string) => {
   if (!birthDate) return null;
@@ -995,85 +996,105 @@ export default function AdminDashboard() {
   };
 
   const handleExportBackup = async () => {
-    let htmlContent = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-      <head>
-        <meta charset="utf-8" />
-        <style>table { border-collapse: collapse; margin-bottom: 20px; } th, td { border: 1px solid #000; padding: 5px; text-align: left; }</style>
-      </head>
-      <body>`;
+    // 0. Preparar Workbook e Consultar dados
+    const wb = XLSX.utils.book_new();
+
+    const { data: anamnesesData } = await supabase
+      .from('anamneses')
+      .select('*, patient:patients(name)');
+
+    const { data: allFinances } = await supabase
+      .from('finances')
+      .select('*')
+      .order('date', { ascending: false });
 
     // 1. Pacientes
-    htmlContent += `<h2>Pacientes</h2><table><thead><tr><th style="background-color: #f2f2f2;">Nome</th><th style="background-color: #f2f2f2;">Email</th><th style="background-color: #f2f2f2;">Telefone</th><th style="background-color: #f2f2f2;">Nascimento</th><th style="background-color: #f2f2f2;">Convênio</th><th style="background-color: #f2f2f2;">Status</th><th style="background-color: #f2f2f2;">Anotações</th></tr></thead><tbody>`;
-    patientsList.forEach(p => {
-      htmlContent += `<tr><td>${p.name}</td><td>${p.email || ''}</td><td>${p.phone || ''}</td><td>${p.birthDate ? new Date(p.birthDate + "T00:00:00").toLocaleDateString("pt-BR") : ''}</td><td>${p.healthPlan || ''} ${p.healthPlanNumber || ''}</td><td>${p.status || 'Ativo'}</td><td>${p.notes || ''}</td></tr>`;
-    });
-    htmlContent += `</tbody></table><br/>`;
+    const patientsExport = patientsList.map(p => ({
+       'Nome': p.name,
+       'Email': p.email || '',
+       'Telefone': p.phone || '',
+       'Nascimento': p.birthDate ? new Date(p.birthDate + "T00:00:00").toLocaleDateString("pt-BR") : '',
+       'Convênio': `${p.healthPlan || ''} ${p.healthPlanNumber || ''}`.trim(),
+       'Status': p.status || 'Ativo',
+       'Anotações': p.notes || ''
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(patientsExport), "Pacientes");
 
-    // 2. Agendamentos
-    htmlContent += `<h2>Agendamentos (Histórico)</h2><table><thead><tr><th style="background-color: #f2f2f2;">Data</th><th style="background-color: #f2f2f2;">Início</th><th style="background-color: #f2f2f2;">Fim</th><th style="background-color: #f2f2f2;">Paciente</th><th style="background-color: #f2f2f2;">Profissional</th><th style="background-color: #f2f2f2;">Serviço</th><th style="background-color: #f2f2f2;">Sala</th><th style="background-color: #f2f2f2;">Status</th></tr></thead><tbody>`;
-    allReservations.forEach(r => {
-      const profName = professionalsMap[r.professionalId] || 'Desconhecido';
-      const roomName = rooms.find(rm => rm.id === r.roomId)?.name || 'Desconhecida';
-      const dataFormatada = new Date(r.date + "T00:00:00").toLocaleDateString("pt-BR");
-      htmlContent += `<tr><td>${dataFormatada}</td><td>${r.startTime}</td><td>${r.endTime}</td><td>${r.patientName || ''}</td><td>${profName}</td><td>${r.service || ''}</td><td>${roomName}</td><td style="text-transform: capitalize;">${r.status || 'Agendado'}</td></tr>`;
-    });
-    htmlContent += `</tbody></table><br/>`;
+    // 2. Anamneses
+    const anamnesesExport = (anamnesesData || []).map(a => ({
+       'Paciente': a.patient?.name || 'Desconhecido',
+       'Data Criação': new Date(a.created_at).toLocaleString("pt-BR"),
+       'Respostas': JSON.stringify(a.responses)
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(anamnesesExport), "Anamneses");
 
-    // 3. Profissionais
-    htmlContent += `<h2>Profissionais</h2><table><thead><tr><th style="background-color: #f2f2f2;">Nome</th><th style="background-color: #f2f2f2;">Especialidade</th><th style="background-color: #f2f2f2;">Email</th></tr></thead><tbody>`;
-    professionalsList.forEach(p => {
-      htmlContent += `<tr><td>${p.name}</td><td>${p.specialty || ''}</td><td>${p.email || ''}</td></tr>`;
-    });
-    htmlContent += `</tbody></table><br/>`;
+    // 3. Agendamentos
+    const reservationsExport = allReservations.map(r => ({
+       'Data': new Date(r.date + "T00:00:00").toLocaleDateString("pt-BR"),
+       'Início': r.startTime,
+       'Fim': r.endTime,
+       'Paciente': r.patientName || '',
+       'Profissional': professionalsMap[r.professionalId] || 'Desconhecido',
+       'Serviço': r.service || '',
+       'Sala': rooms.find(rm => rm.id === r.roomId)?.name || 'Desconhecida',
+       'Status': r.status || 'agendado'
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reservationsExport), "Agendamentos");
 
-    // 4. Tarefas
-    htmlContent += `<h2>Tarefas</h2><table><thead><tr><th style="background-color: #f2f2f2;">Título</th><th style="background-color: #f2f2f2;">Descrição</th><th style="background-color: #f2f2f2;">Atribuído Para</th><th style="background-color: #f2f2f2;">Prazo</th><th style="background-color: #f2f2f2;">Prioridade</th><th style="background-color: #f2f2f2;">Status</th><th style="background-color: #f2f2f2;">Comentário</th></tr></thead><tbody>`;
-    adminTasks.forEach(assignment => {
-      const task = assignment.task || {};
-      const profName = assignment.professional_id === null ? "Administração" : (assignment.professional?.name || "Desconhecido");
-      const dueDate = task.due_date ? new Date(task.due_date + "T00:00:00").toLocaleDateString("pt-BR") : "";
-      htmlContent += `<tr><td>${task.title || ""}</td><td>${task.description || ""}</td><td>${profName}</td><td>${dueDate}</td><td style="text-transform: capitalize;">${task.priority || "media"}</td><td style="text-transform: capitalize;">${assignment.status || "pendente"}</td><td>${assignment.comment || ""}</td></tr>`;
-    });
-    htmlContent += `</tbody></table><br/>`;
+    // 4. Profissionais
+    const professionalsExport = professionalsList.map(p => ({
+       'Nome': p.name,
+       'Especialidade': p.specialty || '',
+       'Email': p.email || ''
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(professionalsExport), "Profissionais");
 
-    // 5. Salas
-    htmlContent += `<h2>Salas</h2><table><thead><tr><th style="background-color: #f2f2f2;">Nome</th><th style="background-color: #f2f2f2;">Descrição</th></tr></thead><tbody>`;
-    rooms.forEach(r => {
-      htmlContent += `<tr><td>${r.name}</td><td>${r.description || ''}</td></tr>`;
+    // 5. Tarefas
+    const tasksExport = adminTasks.map(assignment => {
+       const task = assignment.task || {};
+       return {
+         'Título': task.title || '',
+         'Descrição': task.description || '',
+         'Atribuído Para': assignment.professional_id === null ? "Administração" : (assignment.professional?.name || "Desconhecido"),
+         'Prazo': task.due_date ? new Date(task.due_date + "T00:00:00").toLocaleDateString("pt-BR") : "",
+         'Prioridade': task.priority || "media",
+         'Status': assignment.status || "pendente",
+         'Comentário': assignment.comment || ""
+       };
     });
-    htmlContent += `</tbody></table><br/>`;
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(tasksExport), "Tarefas");
 
-    // 6. Serviços
-    htmlContent += `<h2>Serviços</h2><table><thead><tr><th style="background-color: #f2f2f2;">Nome</th><th style="background-color: #f2f2f2;">Duração (min)</th><th style="background-color: #f2f2f2;">Descrição</th></tr></thead><tbody>`;
-    (servicesList || []).forEach(s => {
-      htmlContent += `<tr><td>${s.name}</td><td>${s.duration || ''}</td><td>${s.description || ''}</td></tr>`;
-    });
-    htmlContent += `</tbody></table><br/>`;
+    // 6. Salas
+    const roomsExport = rooms.map(r => ({
+       'Nome': r.name,
+       'Descrição': r.description || ''
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(roomsExport), "Salas");
 
-    // 7. Finanças
-    const { data: allFinances } = await supabase.from('finances').select('*').order('date', { ascending: false });
+    // 7. Serviços
+    const servicesExport = (servicesList || []).map(s => ({
+       'Nome': s.name,
+       'Duração (min)': s.duration || '',
+       'Descrição': s.description || ''
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(servicesExport), "Serviços");
+
+    // 8. Finanças
     if (allFinances) {
-      htmlContent += `<h2>Finanças (Histórico Completo)</h2><table><thead><tr><th style="background-color: #f2f2f2;">Data</th><th style="background-color: #f2f2f2;">Vencimento</th><th style="background-color: #f2f2f2;">Descrição</th><th style="background-color: #f2f2f2;">Categoria</th><th style="background-color: #f2f2f2;">Tipo</th><th style="background-color: #f2f2f2;">Valor (R$)</th><th style="background-color: #f2f2f2;">Pago</th></tr></thead><tbody>`;
-      allFinances.forEach(f => {
-        const dataStr = f.date ? new Date(f.date + "T00:00:00").toLocaleDateString("pt-BR") : "";
-        const vencStr = f.due_date ? new Date(f.due_date + "T00:00:00").toLocaleDateString("pt-BR") : "";
-        const pagoStr = f.is_paid ? "Sim" : "Não";
-        htmlContent += `<tr><td>${dataStr}</td><td>${vencStr}</td><td>${f.description}</td><td>${f.category}</td><td style="text-transform: capitalize;">${f.type}</td><td>${Number(f.amount).toFixed(2).replace('.',',')}</td><td>${pagoStr}</td></tr>`;
-      });
-      htmlContent += `</tbody></table><br/>`;
+       const financesExport = allFinances.map(f => ({
+          'Data': f.date ? new Date(f.date + "T00:00:00").toLocaleDateString("pt-BR") : "",
+          'Vencimento': f.due_date ? new Date(f.due_date + "T00:00:00").toLocaleDateString("pt-BR") : "",
+          'Descrição': f.description || '',
+          'Categoria': f.category || '',
+          'Tipo': f.type || '',
+          'Valor (R$)': Number(f.amount),
+          'Pago': f.is_paid ? "Sim" : "Não"
+       }));
+       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(financesExport), "Finanças");
     }
 
-    htmlContent += `</body></html>`;
-
-    const blob = new Blob([htmlContent], { type: "application/vnd.ms-excel;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `backup_clinica_${new Date().toISOString().split('T')[0]}.xls`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    // 9. Gerar Arquivo XLSX Real
+    XLSX.writeFile(wb, `backup_clinica_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   return (
