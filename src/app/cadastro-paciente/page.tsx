@@ -90,6 +90,8 @@ export default function CadastroPaciente() {
       return;
     }
     
+    window.alert("Atenção: Na primeira sessão levar todos os documentos, encaminhamentos e documentos de autorização do paciente.");
+    
     setLoading(true);
     setError("");
 
