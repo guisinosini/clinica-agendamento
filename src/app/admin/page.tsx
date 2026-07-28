@@ -1008,6 +1008,10 @@ export default function AdminDashboard() {
       .select('*')
       .order('date', { ascending: false });
 
+    const { data: assignmentsData } = await supabase
+      .from('task_assignments')
+      .select(`*, task:tasks(*), professional:professionals(*)`);
+
     // 1. Pacientes
     const patientsExport = patientsList.map(p => ({
        'Nome': p.name,
@@ -1050,7 +1054,7 @@ export default function AdminDashboard() {
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(professionalsExport), "Profissionais");
 
     // 5. Tarefas
-    const tasksExport = adminTasks.map(assignment => {
+    const tasksExport = (assignmentsData || []).map(assignment => {
        const task = assignment.task || {};
        return {
          'Título': task.title || '',
