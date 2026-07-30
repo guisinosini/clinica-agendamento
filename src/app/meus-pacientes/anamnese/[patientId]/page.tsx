@@ -29,7 +29,7 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
     socioemocionais: {}, estrategiasCoping: "", autopercepcao: "", estereotipias: "", comportamentosAtipicos: "",
     sonoHorario: "", alteracoesSono: [], padraoAlimentar: "", atividadeFisica: "",
     apoioTerceiros: [], detalhesApoio: "",
-    expectativasAvaliacao: "", documentosTrazidos: "", documentosAnexos: []
+    expectativasAvaliacao: "", documentosTrazidos: "", documentosAnexos: [], observacoesComportamentais: ""
   });
 
   useEffect(() => {
@@ -533,6 +533,13 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
               </div>
             )}
           </section>
+
+          <section>
+            <h2 className="print-title" style={{ fontSize: '1.2rem', fontWeight: 700, borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1rem', color: 'var(--primary)' }}>13. Observações Comportamentais</h2>
+            
+            <label className="label">Observações comportamentais:</label>
+            <textarea className="input" style={{ minHeight: '80px', marginBottom: '1.5rem' }} value={formData.observacoesComportamentais} onChange={e => handleChange("observacoesComportamentais", e.target.value)}></textarea>
+          </section>
         </div>
         
         <div style={{ marginTop: "3rem", display: "flex", justifyContent: "flex-end" }}>
@@ -691,6 +698,18 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
           <h2 className="print-title">12. Expectativas quanto à Avaliação</h2>
           <div className="print-item"><span className="print-label">Expectativas:</span><span className="print-value">{formData.expectativasAvaliacao}</span></div>
           <div className="print-item"><span className="print-label">Documentos trazidos:</span><span className="print-value">{formData.documentosTrazidos}</span></div>
+        </div>
+
+        <div className="print-section allow-break">
+          <h2 className="print-title">13. Observações Comportamentais e Anotações Gerais</h2>
+          <div className="print-item"><span className="print-label">Observações comportamentais:</span><span className="print-value">{formData.observacoesComportamentais}</span></div>
+          
+          <div style={{ marginTop: "20px" }}>
+            <div className="print-label" style={{ display: "block", marginBottom: "15px" }}>Anotações gerais:</div>
+            {Array.from({ length: 15 }).map((_, i) => (
+              <div key={i} style={{ borderBottom: "1px solid #ccc", height: "30px", width: "100%", marginBottom: "5px" }}></div>
+            ))}
+          </div>
         </div>
 
       </div>
