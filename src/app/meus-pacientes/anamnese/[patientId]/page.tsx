@@ -175,6 +175,7 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
         .print-label { font-weight: bold; display: inline; margin-right: 5px; }
         .print-value { display: inline; }
         .print-section { page-break-inside: avoid; border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
+        .allow-break { page-break-inside: auto !important; }
       }
     `;
     document.head.appendChild(style);
@@ -629,7 +630,7 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
           <div className="print-item"><span className="print-label">Dinâmica familiar atual:</span><span className="print-value">{formData.dinamicaFamiliar}</span></div>
         </div>
 
-        <div className="print-section">
+        <div className="print-section allow-break">
           <h2 className="print-title">8. Investigação Dirigida por Função Cognitiva</h2>
           <div className="print-item"><span className="print-label">Atenção - Dificuldade em manter o foco:</span><span className="print-value">{formData.atencao?.manterFoco}</span></div>
           <div className="print-item"><span className="print-label">Atenção - Distrai-se facilmente:</span><span className="print-value">{formData.atencao?.distraiFacilmente}</span></div>
@@ -658,7 +659,7 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
           <div className="print-item"><span className="print-label">Praxias e Coordenação Motora:</span><span className="print-value">{formData.praxias?.join(", ")}</span></div>
         </div>
 
-        <div className="print-section">
+        <div className="print-section allow-break">
           <h2 className="print-title">9. Aspectos Socioemocionais, Comportamentais e de Personalidade</h2>
           <div className="print-item"><span className="print-label">Irritabilidade / Labilidade emocional:</span><span className="print-value">{formData.socioemocionais?.irritabilidade}</span></div>
           <div className="print-item"><span className="print-label">Ansiedade (antecipatória/generalizada):</span><span className="print-value">{formData.socioemocionais?.ansiedade}</span></div>
