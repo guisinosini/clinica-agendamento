@@ -4,15 +4,18 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../../../../lib/supabase";
+import { useReservation } from "../../../../context/ReservationContext";
 
 export default function ProfissionalAnamnesePage({ params }: { params: { patientId: string } }) {
   const router = useRouter();
   const patientId = params.patientId;
+  const { professional } = useReservation();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [patient, setPatient] = useState<any>(null);
   const [anamneseId, setAnamneseId] = useState<string | null>(null);
+  const [anamneseDate, setAnamneseDate] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<any>({
     queixaPrincipal: "", inicioSintomas: "", gatilhoInicio: "", progressao: "", contextosEvidente: "", melhorouPiorou: "", areasImpacto: [], areasImpactoOutro: "",
@@ -45,6 +48,7 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
     
     if (anamData) {
       setAnamneseId(anamData.id);
+      setAnamneseDate(anamData.created_at);
       setFormData((prev: any) => ({ ...prev, ...anamData.responses }));
     }
     
@@ -92,6 +96,31 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
     alert("Anamnese salva com sucesso!");
   };
 
+  const calculateAge = (birthDateString: string) => {
+    if (!birthDateString) return "";
+    const today = new Date();
+    // try to handle DD/MM/YYYY or YYYY-MM-DD
+    let birthDate;
+    if (birthDateString.includes("/")) {
+      const parts = birthDateString.split("/");
+      if (parts.length === 3) {
+        birthDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00`);
+      } else {
+        birthDate = new Date(birthDateString);
+      }
+    } else {
+      birthDate = new Date(birthDateString);
+    }
+    
+    if (isNaN(birthDate.getTime())) return "";
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return `${age} anos`;
+  };
 
   const renderFrequenciaSelect = (category: string, field: string, label: string) => {
     const opcoes = ["Nunca", "Raramente", "Às vezes", "Frequentemente", "Sempre"];
@@ -136,15 +165,16 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
       }
       @media print {
         @page { margin: 1cm; }
-        body { background: white !important; color: black !important; font-size: 10pt !important; line-height: 1.3 !important; }
+        * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        body { background: white !important; color: black !important; font-size: 10pt !important; line-height: 1.6 !important; }
         .screen-only, header, nav, .navbar, .card, .btn { display: none !important; }
         .print-report { display: block !important; width: 100%; }
-        .print-header { border-bottom: 2px solid black; padding-bottom: 10px; margin-bottom: 10px; }
-        .print-title { font-size: 12pt; font-weight: bold; border-bottom: 1px solid #ccc; margin: 10px 0 4px 0; padding-bottom: 2px; }
-        .print-item { margin-bottom: 4px; }
+        .print-header { border-bottom: 2px solid black; padding-bottom: 15px; margin-bottom: 20px; }
+        .print-title { font-size: 12pt; font-weight: bold; border-bottom: 1px solid #ddd; margin: -15px -15px 15px -15px; padding: 8px 15px; background: #f8f9fa !important; border-top-left-radius: 8px; border-top-right-radius: 8px; }
+        .print-item { margin-bottom: 8px; }
         .print-label { font-weight: bold; display: inline; margin-right: 5px; }
         .print-value { display: inline; }
-        .print-section { page-break-inside: avoid; }
+        .print-section { page-break-inside: avoid; border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
       }
     `;
     document.head.appendChild(style);
@@ -515,13 +545,21 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
         {patient && (
           <div className="print-header">
             <h1 style={{ fontSize: "16pt", margin: 0 }}>Anamnese Clínica - {patient.name}</h1>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", marginTop: "10px", fontSize: "10pt" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", marginTop: "10px", fontSize: "10pt", gap: "5px" }}>
               <div><strong>Código do Paciente:</strong> {patient.code || "-"}</div>
-              <div><strong>Data de Nascimento:</strong> {patient.birthDate || "-"}</div>
+              <div>
+                <strong>Data de Nascimento:</strong> {patient.birthDate ? `${patient.birthDate} ${calculateAge(patient.birthDate) ? `(${calculateAge(patient.birthDate)})` : ''}` : "-"}
+              </div>
               <div><strong>Responsável/Pais:</strong> {patient.guardianName || patient.parentsName || "-"}</div>
-              <div><strong>Convênio:</strong> {patient.healthPlan || "-"}</div>
+              <div>
+                <strong>Convênio:</strong> {patient.healthPlan || "-"}
+                {patient.healthPlanNumber ? ` (Carteirinha: ${patient.healthPlanNumber})` : ""}
+              </div>
               <div><strong>Escolaridade:</strong> {patient.schoolGrade || "-"}</div>
-              <div><strong>Data de Impressão:</strong> {new Date().toLocaleDateString("pt-BR")}</div>
+              <div><strong>Data da Sessão:</strong> {anamneseDate ? new Date(anamneseDate).toLocaleDateString("pt-BR") : new Date().toLocaleDateString("pt-BR")}</div>
+              {professional && (
+                <div style={{ gridColumn: "span 2" }}><strong>Profissional Atendente:</strong> {professional.name}</div>
+              )}
             </div>
           </div>
         )}
