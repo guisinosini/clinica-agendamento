@@ -2102,6 +2102,21 @@ export default function AdminDashboard() {
                         )}
                       </div>
                       <div style={{ display: "flex", gap: "0.5rem" }}>
+                        <button 
+                          onClick={() => {
+                            setReportPatient(pat.name);
+                            setReportProf("");
+                            setReportHealthPlan("");
+                            setReportStartDate("");
+                            setReportEndDate("");
+                            setReportStatus("");
+                            setActiveTab("relatorios");
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }} 
+                          style={{ padding: "0.3rem 0.6rem", backgroundColor: "var(--primary)", color: "white", border: "none", borderRadius: "var(--radius-sm)", fontSize: "0.75rem", fontWeight: 600 }}
+                        >
+                          Relatório
+                        </button>
                         <button onClick={() => handleEditPatient(pat)} style={{ padding: "0.3rem 0.6rem", backgroundColor: "var(--bg-color)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", fontSize: "0.75rem", fontWeight: 600 }}>
                           Editar
                         </button>
