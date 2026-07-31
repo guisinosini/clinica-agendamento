@@ -257,7 +257,7 @@ export default function MeusPacientesPage() {
               <option value="Particular">Particular</option>
               <option value="Unimed">Unimed</option>
               <option value="Prefeitura">Prefeitura</option>
-              <option value="Lumiar">Lumiar</option>
+              <option value="Luminar Saúde">Luminar Saúde</option>
               <option value="Bradesco">Bradesco</option>
               <option value="Pró Saúde">Pró Saúde</option>
               <option value="São Luiz Saúde">São Luiz Saúde</option>
