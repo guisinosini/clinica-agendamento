@@ -350,6 +350,16 @@ img { max-width: 100%; display: block; }
   transition: all 0.2s ease;
 }
 
+/* Fix específico para inputs de data (bug comum no iOS Safari) */
+input[type="date"].input {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-height: 3.2rem;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+}
+
 .input:focus {
   box-shadow: 
     inset 5px 5px 10px var(--shadow-dark),
