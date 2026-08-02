@@ -71,6 +71,19 @@ export default function ProfessionalAgendaPage() {
 
   const [viewingPatient, setViewingPatient] = useState<Patient | null>(null);
   const [isLoadingPatient, setIsLoadingPatient] = useState(false);
+  const [patientsDict, setPatientsDict] = useState<Record<string, Patient>>({});
+
+  useEffect(() => {
+    const fetchAllPatients = async () => {
+      const { data } = await supabase.from('patients').select('name, birthDate, healthPlan');
+      if (data) {
+        const dict: Record<string, Patient> = {};
+        data.forEach(p => dict[p.name] = p);
+        setPatientsDict(dict);
+      }
+    };
+    fetchAllPatients();
+  }, []);
 
   const handlePatientClick = async (patientName: string | undefined) => {
     if (!patientName) return;
@@ -392,6 +405,10 @@ export default function ProfessionalAgendaPage() {
                     ) : (
                       dayReservations.map(res => {
                         const isBlocked = res.status === 'indisponivel';
+                        const patientInfo = patientsDict[res.patientName || ""];
+                        const ageStr = patientInfo?.birthDate ? calculateAge(patientInfo.birthDate) : "";
+                        const hpStr = patientInfo?.healthPlan === "Particular" ? "Particular" : (patientInfo?.healthPlan || "");
+                        const extraInfo = [ageStr, hpStr].filter(Boolean).join(" • ");
                         return (
                           <div key={res.id} className="card" style={{ padding: "0.6rem", display: "flex", flexDirection: "column", gap: "0.3rem", fontSize: "0.8rem", borderLeft: `4px solid ${isBlocked ? 'var(--danger)' : (res.status === 'realizado' ? 'var(--success)' : 'var(--primary)')}` }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -405,7 +422,7 @@ export default function ProfessionalAgendaPage() {
                               style={{ fontWeight: 700, color: isBlocked ? 'var(--danger)' : (res.status === 'realizado' || res.status === 'falta' ? 'var(--text-muted)' : 'var(--primary)'), whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", cursor: isBlocked ? "default" : "pointer", textDecoration: isBlocked ? "none" : "underline", textUnderlineOffset: "2px" }}
                               title={isBlocked ? "" : "Ver cadastro do paciente"}
                             >
-                              {res.patientName || "Paciente"}
+                              {res.patientName || "Paciente"} {extraInfo && !isBlocked && <span style={{ fontSize: "0.8em", fontWeight: "normal", color: "var(--text-muted)" }}>({extraInfo})</span>}
                             </div>
                             <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                               {isBlocked ? blockReason || "Indisponível" : res.service}
@@ -453,6 +470,10 @@ export default function ProfessionalAgendaPage() {
                     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                       {groupedReservations[dateStr].map(res => {
                         const isBlocked = res.status === 'indisponivel';
+                        const patientInfo = patientsDict[res.patientName || ""];
+                        const ageStr = patientInfo?.birthDate ? calculateAge(patientInfo.birthDate) : "";
+                        const hpStr = patientInfo?.healthPlan === "Particular" ? "Particular" : (patientInfo?.healthPlan || "");
+                        const extraInfo = [ageStr, hpStr].filter(Boolean).join(" • ");
                         return (
                         <div key={res.id} className="card animate-slide" style={{ display: "flex", gap: "1rem", alignItems: "center", padding: "1.25rem", ...(isBlocked ? { background: "var(--danger-light)", border: "1px solid var(--danger)" } : {}) }}>
                   {/* Horário */}
@@ -470,6 +491,7 @@ export default function ProfessionalAgendaPage() {
                         title={isBlocked ? "" : "Ver cadastro do paciente"}
                       >
                         {res.patientName || "Paciente Não Informado"}
+                        {extraInfo && !isBlocked && <span style={{ fontSize: "0.8em", fontWeight: "normal", color: "var(--text-muted)", marginLeft: "0.5rem" }}>({extraInfo})</span>}
                       </h4>
                       {isBlocked && <span className="badge" style={{ backgroundColor: "var(--danger)", color: "white", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>Bloqueado</span>}
                       {res.status === 'falta' && <span className="badge" style={{ backgroundColor: "var(--danger-light)", color: "var(--danger)", fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}>Falta</span>}
