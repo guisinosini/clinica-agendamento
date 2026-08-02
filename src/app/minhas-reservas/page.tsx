@@ -75,10 +75,10 @@ export default function ProfessionalAgendaPage() {
 
   useEffect(() => {
     const fetchAllPatients = async () => {
-      const { data } = await supabase.from('patients').select('name, birthDate, healthPlan');
+      const { data } = await supabase.from('patients').select('id, name, birthDate, healthPlan');
       if (data) {
         const dict: Record<string, Patient> = {};
-        data.forEach(p => dict[p.name] = p);
+        data.forEach(p => dict[p.name] = p as Patient);
         setPatientsDict(dict);
       }
     };
