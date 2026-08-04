@@ -149,6 +149,8 @@ export default function AdminDashboard() {
   const [financeActiveSubTab, setFinanceActiveSubTab] = useState<"fluxo" | "pacientes">("fluxo");
   const [patientPayments, setPatientPayments] = useState<any[]>([]);
   const [isFetchingPatientPayments, setIsFetchingPatientPayments] = useState(false);
+  const [financePatientFilterHealthPlan, setFinancePatientFilterHealthPlan] = useState("todos");
+  const [paymentDateInputs, setPaymentDateInputs] = useState<Record<string, string>>({});
 
   const fetchFinances = async () => {
     // Busca uma margem maior no banco para garantir que pegamos registros 
@@ -193,13 +195,17 @@ export default function AdminDashboard() {
           patient_name,
           service,
           is_paid,
-          professionals ( name )
+          payment_date,
+          professionals ( name ),
+          patients ( "healthPlan" )
         `)
         .gte('date', financeStartDate)
         .lte('date', financeEndDate)
         .order('date', { ascending: false });
 
       if (data) {
+        const newPaymentDateInputs: Record<string, string> = {};
+        
         // Agrupar por paciente
         const grouped = data.reduce((acc: any, curr: any) => {
           const name = curr.patient_name || "Não informado";
@@ -207,15 +213,26 @@ export default function AdminDashboard() {
             acc[name] = {
               patient_name: name,
               reservations: [],
-              is_paid: true // Será false se alguma reserva estiver pendente
+              is_paid: true, // Será false se alguma reserva estiver pendente
+              healthPlan: curr.patients?.healthPlan || "Particular/Sem Convênio",
+              payment_date: null
             };
           }
           acc[name].reservations.push(curr);
           if (!curr.is_paid) acc[name].is_paid = false;
+          if (curr.payment_date && !acc[name].payment_date) acc[name].payment_date = curr.payment_date;
           return acc;
         }, {});
 
-        setPatientPayments(Object.values(grouped));
+        const groupedArray = Object.values(grouped);
+        groupedArray.forEach((group: any) => {
+           if (group.is_paid && group.payment_date) {
+             newPaymentDateInputs[group.patient_name] = group.payment_date;
+           }
+        });
+
+        setPatientPayments(groupedArray);
+        setPaymentDateInputs(prev => ({ ...prev, ...newPaymentDateInputs }));
       }
     } catch (err) {
       console.error(err);
@@ -233,9 +250,13 @@ export default function AdminDashboard() {
     }
   }, [activeTab, isFinancesUnlocked, financeActiveSubTab, financeStartDate, financeEndDate]);
 
-  const handleTogglePatientPaid = async (reservations: any[], currentStatus: boolean) => {
+  const handleTogglePatientPaid = async (reservations: any[], currentStatus: boolean, paymentDate?: string) => {
     const ids = reservations.map(r => r.id);
-    await supabase.from('reservations').update({ is_paid: !currentStatus }).in('id', ids);
+    const updatePayload = { 
+      is_paid: !currentStatus, 
+      payment_date: currentStatus ? null : paymentDate || null 
+    };
+    await supabase.from('reservations').update(updatePayload).in('id', ids);
     fetchPatientPayments();
   };
 
@@ -3349,20 +3370,50 @@ export default function AdminDashboard() {
               </>
             ) : (
               <div className="card" style={{ padding: "1.5rem" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
-                  <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)" }}>Pagamentos de Pacientes</h3>
+                {(() => {
+                  const filteredPatientPayments = patientPayments.filter(p => {
+                    if (financePatientFilterHealthPlan !== "todos" && p.healthPlan !== financePatientFilterHealthPlan) return false;
+                    return true;
+                  });
+                  const totalPaid = filteredPatientPayments.filter(p => p.is_paid).length;
+                  const totalPending = filteredPatientPayments.length - totalPaid;
                   
-                  <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>De</label>
-                      <input type="date" className="input" style={{ padding: "0.4rem" }} value={financeStartDate} onChange={e => setFinanceStartDate(e.target.value)} />
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Até</label>
-                      <input type="date" className="input" style={{ padding: "0.4rem" }} value={financeEndDate} onChange={e => setFinanceEndDate(e.target.value)} />
-                    </div>
-                  </div>
-                </div>
+                  return (
+                    <>
+                      <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
+                        <div style={{ flex: 1, backgroundColor: "var(--success)", color: "white", padding: "1.5rem", borderRadius: "var(--radius-md)", display: "flex", flexDirection: "column", alignItems: "center", minWidth: "150px" }}>
+                          <span style={{ fontSize: "2.5rem", fontWeight: 800 }}>{totalPaid}</span>
+                          <span style={{ fontSize: "1rem", fontWeight: 600 }}>Pagos</span>
+                        </div>
+                        <div style={{ flex: 1, backgroundColor: "var(--danger)", color: "white", padding: "1.5rem", borderRadius: "var(--radius-md)", display: "flex", flexDirection: "column", alignItems: "center", minWidth: "150px" }}>
+                          <span style={{ fontSize: "2.5rem", fontWeight: 800 }}>{totalPending}</span>
+                          <span style={{ fontSize: "1rem", fontWeight: 600 }}>Pendentes</span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+                        <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)" }}>Lista de Pacientes</h3>
+                        
+                        <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Convênio:</label>
+                            <select className="input" value={financePatientFilterHealthPlan} onChange={e => setFinancePatientFilterHealthPlan(e.target.value)} style={{ padding: "0.4rem 0.8rem", fontSize: "0.85rem" }}>
+                              <option value="todos">Todos</option>
+                              {Array.from(new Set(patientPayments.map(p => p.healthPlan))).map(hp => (
+                                <option key={String(hp)} value={String(hp)}>{String(hp)}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>De</label>
+                            <input type="date" className="input" style={{ padding: "0.4rem" }} value={financeStartDate} onChange={e => setFinanceStartDate(e.target.value)} />
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Até</label>
+                            <input type="date" className="input" style={{ padding: "0.4rem" }} value={financeEndDate} onChange={e => setFinanceEndDate(e.target.value)} />
+                          </div>
+                        </div>
+                      </div>
 
                 <div className="table-scroll">
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -3370,7 +3421,7 @@ export default function AdminDashboard() {
                       <tr style={{ borderBottom: "2px solid var(--border-color)", textAlign: "left" }}>
                         <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Paciente</th>
                         <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Sessões no Período</th>
-                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Serviços</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Convênio</th>
                         <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Profissionais</th>
                         <th style={{ padding: "1rem", color: "var(--text-secondary)", textAlign: "center" }}>Status Total</th>
                       </tr>
@@ -3382,14 +3433,14 @@ export default function AdminDashboard() {
                             Carregando...
                           </td>
                         </tr>
-                      ) : patientPayments.length === 0 ? (
+                      ) : filteredPatientPayments.length === 0 ? (
                         <tr>
                           <td colSpan={5} style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>
                             Nenhum paciente encontrado neste período.
                           </td>
                         </tr>
                       ) : (
-                        patientPayments.map((payment, index) => (
+                        filteredPatientPayments.map((payment, index) => (
                           <tr key={index} style={{ borderBottom: "1px solid var(--border-color)", opacity: payment.is_paid ? 0.7 : 1 }}>
                             <td style={{ padding: "1rem", color: "var(--text-main)", fontWeight: 500 }}>
                               {payment.patient_name}
@@ -3401,26 +3452,46 @@ export default function AdminDashboard() {
                             </td>
                             <td style={{ padding: "1rem" }}>
                                <span className="badge" style={{ backgroundColor: "var(--bg-color)", color: "var(--text-muted)", border: "1px solid var(--border-color)", fontSize: "0.75rem" }}>
-                                 {Array.from(new Set(payment.reservations.map((r: any) => r.service || "Sem serviço"))).join(', ')}
+                                 {payment.healthPlan}
                                </span>
                             </td>
                             <td style={{ padding: "1rem", color: "var(--text-muted)" }}>
                               {Array.from(new Set(payment.reservations.map((r: any) => r.professionals?.name || "Desconhecido"))).join(', ')}
                             </td>
                             <td style={{ padding: "1rem", textAlign: "center" }}>
-                              <button 
-                                onClick={() => handleTogglePatientPaid(payment.reservations, payment.is_paid)} 
-                                className={`btn ${payment.is_paid ? 'btn-outline' : ''}`}
-                                style={{ 
-                                  padding: "0.4rem 1rem", 
-                                  fontSize: "0.85rem",
-                                  backgroundColor: payment.is_paid ? "transparent" : "var(--success)",
-                                  borderColor: "var(--success)",
-                                  color: payment.is_paid ? "var(--success)" : "white"
-                                }}
-                              >
-                                {payment.is_paid ? '✅ Pago' : 'Pendência'}
-                              </button>
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", flexDirection: "column" }}>
+                                {!payment.is_paid && (
+                                  <input 
+                                    type="date" 
+                                    className="input" 
+                                    style={{ padding: "0.3rem", fontSize: "0.8rem", width: "100%", maxWidth: "130px" }}
+                                    value={paymentDateInputs[payment.patient_name] || ""}
+                                    onChange={e => setPaymentDateInputs(prev => ({ ...prev, [payment.patient_name]: e.target.value }))}
+                                  />
+                                )}
+                                {payment.is_paid && payment.payment_date && (
+                                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "0.2rem" }}>
+                                    Data: {new Date(payment.payment_date + "T00:00:00").toLocaleDateString('pt-BR')}
+                                  </div>
+                                )}
+                                <button 
+                                  onClick={() => handleTogglePatientPaid(payment.reservations, payment.is_paid, paymentDateInputs[payment.patient_name])} 
+                                  disabled={!payment.is_paid && !paymentDateInputs[payment.patient_name]}
+                                  className={`btn ${payment.is_paid ? 'btn-outline' : ''}`}
+                                  style={{ 
+                                    padding: "0.4rem 1rem", 
+                                    fontSize: "0.85rem",
+                                    backgroundColor: (payment.is_paid || !paymentDateInputs[payment.patient_name]) ? "transparent" : "var(--success)",
+                                    borderColor: payment.is_paid ? "var(--success)" : "var(--border-color)",
+                                    color: payment.is_paid ? "var(--success)" : "var(--text-muted)",
+                                    opacity: (!payment.is_paid && !paymentDateInputs[payment.patient_name]) ? 0.5 : 1,
+                                    cursor: (!payment.is_paid && !paymentDateInputs[payment.patient_name]) ? "not-allowed" : "pointer"
+                                  }}
+                                  title={!payment.is_paid && !paymentDateInputs[payment.patient_name] ? "Preencha a data de pagamento primeiro" : ""}
+                                >
+                                  {payment.is_paid ? '✅ Pago' : 'Confirmar Pgto'}
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))
@@ -3428,6 +3499,9 @@ export default function AdminDashboard() {
                     </tbody>
                   </table>
                 </div>
+              </>
+              );
+            })()}
               </div>
             )}
             </div>

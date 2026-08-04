@@ -37,6 +37,7 @@ CREATE TABLE reservations (
   service TEXT,
   status TEXT DEFAULT 'agendado',
   is_paid BOOLEAN DEFAULT false,
+  payment_date DATE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
