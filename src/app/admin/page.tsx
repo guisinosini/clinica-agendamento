@@ -186,22 +186,31 @@ export default function AdminDashboard() {
   const fetchPatientPayments = async () => {
     setIsFetchingPatientPayments(true);
     try {
-      const { data, error } = await supabase
-        .from('reservations')
-        .select(`
-          id,
-          date,
-          start_time,
-          patient_name,
-          service,
-          is_paid,
-          payment_date,
-          professionals ( name ),
-          patients ( "healthPlan" )
-        `)
-        .gte('date', financeStartDate)
-        .lte('date', financeEndDate)
-        .order('date', { ascending: false });
+      const [reservationsRes, patientsRes] = await Promise.all([
+        supabase
+          .from('reservations')
+          .select(`
+            id,
+            date,
+            start_time,
+            patient_name,
+            service,
+            is_paid,
+            payment_date,
+            professionals ( name )
+          `)
+          .gte('date', financeStartDate)
+          .lte('date', financeEndDate)
+          .order('date', { ascending: false }),
+        supabase.from('patients').select('name, "healthPlan"')
+      ]);
+
+      const data = reservationsRes.data;
+      const patientsData = patientsRes.data || [];
+      const patientsMap = patientsData.reduce((acc: any, p: any) => {
+        if (p.name) acc[p.name.trim()] = p.healthPlan;
+        return acc;
+      }, {});
 
       if (data) {
         const newPaymentDateInputs: Record<string, string> = {};
@@ -209,12 +218,14 @@ export default function AdminDashboard() {
         // Agrupar por paciente
         const grouped = data.reduce((acc: any, curr: any) => {
           const name = curr.patient_name || "Não informado";
+          const patientHealthPlan = patientsMap[name.trim()] || "Particular/Sem Convênio";
+          
           if (!acc[name]) {
             acc[name] = {
               patient_name: name,
               reservations: [],
               is_paid: true, // Será false se alguma reserva estiver pendente
-              healthPlan: curr.patients?.healthPlan || "Particular/Sem Convênio",
+              healthPlan: patientHealthPlan,
               payment_date: null
             };
           }
