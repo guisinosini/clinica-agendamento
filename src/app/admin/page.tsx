@@ -150,6 +150,7 @@ export default function AdminDashboard() {
   const [patientPayments, setPatientPayments] = useState<any[]>([]);
   const [isFetchingPatientPayments, setIsFetchingPatientPayments] = useState(false);
   const [financePatientFilterHealthPlan, setFinancePatientFilterHealthPlan] = useState("todos");
+  const [financePatientFilterName, setFinancePatientFilterName] = useState("");
   const [paymentDateInputs, setPaymentDateInputs] = useState<Record<string, string>>({});
 
   const fetchFinances = async () => {
@@ -3367,6 +3368,7 @@ export default function AdminDashboard() {
                 {(() => {
                   const filteredPatientPayments = patientPayments.filter(p => {
                     if (financePatientFilterHealthPlan !== "todos" && p.healthPlan !== financePatientFilterHealthPlan) return false;
+                    if (financePatientFilterName.trim() !== "" && !p.patient_name.toLowerCase().includes(financePatientFilterName.toLowerCase())) return false;
                     return true;
                   });
                   const totalPaid = filteredPatientPayments.filter(p => p.is_paid).length;
@@ -3389,6 +3391,10 @@ export default function AdminDashboard() {
                         <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)" }}>Lista de Pacientes</h3>
                         
                         <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Nome:</label>
+                            <input type="text" className="input" placeholder="Buscar paciente..." style={{ padding: "0.4rem 0.8rem", fontSize: "0.85rem" }} value={financePatientFilterName} onChange={e => setFinancePatientFilterName(e.target.value)} />
+                          </div>
                           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                             <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Convênio:</label>
                             <select className="input" value={financePatientFilterHealthPlan} onChange={e => setFinancePatientFilterHealthPlan(e.target.value)} style={{ padding: "0.4rem 0.8rem", fontSize: "0.85rem" }}>
