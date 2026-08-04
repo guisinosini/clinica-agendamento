@@ -200,7 +200,22 @@ export default function AdminDashboard() {
         .order('date', { ascending: false });
 
       if (data) {
-        setPatientPayments(data);
+        // Agrupar por paciente
+        const grouped = data.reduce((acc: any, curr: any) => {
+          const name = curr.patient_name || "Não informado";
+          if (!acc[name]) {
+            acc[name] = {
+              patient_name: name,
+              reservations: [],
+              is_paid: true // Será false se alguma reserva estiver pendente
+            };
+          }
+          acc[name].reservations.push(curr);
+          if (!curr.is_paid) acc[name].is_paid = false;
+          return acc;
+        }, {});
+
+        setPatientPayments(Object.values(grouped));
       }
     } catch (err) {
       console.error(err);
@@ -218,8 +233,9 @@ export default function AdminDashboard() {
     }
   }, [activeTab, isFinancesUnlocked, financeActiveSubTab, financeStartDate, financeEndDate]);
 
-  const handleToggleReservationPaid = async (id: string, currentStatus: boolean) => {
-    await supabase.from('reservations').update({ is_paid: !currentStatus }).eq('id', id);
+  const handleTogglePatientPaid = async (reservations: any[], currentStatus: boolean) => {
+    const ids = reservations.map(r => r.id);
+    await supabase.from('reservations').update({ is_paid: !currentStatus }).in('id', ids);
     fetchPatientPayments();
   };
 
@@ -3352,11 +3368,11 @@ export default function AdminDashboard() {
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
                       <tr style={{ borderBottom: "2px solid var(--border-color)", textAlign: "left" }}>
-                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Data</th>
                         <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Paciente</th>
-                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Serviço</th>
-                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Profissional</th>
-                        <th style={{ padding: "1rem", color: "var(--text-secondary)", textAlign: "center" }}>Status</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Sessões no Período</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Serviços</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Profissionais</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)", textAlign: "center" }}>Status Total</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -3369,34 +3385,31 @@ export default function AdminDashboard() {
                       ) : patientPayments.length === 0 ? (
                         <tr>
                           <td colSpan={5} style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>
-                            Nenhum agendamento encontrado neste período.
+                            Nenhum paciente encontrado neste período.
                           </td>
                         </tr>
                       ) : (
-                        patientPayments.map(payment => (
-                          <tr key={payment.id} style={{ borderBottom: "1px solid var(--border-color)", opacity: payment.is_paid ? 0.7 : 1 }}>
+                        patientPayments.map((payment, index) => (
+                          <tr key={index} style={{ borderBottom: "1px solid var(--border-color)", opacity: payment.is_paid ? 0.7 : 1 }}>
+                            <td style={{ padding: "1rem", color: "var(--text-main)", fontWeight: 500 }}>
+                              {payment.patient_name}
+                            </td>
                             <td style={{ padding: "1rem", color: "var(--text-main)" }}>
                               <span style={{ fontWeight: 600 }}>
-                                {new Date(payment.date + "T00:00:00").toLocaleDateString('pt-BR')}
-                              </span>
-                              <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                                {payment.start_time.substring(0, 5)}
-                              </div>
-                            </td>
-                            <td style={{ padding: "1rem", color: "var(--text-main)", fontWeight: 500 }}>
-                              {payment.patient_name || "Não informado"}
+                                {payment.reservations.length}
+                              </span> sessão(ões)
                             </td>
                             <td style={{ padding: "1rem" }}>
                                <span className="badge" style={{ backgroundColor: "var(--bg-color)", color: "var(--text-muted)", border: "1px solid var(--border-color)", fontSize: "0.75rem" }}>
-                                 {payment.service || "Sem serviço"}
+                                 {Array.from(new Set(payment.reservations.map((r: any) => r.service || "Sem serviço"))).join(', ')}
                                </span>
                             </td>
                             <td style={{ padding: "1rem", color: "var(--text-muted)" }}>
-                              {payment.professionals?.name || "Desconhecido"}
+                              {Array.from(new Set(payment.reservations.map((r: any) => r.professionals?.name || "Desconhecido"))).join(', ')}
                             </td>
                             <td style={{ padding: "1rem", textAlign: "center" }}>
                               <button 
-                                onClick={() => handleToggleReservationPaid(payment.id, payment.is_paid)} 
+                                onClick={() => handleTogglePatientPaid(payment.reservations, payment.is_paid)} 
                                 className={`btn ${payment.is_paid ? 'btn-outline' : ''}`}
                                 style={{ 
                                   padding: "0.4rem 1rem", 
