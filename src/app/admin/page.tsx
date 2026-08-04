@@ -198,8 +198,6 @@ export default function AdminDashboard() {
             service,
             professionals ( name )
           `)
-          .gte('date', financeStartDate)
-          .lte('date', financeEndDate)
           .order('date', { ascending: false }),
         supabase.from('patients').select('id, name, "healthPlan", is_paid, payment_date').order('name', { ascending: true })
       ]);
@@ -3404,14 +3402,6 @@ export default function AdminDashboard() {
                               ))}
                             </select>
                           </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                            <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>De</label>
-                            <input type="date" className="input" style={{ padding: "0.4rem" }} value={financeStartDate} onChange={e => setFinanceStartDate(e.target.value)} />
-                          </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                            <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Até</label>
-                            <input type="date" className="input" style={{ padding: "0.4rem" }} value={financeEndDate} onChange={e => setFinanceEndDate(e.target.value)} />
-                          </div>
                         </div>
                       </div>
 
@@ -3420,7 +3410,7 @@ export default function AdminDashboard() {
                     <thead>
                       <tr style={{ borderBottom: "2px solid var(--border-color)", textAlign: "left" }}>
                         <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Paciente</th>
-                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Sessões no Período</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Total de Sessões</th>
                         <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Convênio</th>
                         <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Profissionais</th>
                         <th style={{ padding: "1rem", color: "var(--text-secondary)", textAlign: "center" }}>Status Total</th>
