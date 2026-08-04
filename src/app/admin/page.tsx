@@ -146,6 +146,9 @@ export default function AdminDashboard() {
   const [financeFilterType, setFinanceFilterType] = useState("todos");
   const [financeFilterStatus, setFinanceFilterStatus] = useState("todos");
   const [financeFilterCategory, setFinanceFilterCategory] = useState("todas");
+  const [financeActiveSubTab, setFinanceActiveSubTab] = useState<"fluxo" | "pacientes">("fluxo");
+  const [patientPayments, setPatientPayments] = useState<any[]>([]);
+  const [isFetchingPatientPayments, setIsFetchingPatientPayments] = useState(false);
 
   const fetchFinances = async () => {
     // Busca uma margem maior no banco para garantir que pegamos registros 
@@ -178,11 +181,47 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchPatientPayments = async () => {
+    setIsFetchingPatientPayments(true);
+    try {
+      const { data, error } = await supabase
+        .from('reservations')
+        .select(`
+          id,
+          date,
+          start_time,
+          patient_name,
+          service,
+          is_paid,
+          professionals ( name )
+        `)
+        .gte('date', financeStartDate)
+        .lte('date', financeEndDate)
+        .order('date', { ascending: false });
+
+      if (data) {
+        setPatientPayments(data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    setIsFetchingPatientPayments(false);
+  };
+
   useEffect(() => {
     if (activeTab === "finances" && isFinancesUnlocked) {
-      fetchFinances();
+      if (financeActiveSubTab === "fluxo") {
+        fetchFinances();
+      } else if (financeActiveSubTab === "pacientes") {
+        fetchPatientPayments();
+      }
     }
-  }, [activeTab, isFinancesUnlocked, financeStartDate, financeEndDate]);
+  }, [activeTab, isFinancesUnlocked, financeActiveSubTab, financeStartDate, financeEndDate]);
+
+  const handleToggleReservationPaid = async (id: string, currentStatus: boolean) => {
+    await supabase.from('reservations').update({ is_paid: !currentStatus }).eq('id', id);
+    fetchPatientPayments();
+  };
 
   const handleSaveFinance = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -2890,23 +2929,42 @@ export default function AdminDashboard() {
                 </button>
               </div>
 
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "var(--bg-color)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", flexWrap: "wrap", gap: "1rem" }}>
-                <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
-                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, margin: 0, color: "var(--text-main)" }}>Período:</h3>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>De</label>
-                    <input type="date" className="input" style={{ padding: "0.4rem" }} value={financeStartDate} onChange={e => setFinanceStartDate(e.target.value)} />
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Até</label>
-                    <input type="date" className="input" style={{ padding: "0.4rem" }} value={financeEndDate} onChange={e => setFinanceEndDate(e.target.value)} />
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <button onClick={() => { setFinanceForm({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Consulta", type: "receita", amount: "", due_date: "", is_paid: true, is_recurring: false, recurring_months: 12 }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--success)", color: "var(--success)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>+ Nova Receita</button>
-                  <button onClick={() => { const today = new Date().toISOString().split("T")[0]; setFinanceForm({ id: "", date: today, description: "", category: "Material", type: "despesa", amount: "", due_date: today, is_paid: false, is_recurring: false, recurring_months: 12 }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--danger)", color: "var(--danger)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>- Nova Despesa</button>
-                </div>
+              <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
+                <button 
+                  onClick={() => setFinanceActiveSubTab("fluxo")} 
+                  className={`btn ${financeActiveSubTab === "fluxo" ? "" : "btn-outline"}`}
+                  style={{ borderRadius: "var(--radius-md)", padding: "0.5rem 1rem", fontSize: "0.95rem" }}
+                >
+                  Fluxo de Caixa
+                </button>
+                <button 
+                  onClick={() => setFinanceActiveSubTab("pacientes")} 
+                  className={`btn ${financeActiveSubTab === "pacientes" ? "" : "btn-outline"}`}
+                  style={{ borderRadius: "var(--radius-md)", padding: "0.5rem 1rem", fontSize: "0.95rem" }}
+                >
+                  Pagamentos de Pacientes
+                </button>
               </div>
+
+              {financeActiveSubTab === "fluxo" ? (
+                <>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "var(--bg-color)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", flexWrap: "wrap", gap: "1rem" }}>
+                    <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
+                      <h3 style={{ fontSize: "0.95rem", fontWeight: 700, margin: 0, color: "var(--text-main)" }}>Período:</h3>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>De</label>
+                        <input type="date" className="input" style={{ padding: "0.4rem" }} value={financeStartDate} onChange={e => setFinanceStartDate(e.target.value)} />
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Até</label>
+                        <input type="date" className="input" style={{ padding: "0.4rem" }} value={financeEndDate} onChange={e => setFinanceEndDate(e.target.value)} />
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <button onClick={() => { setFinanceForm({ id: "", date: new Date().toISOString().split("T")[0], description: "", category: "Consulta", type: "receita", amount: "", due_date: "", is_paid: true, is_recurring: false, recurring_months: 12 }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--success)", color: "var(--success)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>+ Nova Receita</button>
+                      <button onClick={() => { const today = new Date().toISOString().split("T")[0]; setFinanceForm({ id: "", date: today, description: "", category: "Material", type: "despesa", amount: "", due_date: today, is_paid: false, is_recurring: false, recurring_months: 12 }); setShowFinanceModal(true); }} className="btn btn-outline" style={{ borderColor: "var(--danger)", color: "var(--danger)", padding: "0.4rem 1rem", fontSize: "0.85rem" }}>- Nova Despesa</button>
+                    </div>
+                  </div>
 
               {/* Formulário Inline (Expansível) */}
               {showFinanceModal && (
@@ -3272,6 +3330,93 @@ export default function AdminDashboard() {
               </div>
               );
               })()}
+              </>
+            ) : (
+              <div className="card" style={{ padding: "1.5rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+                  <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)" }}>Pagamentos de Pacientes</h3>
+                  
+                  <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>De</label>
+                      <input type="date" className="input" style={{ padding: "0.4rem" }} value={financeStartDate} onChange={e => setFinanceStartDate(e.target.value)} />
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Até</label>
+                      <input type="date" className="input" style={{ padding: "0.4rem" }} value={financeEndDate} onChange={e => setFinanceEndDate(e.target.value)} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="table-scroll">
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "2px solid var(--border-color)", textAlign: "left" }}>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Data</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Paciente</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Serviço</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Profissional</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)", textAlign: "center" }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {isFetchingPatientPayments ? (
+                        <tr>
+                          <td colSpan={5} style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>
+                            Carregando...
+                          </td>
+                        </tr>
+                      ) : patientPayments.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>
+                            Nenhum agendamento encontrado neste período.
+                          </td>
+                        </tr>
+                      ) : (
+                        patientPayments.map(payment => (
+                          <tr key={payment.id} style={{ borderBottom: "1px solid var(--border-color)", opacity: payment.is_paid ? 0.7 : 1 }}>
+                            <td style={{ padding: "1rem", color: "var(--text-main)" }}>
+                              <span style={{ fontWeight: 600 }}>
+                                {new Date(payment.date + "T00:00:00").toLocaleDateString('pt-BR')}
+                              </span>
+                              <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                                {payment.start_time.substring(0, 5)}
+                              </div>
+                            </td>
+                            <td style={{ padding: "1rem", color: "var(--text-main)", fontWeight: 500 }}>
+                              {payment.patient_name || "Não informado"}
+                            </td>
+                            <td style={{ padding: "1rem" }}>
+                               <span className="badge" style={{ backgroundColor: "var(--bg-color)", color: "var(--text-muted)", border: "1px solid var(--border-color)", fontSize: "0.75rem" }}>
+                                 {payment.service || "Sem serviço"}
+                               </span>
+                            </td>
+                            <td style={{ padding: "1rem", color: "var(--text-muted)" }}>
+                              {payment.professionals?.name || "Desconhecido"}
+                            </td>
+                            <td style={{ padding: "1rem", textAlign: "center" }}>
+                              <button 
+                                onClick={() => handleToggleReservationPaid(payment.id, payment.is_paid)} 
+                                className={`btn ${payment.is_paid ? 'btn-outline' : ''}`}
+                                style={{ 
+                                  padding: "0.4rem 1rem", 
+                                  fontSize: "0.85rem",
+                                  backgroundColor: payment.is_paid ? "transparent" : "var(--success)",
+                                  borderColor: "var(--success)",
+                                  color: payment.is_paid ? "var(--success)" : "white"
+                                }}
+                              >
+                                {payment.is_paid ? '✅ Pago' : 'Pendência'}
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
             </div>
           )}
         </div>
