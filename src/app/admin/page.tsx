@@ -195,56 +195,40 @@ export default function AdminDashboard() {
             start_time,
             patient_name,
             service,
-            is_paid,
-            payment_date,
             professionals ( name )
           `)
           .gte('date', financeStartDate)
           .lte('date', financeEndDate)
           .order('date', { ascending: false }),
-        supabase.from('patients').select('name, "healthPlan"')
+        supabase.from('patients').select('id, name, "healthPlan", is_paid, payment_date').order('name', { ascending: true })
       ]);
 
-      const data = reservationsRes.data;
+      const data = reservationsRes.data || [];
       const patientsData = patientsRes.data || [];
-      const patientsMap = patientsData.reduce((acc: any, p: any) => {
-        if (p.name) acc[p.name.trim()] = p.healthPlan;
-        return acc;
-      }, {});
 
-      if (data) {
-        const newPaymentDateInputs: Record<string, string> = {};
-        
-        // Agrupar por paciente
-        const grouped = data.reduce((acc: any, curr: any) => {
-          const name = curr.patient_name || "Não informado";
-          const patientHealthPlan = patientsMap[name.trim()] || "Particular/Sem Convênio";
-          
-          if (!acc[name]) {
-            acc[name] = {
-              patient_name: name,
-              reservations: [],
-              is_paid: true, // Será false se alguma reserva estiver pendente
-              healthPlan: patientHealthPlan,
-              payment_date: null
-            };
-          }
-          acc[name].reservations.push(curr);
-          if (!curr.is_paid) acc[name].is_paid = false;
-          if (curr.payment_date && !acc[name].payment_date) acc[name].payment_date = curr.payment_date;
-          return acc;
-        }, {});
+      const newPaymentDateInputs: Record<string, string> = {};
+      
+      const groupedArray = patientsData.map((p: any) => {
+         const pName = (p.name || "").trim().toLowerCase();
+         // Buscar agendamentos deste paciente fazendo match pelo nome
+         const pReservations = data.filter((r: any) => (r.patient_name || "").trim().toLowerCase() === pName);
+         
+         if (p.is_paid && p.payment_date) {
+            newPaymentDateInputs[p.id] = p.payment_date;
+         }
 
-        const groupedArray = Object.values(grouped);
-        groupedArray.forEach((group: any) => {
-           if (group.is_paid && group.payment_date) {
-             newPaymentDateInputs[group.patient_name] = group.payment_date;
-           }
-        });
+         return {
+            patient_id: p.id,
+            patient_name: p.name || "Não informado",
+            healthPlan: p.healthPlan || "Particular/Sem Convênio",
+            is_paid: p.is_paid || false,
+            payment_date: p.payment_date,
+            reservations: pReservations
+         };
+      });
 
-        setPatientPayments(groupedArray);
-        setPaymentDateInputs(prev => ({ ...prev, ...newPaymentDateInputs }));
-      }
+      setPatientPayments(groupedArray);
+      setPaymentDateInputs(newPaymentDateInputs);
     } catch (err) {
       console.error(err);
     }
@@ -261,13 +245,12 @@ export default function AdminDashboard() {
     }
   }, [activeTab, isFinancesUnlocked, financeActiveSubTab, financeStartDate, financeEndDate]);
 
-  const handleTogglePatientPaid = async (reservations: any[], currentStatus: boolean, paymentDate?: string) => {
-    const ids = reservations.map(r => r.id);
+  const handleTogglePatientPaid = async (patientId: string, currentStatus: boolean, paymentDate?: string) => {
     const updatePayload = { 
       is_paid: !currentStatus, 
       payment_date: currentStatus ? null : paymentDate || null 
     };
-    await supabase.from('reservations').update(updatePayload).in('id', ids);
+    await supabase.from('patients').update(updatePayload).eq('id', patientId);
     fetchPatientPayments();
   };
 
@@ -3476,8 +3459,8 @@ export default function AdminDashboard() {
                                     type="date" 
                                     className="input" 
                                     style={{ padding: "0.3rem", fontSize: "0.8rem", width: "100%", maxWidth: "130px" }}
-                                    value={paymentDateInputs[payment.patient_name] || ""}
-                                    onChange={e => setPaymentDateInputs(prev => ({ ...prev, [payment.patient_name]: e.target.value }))}
+                                    value={paymentDateInputs[payment.patient_id] || ""}
+                                    onChange={e => setPaymentDateInputs(prev => ({ ...prev, [payment.patient_id]: e.target.value }))}
                                   />
                                 )}
                                 {payment.is_paid && payment.payment_date && (
@@ -3486,19 +3469,19 @@ export default function AdminDashboard() {
                                   </div>
                                 )}
                                 <button 
-                                  onClick={() => handleTogglePatientPaid(payment.reservations, payment.is_paid, paymentDateInputs[payment.patient_name])} 
-                                  disabled={!payment.is_paid && !paymentDateInputs[payment.patient_name]}
+                                  onClick={() => handleTogglePatientPaid(payment.patient_id, payment.is_paid, paymentDateInputs[payment.patient_id])} 
+                                  disabled={!payment.is_paid && !paymentDateInputs[payment.patient_id]}
                                   className={`btn ${payment.is_paid ? 'btn-outline' : ''}`}
                                   style={{ 
                                     padding: "0.4rem 1rem", 
                                     fontSize: "0.85rem",
-                                    backgroundColor: (payment.is_paid || !paymentDateInputs[payment.patient_name]) ? "transparent" : "var(--success)",
+                                    backgroundColor: (payment.is_paid || !paymentDateInputs[payment.patient_id]) ? "transparent" : "var(--success)",
                                     borderColor: payment.is_paid ? "var(--success)" : "var(--border-color)",
                                     color: payment.is_paid ? "var(--success)" : "var(--text-muted)",
-                                    opacity: (!payment.is_paid && !paymentDateInputs[payment.patient_name]) ? 0.5 : 1,
-                                    cursor: (!payment.is_paid && !paymentDateInputs[payment.patient_name]) ? "not-allowed" : "pointer"
+                                    opacity: (!payment.is_paid && !paymentDateInputs[payment.patient_id]) ? 0.5 : 1,
+                                    cursor: (!payment.is_paid && !paymentDateInputs[payment.patient_id]) ? "not-allowed" : "pointer"
                                   }}
-                                  title={!payment.is_paid && !paymentDateInputs[payment.patient_name] ? "Preencha a data de pagamento primeiro" : ""}
+                                  title={!payment.is_paid && !paymentDateInputs[payment.patient_id] ? "Preencha a data de pagamento primeiro" : ""}
                                 >
                                   {payment.is_paid ? '✅ Pago' : 'Confirmar Pgto'}
                                 </button>
