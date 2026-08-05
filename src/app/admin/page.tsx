@@ -35,6 +35,15 @@ const calculateAge = (birthDate: string) => {
   return ageStr;
 };
 
+const formatCPF = (value: string) => {
+  return value
+    .replace(/\D/g, '')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+    .replace(/(-\d{2})\d+?$/, '$1');
+};
+
 export default function AdminDashboard() {
   const router = useRouter();
   const { rooms, fetchAllReservations, cancelReservation, updateReservationStatus, addRoom, updateRoom, deleteRoom, loading, addReservations, servicesList, addService, updateService, deleteService, professional } = useReservation();
@@ -109,6 +118,7 @@ export default function AdminDashboard() {
   const [patSchoolGrade, setPatSchoolGrade] = useState("");
   const [patSchoolType, setPatSchoolType] = useState("");
   const [patientSearch, setPatientSearch] = useState("");
+  const [patientSearchCpf, setPatientSearchCpf] = useState("");
   const [patientFilterHealthPlan, setPatientFilterHealthPlan] = useState("");
   const [patientFilterAgeGroup, setPatientFilterAgeGroup] = useState("");
   const [showPatientForm, setShowPatientForm] = useState(false);
@@ -1956,7 +1966,7 @@ export default function AdminDashboard() {
                 </div>
                 <div style={{ flex: "1 1 150px" }}>
                   <label className="label">CPF</label>
-                  <input className="input" value={patCpf} onChange={e => setPatCpf(e.target.value)} placeholder="000.000.000-00" />
+                  <input className="input" value={patCpf} onChange={e => setPatCpf(formatCPF(e.target.value))} placeholder="000.000.000-00" maxLength={14} />
                 </div>
               </div>
               
@@ -2077,7 +2087,7 @@ export default function AdminDashboard() {
             <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem" }}>Pacientes ({patientsList.length})</h2>
             <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
               <div style={{ flex: "1 1 200px" }}>
-                <label className="label" style={{ fontSize: "0.85rem", marginBottom: "0.2rem" }}>Pesquisar</label>
+                <label className="label" style={{ fontSize: "0.85rem", marginBottom: "0.2rem" }}>Pesquisar por Nome</label>
                 <input 
                   type="text" 
                   className="input" 
@@ -2085,6 +2095,18 @@ export default function AdminDashboard() {
                   placeholder="Nome do paciente..." 
                   value={patientSearch}
                   onChange={(e) => setPatientSearch(e.target.value)}
+                />
+              </div>
+              <div style={{ flex: "1 1 150px" }}>
+                <label className="label" style={{ fontSize: "0.85rem", marginBottom: "0.2rem" }}>Pesquisar por CPF</label>
+                <input 
+                  type="text" 
+                  className="input" 
+                  style={{ padding: "0.4rem" }}
+                  placeholder="000.000.000-00" 
+                  value={patientSearchCpf}
+                  onChange={(e) => setPatientSearchCpf(formatCPF(e.target.value))}
+                  maxLength={14}
                 />
               </div>
               <div style={{ flex: "1 1 150px" }}>
@@ -2116,6 +2138,12 @@ export default function AdminDashboard() {
               {(() => {
                 const filteredPatients = patientsList.filter(pat => {
                   if (patientSearch && !pat.name.toLowerCase().includes(patientSearch.toLowerCase())) return false;
+                  
+                  if (patientSearchCpf) {
+                    const searchCpfDigits = patientSearchCpf.replace(/\D/g, '');
+                    const patCpfDigits = pat.cpf ? pat.cpf.replace(/\D/g, '') : '';
+                    if (!patCpfDigits.includes(searchCpfDigits)) return false;
+                  }
                   
                   if (patientFilterHealthPlan) {
                     if (patientFilterHealthPlan === "Particular" && pat.healthPlan && pat.healthPlan !== "Particular") return false;
