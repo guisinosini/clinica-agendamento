@@ -98,6 +98,7 @@ export default function AdminDashboard() {
   const [editResService, setEditResService] = useState("");
 
   const [visibleReservationsCount, setVisibleReservationsCount] = useState(20);
+  const [activeTooltipResId, setActiveTooltipResId] = useState<string | null>(null);
 
   // Patient Form State
   const [editingPatientId, setEditingPatientId] = useState<string | null>(null);
@@ -1520,6 +1521,42 @@ export default function AdminDashboard() {
                       </td>
                       <td style={{ padding: "1rem", textAlign: "right" }}>
                         <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap" }}>
+                          <div style={{ position: "relative" }}>
+                            <button
+                              onClick={() => setActiveTooltipResId(activeTooltipResId === res.id ? null : res.id)}
+                              style={{ color: "var(--primary)", backgroundColor: "transparent", padding: "0.4rem", borderRadius: "50%", fontSize: "1.1rem", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                              title="Informações de autoria"
+                            >
+                              ℹ️
+                            </button>
+                            {activeTooltipResId === res.id && (
+                              <div style={{
+                                position: "absolute",
+                                bottom: "100%",
+                                right: "0",
+                                marginBottom: "0.5rem",
+                                backgroundColor: "var(--card-bg)",
+                                border: "1px solid var(--border-color)",
+                                borderRadius: "var(--radius-md)",
+                                padding: "1rem",
+                                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                                width: "max-content",
+                                maxWidth: "260px",
+                                zIndex: 50,
+                                textAlign: "left"
+                              }}>
+                                <div style={{ fontWeight: 700, marginBottom: "0.5rem", color: "var(--text-color)" }}>Detalhes do Registro</div>
+                                <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "0.3rem" }}>
+                                  Agendado por: <strong style={{color: "var(--text-color)"}}>{res.created_by_name || "Usuário Desconhecido"}</strong>
+                                </div>
+                                {res.created_at && (
+                                  <div style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
+                                    Em: <strong style={{color: "var(--text-color)"}}>{new Date(res.created_at).toLocaleDateString('pt-BR')} às {new Date(res.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</strong>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
                           {res.status === 'indisponivel' ? (
                             <button 
                               onClick={() => handleCancelReservation(res.id)}

@@ -22,6 +22,8 @@ export type Reservation = {
   patientName?: string;
   service?: string;
   status?: "agendado" | "reagendado" | "falta" | "cancelado" | "concluido" | "confirmado" | "realizado" | "indisponivel";
+  created_at?: string;
+  created_by_name?: string;
 };
 
 export type Patient = {

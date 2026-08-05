@@ -38,7 +38,8 @@ CREATE TABLE reservations (
   status TEXT DEFAULT 'agendado',
   is_paid BOOLEAN DEFAULT false,
   payment_date DATE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  created_by_name TEXT
 );
 
 -- Adiciona a coluna patient_id (referenciando a tabela patients que é criada mais abaixo)

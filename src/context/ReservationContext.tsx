@@ -310,7 +310,9 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
         endTime: r.end_time.substring(0, 5),
         patientName: r.patient_name,
         service: r.service,
-        status: r.status || 'agendado'
+        status: r.status || 'agendado',
+        created_at: r.created_at,
+        created_by_name: r.created_by_name
       })));
     }
   };
@@ -324,7 +326,8 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
       end_time: `${res.endTime}:00`,
       patient_name: res.patientName || null,
       service: res.service || null,
-      status: res.status || 'agendado'
+      status: res.status || 'agendado',
+      created_by_name: professional?.name || 'Admin'
     }));
 
     const { data, error } = await supabase.from('reservations').insert(dbReservations).select();
