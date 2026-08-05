@@ -457,13 +457,15 @@ export default function ReservarPage() {
                     </button>
                   </div>
 
-                  <select 
+                  <input 
+                    type="text"
+                    list="patients-list-prof"
                     className="input" 
                     value={patientName}
                     onChange={(e) => setPatientName(e.target.value)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <option value="">(Sem paciente / Selecione...)</option>
+                    placeholder="(Sem paciente / Digite para buscar...)"
+                  />
+                  <datalist id="patients-list-prof">
                     {patientsList.map(pat => {
                       let ageStr = "";
                       if (pat.birthDate) {
@@ -476,7 +478,7 @@ export default function ReservarPage() {
                       }
                       return <option key={pat.id} value={pat.name}>{pat.name}{ageStr}</option>;
                     })}
-                  </select>
+                  </datalist>
                 </div>
                 <div>
                   <label className="label">Serviço / Procedimento</label>

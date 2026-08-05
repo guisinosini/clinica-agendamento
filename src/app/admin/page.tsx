@@ -1458,12 +1458,16 @@ export default function AdminDashboard() {
 
               <input 
                 type="text"
+                list="patients-list-filter"
                 placeholder="Buscar por paciente..."
                 className="input"
                 style={{ padding: "0.5rem", width: "auto" }}
                 value={filterPatientName}
                 onChange={e => setFilterPatientName(e.target.value)}
               />
+              <datalist id="patients-list-filter">
+                {patientsList.map(pat => <option key={pat.id} value={pat.name}>{pat.name}</option>)}
+              </datalist>
             </div>
           </div>
 
@@ -2319,8 +2323,15 @@ export default function AdminDashboard() {
             <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
               <div>
                 <label className="label">Nome do Paciente (Opcional)</label>
-                <select className="input" value={newResPatient} onChange={e => setNewResPatient(e.target.value)} style={{ cursor: "pointer" }}>
-                  <option value="">(Sem paciente / Selecione...)</option>
+                <input 
+                  type="text"
+                  list="patients-list-new"
+                  className="input" 
+                  value={newResPatient} 
+                  onChange={e => setNewResPatient(e.target.value)} 
+                  placeholder="(Sem paciente / Digite para buscar...)"
+                />
+                <datalist id="patients-list-new">
                   {patientsList.map(pat => {
                     let ageStr = "";
                     if (pat.birthDate) {
@@ -2333,7 +2344,7 @@ export default function AdminDashboard() {
                     }
                     return <option key={pat.id} value={pat.name}>{pat.name}{ageStr}</option>;
                   })}
-                </select>
+                </datalist>
               </div>
 
             </div>
@@ -2602,10 +2613,17 @@ export default function AdminDashboard() {
               
               <div>
                 <label className="label">Paciente (Opcional)</label>
-                <select className="input" value={editResPatient} onChange={e => setEditResPatient(e.target.value)}>
-                  <option value="">(Sem paciente / Selecione...)</option>
+                <input 
+                  type="text"
+                  list="patients-list-edit"
+                  className="input" 
+                  value={editResPatient} 
+                  onChange={e => setEditResPatient(e.target.value)}
+                  placeholder="(Sem paciente / Digite para buscar...)"
+                />
+                <datalist id="patients-list-edit">
                   {patientsList.map(pat => <option key={pat.id} value={pat.name}>{pat.name}</option>)}
-                </select>
+                </datalist>
               </div>
 
               <div>
