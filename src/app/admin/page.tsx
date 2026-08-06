@@ -1228,7 +1228,19 @@ export default function AdminDashboard() {
       for (const table of tables) {
         const data = await fetchTable(table);
         if (data.length > 0) {
-          XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), table);
+          // Converte campos que são objetos (como JSONB das anamneses) para string
+          const sanitizedData = data.map(row => {
+            const newRow: any = {};
+            for (const key in row) {
+              if (row[key] !== null && typeof row[key] === 'object') {
+                newRow[key] = JSON.stringify(row[key]);
+              } else {
+                newRow[key] = row[key];
+              }
+            }
+            return newRow;
+          });
+          XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sanitizedData), table);
         } else {
           XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ info: 'Sem dados' }]), table);
         }
