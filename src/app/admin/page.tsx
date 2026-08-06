@@ -44,6 +44,22 @@ const formatCPF = (value: string) => {
     .replace(/(-\d{2})\d+?$/, '$1');
 };
 
+const formatName = (name: string) => {
+  if (!name) return name;
+  const prepositions = ["da", "de", "do", "das", "dos", "e"];
+  
+  return name
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word, index) => {
+      if (index === 0 || !prepositions.includes(word)) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }
+      return word;
+    })
+    .join(' ');
+};
+
 export default function AdminDashboard() {
   const router = useRouter();
   const { rooms, fetchAllReservations, cancelReservation, updateReservationStatus, addRoom, updateRoom, deleteRoom, loading, addReservations, servicesList, addService, updateService, deleteService, professional } = useReservation();
@@ -83,7 +99,8 @@ export default function AdminDashboard() {
   const [newResRoomId, setNewResRoomId] = useState("");
   const [newResDate, setNewResDate] = useState("");
   const [newResSlots, setNewResSlots] = useState<string[]>([]);
-  const [newResPatient, setNewResPatient] = useState("");
+  const [newResPatientId, setNewResPatientId] = useState<string>("");
+  const [newResPatient, setNewResPatient] = useState(""); // Mantido para avulso
   const [newResService, setNewResService] = useState("");
 
 
@@ -94,6 +111,7 @@ export default function AdminDashboard() {
   const [editResStart, setEditResStart] = useState("");
   const [editResRoom, setEditResRoom] = useState("");
   const [editResProfId, setEditResProfId] = useState("");
+  const [editResPatientId, setEditResPatientId] = useState<string>("");
   const [editResPatient, setEditResPatient] = useState("");
   const [editResService, setEditResService] = useState("");
 
@@ -818,7 +836,8 @@ export default function AdminDashboard() {
         date: newResDate,
         startTime: slot,
         endTime: formattedEndTime,
-        patientName: newResPatient || undefined,
+        patientId: newResPatientId || undefined,
+        patientName: newResPatientId ? (patientsList.find(p => p.id === newResPatientId)?.name) : (newResPatient || undefined),
         service: newResService || undefined
       };
     });
@@ -859,6 +878,7 @@ export default function AdminDashboard() {
       await addReservations(allNewReservations);
       alert("Reserva(s) criada(s) com sucesso pelo Administrador!");
       setNewResPatient("");
+      setNewResPatientId("");
       setNewResService("");
       setNewResSlots([]);
       setActiveTab("reservations");
@@ -874,6 +894,7 @@ export default function AdminDashboard() {
     setEditResStart(res.startTime);
     setEditResRoom(res.roomId);
     setEditResProfId(res.professionalId || "");
+    setEditResPatientId(res.patientId || "");
     setEditResPatient(res.patientName || "");
     setEditResService(res.service || "");
   };
@@ -921,7 +942,8 @@ export default function AdminDashboard() {
         end_time: `${calculatedEnd}:00`,
         room_id: editResRoom,
         professional_id: editResProfId,
-        patient_name: editResPatient || null,
+        patient_id: editResPatientId || null,
+        patient_name: editResPatientId ? (patientsList.find(p => p.id === editResPatientId)?.name) : (editResPatient || null),
         service: editResService
       }).eq('id', editingResId);
 
@@ -1501,14 +1523,14 @@ export default function AdminDashboard() {
                         ) : (
                           <div 
                             onClick={() => {
-                              if (res.patientName) {
-                                const p = patientsList.find((x: any) => x.name === res.patientName);
+                              if (res.patientId || res.patientName) {
+                                const p = patientsList.find((x: any) => x.id === res.patientId || x.name === res.patientName);
                                 if (p) setViewingPatient(p);
                                 else alert("Cadastro do paciente não encontrado.");
                               }
                             }}
-                            style={{ fontWeight: 700, color: "var(--primary)", cursor: res.patientName ? "pointer" : "default", textDecoration: res.patientName ? "underline" : "none", textUnderlineOffset: "4px" }}
-                            title={res.patientName ? "Ver cadastro do paciente" : ""}
+                            style={{ fontWeight: 700, color: "var(--primary)", cursor: (res.patientId || res.patientName) ? "pointer" : "default", textDecoration: (res.patientId || res.patientName) ? "underline" : "none", textUnderlineOffset: "4px" }}
+                            title={(res.patientId || res.patientName) ? "Ver cadastro do paciente" : ""}
                           >
                             {res.patientName || "Paciente Não Informado"}
                           </div>
@@ -2003,7 +2025,7 @@ export default function AdminDashboard() {
               <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
                 <div style={{ flex: "1 1 200px" }}>
                   <label className="label">Nome do Paciente</label>
-                  <input className="input" value={patName} onChange={e => setPatName(e.target.value)} required placeholder="Ex: Maria Souza" />
+                  <input className="input" value={patName} onChange={e => setPatName(formatName(e.target.value))} required placeholder="Ex: Maria Souza" />
                 </div>
                 <div style={{ flex: "1 1 150px" }}>
                   <label className="label">CPF</label>
@@ -2359,16 +2381,16 @@ export default function AdminDashboard() {
             
             <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
               <div>
-                <label className="label">Nome do Paciente (Opcional)</label>
-                <input 
-                  type="text"
-                  list="patients-list-new"
+                <label className="label">Paciente (Cadastrado)</label>
+                <select 
                   className="input" 
-                  value={newResPatient} 
-                  onChange={e => setNewResPatient(e.target.value)} 
-                  placeholder="(Sem paciente / Digite para buscar...)"
-                />
-                <datalist id="patients-list-new">
+                  value={newResPatientId} 
+                  onChange={e => {
+                    setNewResPatientId(e.target.value);
+                    if (e.target.value) setNewResPatient(""); 
+                  }} 
+                >
+                  <option value="">-- Selecione o Paciente --</option>
                   {patientsList.map(pat => {
                     let ageStr = "";
                     if (pat.birthDate) {
@@ -2379,9 +2401,20 @@ export default function AdminDashboard() {
                       if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
                       if (age >= 0) ageStr = ` (${age} anos)`;
                     }
-                    return <option key={pat.id} value={pat.name}>{pat.name}{ageStr}</option>;
+                    return <option key={pat.id} value={pat.id}>{pat.name} {pat.code ? `[${pat.code}]` : ''} {ageStr}</option>;
                   })}
-                </datalist>
+                </select>
+              </div>
+              <div>
+                <label className="label">Ou Nome Avulso (Não Cadastrado)</label>
+                <input 
+                  type="text"
+                  className="input" 
+                  value={newResPatientId ? "" : newResPatient} 
+                  disabled={!!newResPatientId}
+                  onChange={e => setNewResPatient(formatName(e.target.value))} 
+                  placeholder="Apenas para paciente sem cadastro"
+                />
               </div>
 
             </div>
@@ -2648,19 +2681,43 @@ export default function AdminDashboard() {
                 </div>
               </div>
               
-              <div>
-                <label className="label">Paciente (Opcional)</label>
-                <input 
-                  type="text"
-                  list="patients-list-edit"
-                  className="input" 
-                  value={editResPatient} 
-                  onChange={e => setEditResPatient(e.target.value)}
-                  placeholder="(Sem paciente / Digite para buscar...)"
-                />
-                <datalist id="patients-list-edit">
-                  {patientsList.map(pat => <option key={pat.id} value={pat.name}>{pat.name}</option>)}
-                </datalist>
+              <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+                <div>
+                  <label className="label">Paciente (Cadastrado)</label>
+                  <select 
+                    className="input" 
+                    value={editResPatientId} 
+                    onChange={e => {
+                      setEditResPatientId(e.target.value);
+                      if (e.target.value) setEditResPatient("");
+                    }} 
+                  >
+                    <option value="">-- Selecione o Paciente --</option>
+                    {patientsList.map(pat => {
+                      let ageStr = "";
+                      if (pat.birthDate) {
+                        const birthDate = new Date(pat.birthDate);
+                        const today = new Date();
+                        let age = today.getFullYear() - birthDate.getFullYear();
+                        const m = today.getMonth() - birthDate.getMonth();
+                        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+                        if (age >= 0) ageStr = ` (${age} anos)`;
+                      }
+                      return <option key={pat.id} value={pat.id}>{pat.name} {pat.code ? `[${pat.code}]` : ''} {ageStr}</option>;
+                    })}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Ou Nome Avulso (Não Cadastrado)</label>
+                  <input 
+                    type="text"
+                    className="input" 
+                    value={editResPatientId ? "" : editResPatient} 
+                    disabled={!!editResPatientId}
+                    onChange={e => setEditResPatient(formatName(e.target.value))} 
+                    placeholder="Nome do paciente"
+                  />
+                </div>
               </div>
 
               <div>

@@ -85,26 +85,39 @@ export default function ProfessionalAgendaPage() {
     fetchAllPatients();
   }, []);
 
-  const handlePatientClick = async (patientName: string | undefined) => {
-    if (!patientName) return;
-    setIsLoadingPatient(true);
+  const handlePatientClick = async (patientId: string | undefined, patientName: string | undefined) => {
+    if (!patientId && !patientName) return;
+
     try {
-      const { data, error } = await supabase
-        .from('patients')
-        .select('*')
-        .eq('name', patientName)
-        .single();
+      if (patientId) {
+        const { data, error } = await supabase
+          .from('patients')
+          .select('id')
+          .eq('id', patientId)
+          .single();
         
-      if (data && !error) {
-        setViewingPatient(data);
-      } else {
-        alert("Cadastro do paciente não encontrado.");
+        if (data && !error) {
+          router.push(`/meus-pacientes/anamnese/${data.id}`);
+          return;
+        }
+      } else if (patientName) {
+        // Fallback para reservas antigas sem patientId
+        const { data, error } = await supabase
+          .from('patients')
+          .select('id')
+          .eq('name', patientName)
+          .single();
+        
+        if (data && !error) {
+          router.push(`/meus-pacientes/anamnese/${data.id}`);
+          return;
+        }
       }
+      
+      alert("Cadastro do paciente não encontrado.");
     } catch (err) {
       console.error(err);
       alert("Erro ao buscar paciente.");
-    } finally {
-      setIsLoadingPatient(false);
     }
   };
 
@@ -405,7 +418,7 @@ export default function ProfessionalAgendaPage() {
                     ) : (
                       dayReservations.map(res => {
                         const isBlocked = res.status === 'indisponivel';
-                        const patientInfo = patientsDict[res.patientName || ""];
+                        const patientInfo = res.patientId ? patientsDict[res.patientId] : patientsDict[res.patientName || ""];
                         const ageStr = patientInfo?.birthDate ? calculateAge(patientInfo.birthDate) : "";
                         const hpStr = patientInfo?.healthPlan === "Particular" ? "Particular" : (patientInfo?.healthPlan || "");
                         const extraInfo = [ageStr, hpStr].filter(Boolean).join(" • ");
@@ -418,7 +431,7 @@ export default function ProfessionalAgendaPage() {
                               {res.status === 'falta' && <span className="badge" style={{ backgroundColor: "var(--danger-light)", color: "var(--danger)", fontSize: "0.6rem", padding: "0.1rem 0.3rem" }}>Falta</span>}
                             </div>
                             <div 
-                              onClick={() => !isBlocked && handlePatientClick(res.patientName)}
+                              onClick={() => !isBlocked && handlePatientClick(res.patientId, res.patientName)}
                               style={{ fontWeight: 700, color: isBlocked ? 'var(--danger)' : (res.status === 'realizado' || res.status === 'falta' ? 'var(--text-muted)' : 'var(--primary)'), whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", cursor: isBlocked ? "default" : "pointer", textDecoration: isBlocked ? "none" : "underline", textUnderlineOffset: "2px" }}
                               title={isBlocked ? "" : "Ver cadastro do paciente"}
                             >
@@ -470,7 +483,7 @@ export default function ProfessionalAgendaPage() {
                     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                       {groupedReservations[dateStr].map(res => {
                         const isBlocked = res.status === 'indisponivel';
-                        const patientInfo = patientsDict[res.patientName || ""];
+                        const patientInfo = res.patientId ? patientsDict[res.patientId] : patientsDict[res.patientName || ""];
                         const ageStr = patientInfo?.birthDate ? calculateAge(patientInfo.birthDate) : "";
                         const hpStr = patientInfo?.healthPlan === "Particular" ? "Particular" : (patientInfo?.healthPlan || "");
                         const extraInfo = [ageStr, hpStr].filter(Boolean).join(" • ");
@@ -486,7 +499,7 @@ export default function ProfessionalAgendaPage() {
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.2rem", flexWrap: "wrap" }}>
                       <h4 
-                        onClick={() => !isBlocked && handlePatientClick(res.patientName)}
+                        onClick={() => !isBlocked && handlePatientClick(res.patientId, res.patientName)}
                         style={{ fontSize: "1.1rem", fontWeight: 700, color: isBlocked ? "var(--danger)" : (res.status === 'falta' || res.status === 'reagendado' || res.status === 'realizado' ? "var(--text-muted)" : "var(--primary)"), cursor: isBlocked ? "default" : "pointer", textDecoration: isBlocked ? "none" : "underline", textUnderlineOffset: "4px" }}
                         title={isBlocked ? "" : "Ver cadastro do paciente"}
                       >

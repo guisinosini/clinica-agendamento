@@ -13,6 +13,7 @@ export default function ReservarPage() {
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(NEXT_DAYS[0]);
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
+  const [patientId, setPatientId] = useState("");
   const [patientName, setPatientName] = useState("");
   const [service, setService] = useState("");
   const [feedbackMsg, setFeedbackMsg] = useState<string>("");
@@ -141,13 +142,15 @@ export default function ReservarPage() {
           date: dateStr,
           startTime: slot,
           endTime: formattedEndTime,
-          patientName: patientName || undefined,
+          patientId: patientId || undefined,
+          patientName: patientId ? (patientsList.find(p => p.id === patientId)?.name) : (patientName || undefined),
           service: service || undefined
         };
 
         const guestRes = invitedProfessionals.map(guestId => ({
           ...hostRes,
           professionalId: guestId,
+          patientId: undefined, // Reunião é avulsa
           patientName: patientName ? `${patientName} (Convite)` : `Reunião c/ ${professional.name}`,
           service: service || "Reunião de Equipe"
         }));
@@ -457,28 +460,44 @@ export default function ReservarPage() {
                     </button>
                   </div>
 
-                  <input 
-                    type="text"
-                    list="patients-list-prof"
-                    className="input" 
-                    value={patientName}
-                    onChange={(e) => setPatientName(e.target.value)}
-                    placeholder="(Sem paciente / Digite para buscar...)"
-                  />
-                  <datalist id="patients-list-prof">
-                    {patientsList.map(pat => {
-                      let ageStr = "";
-                      if (pat.birthDate) {
-                        const birthDate = new Date(pat.birthDate);
-                        const today = new Date();
-                        let age = today.getFullYear() - birthDate.getFullYear();
-                        const m = today.getMonth() - birthDate.getMonth();
-                        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-                        if (age >= 0) ageStr = ` (${age} anos)`;
-                      }
-                      return <option key={pat.id} value={pat.name}>{pat.name}{ageStr}</option>;
-                    })}
-                  </datalist>
+                  <div className="grid" style={{ gridTemplateColumns: "1fr", gap: "1rem", marginTop: "0.5rem" }}>
+                    <div>
+                      <select 
+                        className="input" 
+                        value={patientId}
+                        onChange={(e) => {
+                          setPatientId(e.target.value);
+                          if (e.target.value) setPatientName("");
+                        }}
+                      >
+                        <option value="">-- Selecione o Paciente --</option>
+                        {patientsList.map(pat => {
+                          let ageStr = "";
+                          if (pat.birthDate) {
+                            const birthDate = new Date(pat.birthDate);
+                            const today = new Date();
+                            let age = today.getFullYear() - birthDate.getFullYear();
+                            const m = today.getMonth() - birthDate.getMonth();
+                            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+                            if (age >= 0) ageStr = ` (${age} anos)`;
+                          }
+                          return <option key={pat.id} value={pat.id}>{pat.name} {pat.code ? `[${pat.code}]` : ''} {ageStr}</option>;
+                        })}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="label" style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Ou Nome Avulso (Não Cadastrado)</label>
+                      <input 
+                        type="text"
+                        className="input" 
+                        value={patientId ? "" : patientName}
+                        disabled={!!patientId}
+                        onChange={(e) => setPatientName(e.target.value)}
+                        placeholder="Nome para paciente sem cadastro"
+                      />
+                    </div>
+                  </div>
+
                 </div>
                 <div>
                   <label className="label">Serviço / Procedimento</label>

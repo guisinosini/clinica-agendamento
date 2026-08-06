@@ -56,6 +56,22 @@ const formatPhone = (value: string) => {
   return v;
 };
 
+const formatName = (name: string) => {
+  if (!name) return name;
+  const prepositions = ["da", "de", "do", "das", "dos", "e"];
+  
+  return name
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word, index) => {
+      if (index === 0 || !prepositions.includes(word)) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }
+      return word;
+    })
+    .join(' ');
+};
+
 export default function CadastroPaciente() {
   const router = useRouter();
   const [patName, setPatName] = useState("");
@@ -180,7 +196,7 @@ export default function CadastroPaciente() {
             <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
               <div style={{ flex: "1 1 250px" }}>
                 <label className="label">Nome Completo *</label>
-                <input className="input" value={patName} onChange={e => setPatName(e.target.value)} required placeholder="Ex: Maria Souza" />
+                <input className="input" value={patName} onChange={e => setPatName(formatName(e.target.value))} required placeholder="Ex: Maria Souza" />
               </div>
               <div style={{ flex: "1 1 150px" }}>
                 <label className="label">CPF *</label>

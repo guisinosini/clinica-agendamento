@@ -297,7 +297,7 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
   const fetchReservations = async () => {
     const { data } = await supabase
       .from('reservations')
-      .select('*')
+      .select('*, patients(name)')
       .order('date', { ascending: false });
     
     if (data) {
@@ -308,7 +308,8 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
         date: r.date,
         startTime: r.start_time.substring(0, 5),
         endTime: r.end_time.substring(0, 5),
-        patientName: r.patient_name,
+        patientId: r.patient_id,
+        patientName: r.patients?.name || r.patient_name,
         service: r.service,
         status: r.status || 'agendado',
         created_at: r.created_at,
@@ -324,6 +325,7 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
       date: res.date,
       start_time: `${res.startTime}:00`,
       end_time: `${res.endTime}:00`,
+      patient_id: res.patientId || null,
       patient_name: res.patientName || null,
       service: res.service || null,
       status: res.status || 'agendado',

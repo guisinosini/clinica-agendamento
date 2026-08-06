@@ -70,10 +70,14 @@ export default function MeusPacientesPage() {
 
       // 2. Descobrir quais pacientes têm reserva com este profissional
       const myReservations = reservations.filter(res => res.professionalId === professional.id);
+      
+      const myPatientIds = Array.from(new Set(myReservations.map(res => res.patientId).filter(Boolean)));
       const myPatientNames = Array.from(new Set(myReservations.map(res => res.patientName).filter(Boolean)));
 
-      // 3. Filtrar os pacientes que batem com os nomes
-      const myPatientsList = (data as Patient[]).filter(pat => myPatientNames.includes(pat.name));
+      // 3. Filtrar os pacientes que batem com os IDs ou, como fallback (legado), com os nomes
+      const myPatientsList = (data as Patient[]).filter(pat => 
+        myPatientIds.includes(pat.id) || myPatientNames.includes(pat.name)
+      );
       setPatients(myPatientsList);
     } catch (err) {
       console.error(err);

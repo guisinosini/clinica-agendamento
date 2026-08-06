@@ -19,7 +19,8 @@ export type Reservation = {
   date: string; // Formato YYYY-MM-DD
   startTime: string; // Ex: "08:00"
   endTime: string; // Ex: "09:00"
-  patientName?: string;
+  patientId?: string; // Novo campo para o vínculo estrutural
+  patientName?: string; // Mantido para fallback de reservas antigas não migradas
   service?: string;
   status?: "agendado" | "reagendado" | "falta" | "cancelado" | "concluido" | "confirmado" | "realizado" | "indisponivel";
   created_at?: string;
