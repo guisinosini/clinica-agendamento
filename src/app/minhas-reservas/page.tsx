@@ -87,29 +87,30 @@ export default function ProfessionalAgendaPage() {
 
   const handlePatientClick = async (patientId: string | undefined, patientName: string | undefined) => {
     if (!patientId && !patientName) return;
+    setIsLoadingPatient(true);
 
     try {
       if (patientId) {
         const { data, error } = await supabase
           .from('patients')
-          .select('id')
+          .select('*')
           .eq('id', patientId)
           .single();
         
         if (data && !error) {
-          router.push(`/meus-pacientes/anamnese/${data.id}`);
+          setViewingPatient(data);
           return;
         }
       } else if (patientName) {
         // Fallback para reservas antigas sem patientId
         const { data, error } = await supabase
           .from('patients')
-          .select('id')
+          .select('*')
           .eq('name', patientName)
           .single();
         
         if (data && !error) {
-          router.push(`/meus-pacientes/anamnese/${data.id}`);
+          setViewingPatient(data);
           return;
         }
       }
@@ -118,6 +119,8 @@ export default function ProfessionalAgendaPage() {
     } catch (err) {
       console.error(err);
       alert("Erro ao buscar paciente.");
+    } finally {
+      setIsLoadingPatient(false);
     }
   };
 
