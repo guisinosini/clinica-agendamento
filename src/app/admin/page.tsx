@@ -1208,7 +1208,38 @@ export default function AdminDashboard() {
     }
 
     // 9. Gerar Arquivo XLSX Real
-    XLSX.writeFile(wb, `backup_clinica_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.writeFile(wb, `relatorio_clinica_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const handleDatabaseDump = async () => {
+    try {
+      const wb = XLSX.utils.book_new();
+
+      const fetchTable = async (table: string) => {
+        const { data } = await supabase.from(table).select('*');
+        return data || [];
+      };
+
+      const tables = [
+        'professionals', 'rooms', 'reservations', 'patients',
+        'services', 'finances', 'anamneses', 'tasks', 'task_assignments'
+      ];
+
+      for (const table of tables) {
+        const data = await fetchTable(table);
+        if (data.length > 0) {
+          XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), table);
+        } else {
+          XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ info: 'Sem dados' }]), table);
+        }
+      }
+
+      XLSX.writeFile(wb, `database_dump_${new Date().toISOString().split('T')[0]}.xlsx`);
+      alert("Backup do banco de dados concluído!");
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao gerar dump do banco de dados.");
+    }
   };
 
   return (
@@ -1378,7 +1409,10 @@ export default function AdminDashboard() {
                 + Nova Reserva
               </button>
               <button onClick={handleExportBackup} className="admin-nav-btn action-secondary">
-                💾 Backup XLS
+                📊 Exportar Relatório
+              </button>
+              <button onClick={handleDatabaseDump} className="admin-nav-btn action-secondary" style={{ background: "var(--bg-card)", border: "1px solid var(--border)", color: "var(--text-main)" }}>
+                💾 DB Backup (Raw)
               </button>
             </div>
           </div>
