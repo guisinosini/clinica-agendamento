@@ -1116,6 +1116,8 @@ export default function AdminDashboard() {
 
     // 1. Pacientes
     const patientsExport = patientsList.map(p => ({
+       'ID do Paciente': p.id,
+       'Código': p.code || '',
        'Nome': p.name,
        'Email': p.email || '',
        'Telefone': p.phone || '',
@@ -1128,6 +1130,8 @@ export default function AdminDashboard() {
 
     // 2. Anamneses
     const anamnesesExport = (anamnesesData || []).map(a => ({
+       'ID da Anamnese': a.id,
+       'ID do Paciente': a.patient_id,
        'Paciente': a.patient?.name || 'Desconhecido',
        'Data Criação': new Date(a.created_at).toLocaleString("pt-BR"),
        'Respostas': JSON.stringify(a.responses)
@@ -1136,11 +1140,14 @@ export default function AdminDashboard() {
 
     // 3. Agendamentos
     const reservationsExport = allReservations.map(r => ({
+       'ID do Agendamento': r.id,
+       'ID do Paciente': r.patientId || '',
+       'Paciente': r.patientName || '',
+       'ID do Profissional': r.professionalId || '',
+       'Profissional': professionalsMap[r.professionalId] || 'Desconhecido',
        'Data': new Date(r.date + "T00:00:00").toLocaleDateString("pt-BR"),
        'Início': r.startTime,
        'Fim': r.endTime,
-       'Paciente': r.patientName || '',
-       'Profissional': professionalsMap[r.professionalId] || 'Desconhecido',
        'Serviço': r.service || '',
        'Sala': rooms.find(rm => rm.id === r.roomId)?.name || 'Desconhecida',
        'Status': r.status || 'agendado'
@@ -1149,6 +1156,7 @@ export default function AdminDashboard() {
 
     // 4. Profissionais
     const professionalsExport = professionalsList.map(p => ({
+       'ID do Profissional': p.id,
        'Nome': p.name,
        'Especialidade': p.specialty || '',
        'Email': p.email || ''
