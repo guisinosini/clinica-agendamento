@@ -73,6 +73,8 @@ export default function AdminDashboard() {
   const [patientsList, setPatientsList] = useState<any[]>([]);
   const [waitingList, setWaitingList] = useState<any[]>([]);
   const [selectedWaitingPatientId, setSelectedWaitingPatientId] = useState("");
+  const [searchPatientQuery, setSearchPatientQuery] = useState("");
+  const [showPatientDropdown, setShowPatientDropdown] = useState(false);
   
   // Filters State
   const [filterRoom, setFilterRoom] = useState<string>("");
@@ -636,6 +638,7 @@ export default function AdminDashboard() {
       alert("Erro ao adicionar paciente à fila de espera.");
     } else {
       setSelectedWaitingPatientId("");
+      setSearchPatientQuery("");
       fetchWaitingList();
     }
   };
@@ -2109,17 +2112,50 @@ export default function AdminDashboard() {
             <form onSubmit={handleAddWaitingList} style={{ display: "flex", gap: "1rem", alignItems: "flex-end" }}>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 <label style={{ fontSize: "0.875rem", fontWeight: 500 }}>Selecionar Paciente</label>
-                <select 
-                  className="input-field" 
-                  value={selectedWaitingPatientId} 
-                  onChange={(e) => setSelectedWaitingPatientId(e.target.value)}
-                  required
-                >
-                  <option value="">-- Selecione um paciente --</option>
-                  {patientsList.map(p => (
-                    <option key={p.id} value={p.id}>{p.name} {p.code ? `(${p.code})` : ''}</option>
-                  ))}
-                </select>
+                <div style={{ position: "relative" }}>
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder="Buscar paciente pelo nome..."
+                    value={searchPatientQuery}
+                    onChange={(e) => {
+                      setSearchPatientQuery(e.target.value);
+                      setShowPatientDropdown(true);
+                      if (selectedWaitingPatientId) setSelectedWaitingPatientId("");
+                    }}
+                    onFocus={() => setShowPatientDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowPatientDropdown(false), 200)}
+                    required={!selectedWaitingPatientId}
+                  />
+                  {showPatientDropdown && (
+                    <ul style={{ 
+                      position: "absolute", zIndex: 10, background: "var(--bg-card)", 
+                      border: "1px solid var(--border)", width: "100%", maxHeight: "250px", 
+                      overflowY: "auto", listStyle: "none", padding: 0, margin: 0,
+                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                      borderRadius: "0 0 8px 8px"
+                    }}>
+                      {patientsList.filter(p => p.name.toLowerCase().includes(searchPatientQuery.toLowerCase()) || (p.code && p.code.toLowerCase().includes(searchPatientQuery.toLowerCase()))).map(p => (
+                        <li 
+                          key={p.id}
+                          style={{ padding: "0.75rem 1rem", cursor: "pointer", borderBottom: "1px solid var(--border)", fontSize: "0.9rem" }}
+                          onMouseDown={() => {
+                            setSelectedWaitingPatientId(p.id);
+                            setSearchPatientQuery(`${p.name} ${p.code ? `(${p.code})` : ''}`);
+                            setShowPatientDropdown(false);
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--bg-muted)"}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                        >
+                          {p.name} <span style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>{p.code ? `(${p.code})` : ''}</span>
+                        </li>
+                      ))}
+                      {patientsList.filter(p => p.name.toLowerCase().includes(searchPatientQuery.toLowerCase()) || (p.code && p.code.toLowerCase().includes(searchPatientQuery.toLowerCase()))).length === 0 && (
+                        <li style={{ padding: "0.75rem 1rem", color: "var(--text-muted)", fontSize: "0.9rem" }}>Nenhum paciente encontrado.</li>
+                      )}
+                    </ul>
+                  )}
+                </div>
               </div>
               <button type="submit" className="btn" style={{ height: "42px" }}>
                 Adicionar à Fila
