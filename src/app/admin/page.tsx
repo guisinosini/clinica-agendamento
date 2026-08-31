@@ -643,6 +643,26 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleAddSpecificPatientToWaitingList = async (patientId: string) => {
+    const exists = waitingList.find(w => w.patient_id === patientId);
+    if (exists) {
+      alert("Paciente já está na fila de espera.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("waiting_list")
+      .insert([{ patient_id: patientId }]);
+      
+    if (error) {
+      console.error(error);
+      alert("Erro ao adicionar paciente à fila de espera.");
+    } else {
+      fetchWaitingList();
+      alert("Paciente adicionado à fila de espera com sucesso!");
+    }
+  };
+
   const handleRemoveWaitingList = async (id: string) => {
     if (!confirm("Deseja remover este paciente da fila de espera?")) return;
     const { error } = await supabase
@@ -2500,6 +2520,9 @@ export default function AdminDashboard() {
                           style={{ padding: "0.3rem 0.6rem", backgroundColor: "var(--primary)", color: "white", border: "none", borderRadius: "var(--radius-sm)", fontSize: "0.75rem", fontWeight: 600 }}
                         >
                           Relatório
+                        </button>
+                        <button onClick={() => handleAddSpecificPatientToWaitingList(pat.id)} style={{ padding: "0.3rem 0.6rem", backgroundColor: "#f59e0b", color: "white", border: "none", borderRadius: "var(--radius-sm)", fontSize: "0.75rem", fontWeight: 600 }}>
+                          Fila de Espera
                         </button>
                         <button onClick={() => handleEditPatient(pat)} style={{ padding: "0.3rem 0.6rem", backgroundColor: "var(--bg-color)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", fontSize: "0.75rem", fontWeight: 600 }}>
                           Editar
