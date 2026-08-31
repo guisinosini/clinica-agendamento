@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Imprimir Cabeçalhos - Retroativos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f0f0f0;
+    }
+    .print-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+    }
+    .cabecalho-box {
+      page-break-inside: avoid;
+      margin-bottom: 2rem;
+      padding-top: 1rem;
+    }
+    .cabecalho-content {
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      border: 2px solid #000; 
+      padding: 1rem; 
+      border-radius: 8px;
+    }
+    .cabecalho-content h2 {
+      font-size: 1.4rem; 
+      font-weight: 800; 
+      color: #000; 
+      margin: 0;
+    }
+    .cabecalho-content p {
+      margin: 0.5rem 0 0 0; 
+      color: #333; 
+      font-size: 1rem;
+    }
+    .codigo-box {
+      text-align: right;
+    }
+    .codigo-box p {
+      margin: 0 0 0.2rem 0; 
+      font-size: 0.9rem; 
+      color: #555;
+    }
+    .codigo-box h2 {
+      font-size: 2.2rem; 
+      font-weight: 900; 
+      margin: 0; 
+      color: #000;
+    }
+    .recorte {
+      text-align: center; 
+      margin-top: 1.5rem; 
+      border-bottom: 2px dashed #999; 
+      position: relative;
+    }
+    .recorte span {
+      position: absolute; 
+      top: -10px; 
+      left: 50%; 
+      transform: translateX(-50%); 
+      background-color: white; 
+      padding: 0 10px; 
+      color: #666; 
+      font-size: 0.85rem;
+    }
+    @media print {
+      body {
+        background-color: white;
+        padding: 0;
+      }
+      .print-container {
+        padding: 0;
+      }
+      .no-print {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="print-container">
+    <div class="no-print" style="text-align: center; margin-bottom: 20px;">
+      <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px; cursor: pointer; background: #000; color: #fff; border: none; border-radius: 4px;">🖨️ Imprimir Cabeçalhos</button>
+      <p>Certifique-se de habilitar "Gráficos de plano de fundo" (Background graphics) nas opções de impressão, se necessário.</p>
+    </div>
+
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Pedro Sena da Silva</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0001/25B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Lais Furlan</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0002/25B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Gael Pavan</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0003/25B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Heloisa Rafaela Cellulare</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0004/25B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Júlia Rebeca Fernandes</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0005/25B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Lorenzo Chianello Generino</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0006/25B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Thomas Maciel Canestrano</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0001/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Victória Corrêa Périco</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0002/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Yasmin Oliveira dos Santos</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0003/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Ana Alice Soares Souza</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0004/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Arthur dos Santos Crispim</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0005/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Augusto Oliveira de Campos</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0006/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>João Pedro Franco de Oliveira</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0007/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>João Victor Zambelli dos Santos</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0008/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Liz Bená Nunes</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0009/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Matheus Caetano de Mello</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0010/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Miguel Antonio Borella</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0011/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Ravi Gabriel de Abreu</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0012/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Rebeca Moeira da Silva</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0013/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>André Aparecido Guimarães</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0014/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Arthur dos Anjos Felix</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0015/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Geovanna Oliveira de Jesus</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0016/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Guilherme Guidotti</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0017/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Kendly Emanuelly Stence</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0018/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Maria Beatriz Maiochi Coraine</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0019/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Nicolas Gabriel Bressan Marsola</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0020/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Vicente Moreira Pio</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0021/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Yago Rodrigo Silva de Freitas</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0022/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Beatriz Alves de Macena</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0023/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Ester Mendes de Souza</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0024/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Gabriela Carolina de Lima</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0025/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Heitor Fabrizio Lopes Santana de Moraes</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0026/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>João Vitor Silva Santana</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0027/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>José Miguel Aureliano Ferreira da Silva</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0028/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Yago Samuel Alves de Moraes</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0029/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Ana Paula Fernandes Barros</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0030/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Caio Alexandre Rebelato</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0031/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>José Otávio Menezes da Silva</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0032/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Rubens Canestraro Junior</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0033/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Sophia Gonçalves dos Santos</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0034/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+    <div class="cabecalho-box">
+      <div class="cabecalho-content">
+        <div>
+          <h2>Davi Binatto</h2>
+          <p>Clínica de Psicologia</p>
+        </div>
+        <div class="codigo-box">
+          <p>Código do Paciente</p>
+          <h2>0035/26B</h2>
+        </div>
+      </div>
+      <div class="recorte">
+        <span>✂️ Recorte aqui ✂️</span>
+      </div>
+    </div>
+  
+  </div>
+</body>
+</html>

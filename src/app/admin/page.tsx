@@ -66,11 +66,13 @@ export default function AdminDashboard() {
   const allReservations = fetchAllReservations();
   
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "reservations" | "rooms" | "professionals" | "new_reservation" | "patients" | "disponibilidade" | "relatorios" | "services" | "tarefas" | "finances">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "reservations" | "rooms" | "professionals" | "new_reservation" | "patients" | "disponibilidade" | "relatorios" | "services" | "tarefas" | "finances" | "waiting_list">("dashboard");
   const [selectedDispDate, setSelectedDispDate] = useState<string>(NEXT_DAYS[0]);
   const [professionalsMap, setProfessionalsMap] = useState<Record<string, string>>({});
   const [professionalsList, setProfessionalsList] = useState<any[]>([]);
   const [patientsList, setPatientsList] = useState<any[]>([]);
+  const [waitingList, setWaitingList] = useState<any[]>([]);
+  const [selectedWaitingPatientId, setSelectedWaitingPatientId] = useState("");
   
   // Filters State
   const [filterRoom, setFilterRoom] = useState<string>("");
@@ -547,6 +549,7 @@ export default function AdminDashboard() {
       setIsAdmin(true);
       fetchProfessionals();
       fetchPatients();
+      fetchWaitingList();
       setNewResDate(new Date().toISOString().split("T")[0]); // Set default date
 
       // Fetch global delayed tasks count
@@ -592,6 +595,63 @@ export default function AdminDashboard() {
     const { data } = await supabase.from("patients").select("*").order("name");
     if (data) {
       setPatientsList(data);
+    }
+  };
+
+  const fetchWaitingList = async () => {
+    const { data } = await supabase
+      .from("waiting_list")
+      .select(`
+        id,
+        patient_id,
+        status,
+        created_at,
+        patients ( name, code, "healthPlan" )
+      `)
+      .eq("status", "waiting")
+      .order("created_at", { ascending: true });
+    
+    if (data) {
+      setWaitingList(data);
+    }
+  };
+
+  const handleAddWaitingList = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedWaitingPatientId) return;
+
+    // Verifica se já está na fila
+    const exists = waitingList.find(w => w.patient_id === selectedWaitingPatientId);
+    if (exists) {
+      alert("Paciente já está na fila de espera.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("waiting_list")
+      .insert([{ patient_id: selectedWaitingPatientId }]);
+      
+    if (error) {
+      console.error(error);
+      alert("Erro ao adicionar paciente à fila de espera.");
+    } else {
+      setSelectedWaitingPatientId("");
+      fetchWaitingList();
+    }
+  };
+
+  const handleRemoveWaitingList = async (id: string) => {
+    if (!confirm("Deseja remover este paciente da fila de espera?")) return;
+    const { error } = await supabase
+      .from("waiting_list")
+      .update({ status: 'removed' })
+      .eq("id", id);
+      
+    if (error) {
+      console.error(error);
+      alert("Erro ao remover da fila de espera.");
+    } else {
+      fetchWaitingList();
     }
   };
 
@@ -1386,6 +1446,9 @@ export default function AdminDashboard() {
                 <button onClick={() => setActiveTab("patients")} className={`admin-nav-btn${activeTab === "patients" ? " active" : ""}`}>
                   👥 Pacientes
                 </button>
+                <button onClick={() => setActiveTab("waiting_list")} className={`admin-nav-btn${activeTab === "waiting_list" ? " active" : ""}`}>
+                  ⏳ Fila de Espera
+                </button>
                 <button onClick={() => setActiveTab("professionals")} className={`admin-nav-btn${activeTab === "professionals" ? " active" : ""}`}>
                   🩺 Equipe
                 </button>
@@ -2036,6 +2099,77 @@ export default function AdminDashboard() {
           )}
         </div>
       )}
+      {activeTab === "waiting_list" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h2 style={{ fontSize: "1.5rem", fontWeight: "bold" }}>Fila de Espera</h2>
+          </div>
+
+          <div style={{ background: "var(--bg-card)", padding: "1.5rem", borderRadius: "8px", border: "1px solid var(--border)" }}>
+            <form onSubmit={handleAddWaitingList} style={{ display: "flex", gap: "1rem", alignItems: "flex-end" }}>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                <label style={{ fontSize: "0.875rem", fontWeight: 500 }}>Selecionar Paciente</label>
+                <select 
+                  className="input-field" 
+                  value={selectedWaitingPatientId} 
+                  onChange={(e) => setSelectedWaitingPatientId(e.target.value)}
+                  required
+                >
+                  <option value="">-- Selecione um paciente --</option>
+                  {patientsList.map(p => (
+                    <option key={p.id} value={p.id}>{p.name} {p.code ? `(${p.code})` : ''}</option>
+                  ))}
+                </select>
+              </div>
+              <button type="submit" className="btn" style={{ height: "42px" }}>
+                Adicionar à Fila
+              </button>
+            </form>
+          </div>
+
+          <div style={{ background: "var(--bg-card)", borderRadius: "8px", border: "1px solid var(--border)", overflow: "hidden" }}>
+            {waitingList.length === 0 ? (
+              <p style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)" }}>Nenhum paciente na fila de espera.</p>
+            ) : (
+              <div className="table-responsive">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Posição</th>
+                      <th>Paciente</th>
+                      <th>Convênio</th>
+                      <th>Data de Entrada</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {waitingList.map((item, index) => (
+                      <tr key={item.id}>
+                        <td>#{index + 1}</td>
+                        <td>
+                          {item.patients?.name} {item.patients?.code ? `(${item.patients.code})` : ''}
+                        </td>
+                        <td>{item.patients?.healthPlan || "-"}</td>
+                        <td>{new Date(item.created_at).toLocaleString("pt-BR")}</td>
+                        <td>
+                          <button 
+                            onClick={() => handleRemoveWaitingList(item.id)}
+                            className="action-btn"
+                            style={{ color: "#ef4444", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
+                          >
+                            Remover
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
 
       {activeTab === "patients" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
