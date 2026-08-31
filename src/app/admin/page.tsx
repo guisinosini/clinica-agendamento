@@ -2210,10 +2210,9 @@ export default function AdminDashboard() {
                         <td>
                           <button 
                             onClick={() => handleRemoveWaitingList(item.id)}
-                            className="action-btn"
-                            style={{ color: "#ef4444", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
+                            style={{ padding: "0.3rem 0.6rem", backgroundColor: "var(--danger-light)", color: "var(--danger)", border: "none", borderRadius: "var(--radius-sm)", fontSize: "0.75rem", fontWeight: 600 }}
                           >
-                            Remover
+                            Remover da Fila
                           </button>
                         </td>
                       </tr>
