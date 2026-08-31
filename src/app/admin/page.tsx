@@ -2187,27 +2187,33 @@ export default function AdminDashboard() {
             {waitingList.length === 0 ? (
               <p style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)" }}>Nenhum paciente na fila de espera.</p>
             ) : (
-              <div className="table-responsive">
-                <table className="data-table">
+              <div className="table-scroll">
+                <table className="responsive-table" style={{ minWidth: "560px" }}>
                   <thead>
-                    <tr>
-                      <th>Posição</th>
-                      <th>Paciente</th>
-                      <th>Convênio</th>
-                      <th>Data de Entrada</th>
-                      <th>Ações</th>
+                    <tr style={{ borderBottom: "2px solid var(--border)", textAlign: "left" }}>
+                      <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Posição</th>
+                      <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Paciente</th>
+                      <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Convênio</th>
+                      <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Data de Entrada</th>
+                      <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Ações</th>
                     </tr>
                   </thead>
                   <tbody>
                     {waitingList.map((item, index) => (
-                      <tr key={item.id}>
-                        <td>#{index + 1}</td>
-                        <td>
-                          {item.patients?.name} {item.patients?.code ? `(${item.patients.code})` : ''}
+                      <tr key={item.id} style={{ borderBottom: "1px solid var(--border)" }}>
+                        <td style={{ padding: "1rem" }}>
+                          <span style={{ fontWeight: 600, color: "var(--primary)" }}>#{index + 1}</span>
                         </td>
-                        <td>{item.patients?.healthPlan || "-"}</td>
-                        <td>{new Date(item.created_at).toLocaleString("pt-BR")}</td>
-                        <td>
+                        <td style={{ padding: "1rem", fontWeight: 500 }}>
+                          {item.patients?.name} {item.patients?.code ? <span style={{ color: "var(--text-muted)", fontSize: "0.85em" }}>({item.patients.code})</span> : ''}
+                        </td>
+                        <td style={{ padding: "1rem" }}>
+                          {item.patients?.healthPlan ? <span className="badge badge-primary">{item.patients.healthPlan}</span> : "-"}
+                        </td>
+                        <td style={{ padding: "1rem", color: "var(--text-muted)" }}>
+                          {new Date(item.created_at).toLocaleString("pt-BR")}
+                        </td>
+                        <td style={{ padding: "1rem" }}>
                           <button 
                             onClick={() => handleRemoveWaitingList(item.id)}
                             style={{ padding: "0.3rem 0.6rem", backgroundColor: "var(--danger-light)", color: "var(--danger)", border: "none", borderRadius: "var(--radius-sm)", fontSize: "0.75rem", fontWeight: 600 }}
