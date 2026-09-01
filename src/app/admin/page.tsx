@@ -7,6 +7,7 @@ import { useReservation, NEXT_DAYS, TIME_SLOTS } from "../../context/Reservation
 import { supabase } from "../../lib/supabase";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import * as XLSX from 'xlsx';
+import PsychologicalTestsTab from "./PsychologicalTestsTab";
 
 const calculateAge = (birthDate: string) => {
   if (!birthDate) return null;
@@ -66,7 +67,7 @@ export default function AdminDashboard() {
   const allReservations = fetchAllReservations();
   
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "reservations" | "rooms" | "professionals" | "new_reservation" | "patients" | "disponibilidade" | "relatorios" | "services" | "tarefas" | "finances" | "waiting_list">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "reservations" | "rooms" | "professionals" | "new_reservation" | "patients" | "disponibilidade" | "relatorios" | "services" | "tarefas" | "finances" | "waiting_list" | "estoque_testes">("dashboard");
   const [selectedDispDate, setSelectedDispDate] = useState<string>(NEXT_DAYS[0]);
   const [professionalsMap, setProfessionalsMap] = useState<Record<string, string>>({});
   const [professionalsList, setProfessionalsList] = useState<any[]>([]);
@@ -1505,6 +1506,9 @@ export default function AdminDashboard() {
                 </button>
                 <button onClick={() => setActiveTab("rooms")} className={`admin-nav-btn${activeTab === "rooms" ? " active" : ""}`}>
                   🚪 Salas
+                </button>
+                <button onClick={() => setActiveTab("estoque_testes")} className={`admin-nav-btn${activeTab === "estoque_testes" ? " active" : ""}`}>
+                  📦 Testes
                 </button>
                 <button onClick={() => setActiveTab("tarefas")} className={`admin-nav-btn${activeTab === "tarefas" ? " active" : ""}`}>
                   ✅ Tarefas
@@ -3975,6 +3979,7 @@ export default function AdminDashboard() {
           )}
         </div>
       )}
+      {activeTab === "estoque_testes" && <PsychologicalTestsTab />}
     </div>
   );
 }
