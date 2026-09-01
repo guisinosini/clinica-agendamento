@@ -608,9 +608,11 @@ export default function AdminDashboard() {
         patient_id,
         status,
         created_at,
+        position,
         patients ( name, code, "healthPlan" )
       `)
       .eq("status", "waiting")
+      .order("position", { ascending: true })
       .order("created_at", { ascending: true });
     
     if (data) {
@@ -675,6 +677,28 @@ export default function AdminDashboard() {
       alert("Erro ao remover da fila de espera.");
     } else {
       fetchWaitingList();
+    }
+  };
+
+  const handleMoveWaitingList = async (index: number, direction: 'up' | 'down') => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= waitingList.length) return;
+
+    // Swap locally for optimistic UI
+    const newList = [...waitingList];
+    const temp = newList[index];
+    newList[index] = newList[newIndex];
+    newList[newIndex] = temp;
+    setWaitingList(newList);
+
+    // Persist new positions to DB
+    const updates = newList.map((item, idx) => ({
+      id: item.id,
+      position: idx
+    }));
+
+    for (const update of updates) {
+      await supabase.from("waiting_list").update({ position: update.position }).eq("id", update.id);
     }
   };
 
@@ -2213,9 +2237,34 @@ export default function AdminDashboard() {
                         <td style={{ padding: "1rem", color: "var(--text-muted)" }}>
                           {new Date(item.created_at).toLocaleString("pt-BR")}
                         </td>
-                        <td style={{ padding: "1rem" }}>
+                        <td style={{ padding: "1rem", display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                          <button 
+                            onClick={() => handleMoveWaitingList(index, 'up')}
+                            disabled={index === 0}
+                            title="Subir posição"
+                            style={{ 
+                              padding: "0.3rem", backgroundColor: "var(--bg-color)", border: "1px solid var(--border)", 
+                              borderRadius: "var(--radius-sm)", cursor: index === 0 ? "not-allowed" : "pointer", 
+                              opacity: index === 0 ? 0.3 : 1 
+                            }}
+                          >
+                            ⬆️
+                          </button>
+                          <button 
+                            onClick={() => handleMoveWaitingList(index, 'down')}
+                            disabled={index === waitingList.length - 1}
+                            title="Descer posição"
+                            style={{ 
+                              padding: "0.3rem", backgroundColor: "var(--bg-color)", border: "1px solid var(--border)", 
+                              borderRadius: "var(--radius-sm)", cursor: index === waitingList.length - 1 ? "not-allowed" : "pointer", 
+                              opacity: index === waitingList.length - 1 ? 0.3 : 1 
+                            }}
+                          >
+                            ⬇️
+                          </button>
                           <button 
                             onClick={() => handleRemoveWaitingList(item.id)}
+                            title="Remover da fila"
                             style={{ padding: "0.3rem 0.6rem", backgroundColor: "var(--danger-light)", color: "var(--danger)", border: "none", borderRadius: "var(--radius-sm)", fontSize: "0.75rem", fontWeight: 600 }}
                           >
                             Remover da Fila
