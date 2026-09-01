@@ -7,6 +7,7 @@ import { PsychologicalTest } from "../../types";
 export default function PsychologicalTestsTab() {
   const [tests, setTests] = useState<PsychologicalTest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
 
   // Formulário para novo teste
   const [name, setName] = useState("");
@@ -58,6 +59,7 @@ export default function PsychologicalTestsTab() {
       setDescription("");
       setInitialStock("");
       setMinStock("");
+      setShowForm(false);
       fetchTests();
     }
   };
@@ -113,12 +115,74 @@ export default function PsychologicalTestsTab() {
     <div className="admin-content-section animate-fade-in">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <h2 className="admin-section-title">📦 Estoque de Testes Psicológicos</h2>
+        <button className="btn" onClick={() => setShowForm(!showForm)}>
+          {showForm ? "Cancelar Cadastro" : "➕ Cadastrar Novo Teste"}
+        </button>
       </div>
 
-      <div style={{ display: "flex", gap: "2rem", alignItems: "flex-start", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
         
+        {/* Formulário de Novo Teste */}
+        {showForm && (
+          <div className="admin-card animate-fade-in" style={{ width: "100%" }}>
+            <h3 className="admin-card-title">Cadastrar Novo Teste</h3>
+            <form onSubmit={handleAddTest} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                <div style={{ flex: 1, minWidth: "200px" }}>
+                  <label className="label">Nome do Teste / Protocolo</label>
+                  <input 
+                    className="input" 
+                    value={name} 
+                    onChange={e => setName(e.target.value)} 
+                    required 
+                    placeholder="Ex: Palográfico" 
+                  />
+                </div>
+                
+                <div style={{ flex: 2, minWidth: "300px" }}>
+                  <label className="label">Descrição (Opcional)</label>
+                  <input 
+                    className="input" 
+                    value={description} 
+                    onChange={e => setDescription(e.target.value)} 
+                    placeholder="Detalhes adicionais..." 
+                  />
+                </div>
+              </div>
+              
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                <div style={{ flex: 1, minWidth: "150px" }}>
+                  <label className="label">Estoque Inicial</label>
+                  <input 
+                    type="number" 
+                    className="input" 
+                    value={initialStock} 
+                    onChange={e => setInitialStock(e.target.value)} 
+                    placeholder="0" 
+                  />
+                </div>
+                
+                <div style={{ flex: 1, minWidth: "150px" }}>
+                  <label className="label">Aviso (Estoque Mín.)</label>
+                  <input 
+                    type="number" 
+                    className="input" 
+                    value={minStock} 
+                    onChange={e => setMinStock(e.target.value)} 
+                    placeholder="0" 
+                  />
+                </div>
+              </div>
+              
+              <button type="submit" className="btn" style={{ marginTop: "0.5rem", alignSelf: "flex-start" }}>
+                Salvar Teste
+              </button>
+            </form>
+          </div>
+        )}
+
         {/* Tabela de Estoque */}
-        <div className="admin-card" style={{ flex: 2, minWidth: "600px" }}>
+        <div className="admin-card" style={{ width: "100%", backgroundColor: "#ffffff" }}>
           <h3 className="admin-card-title">Estoque Atual</h3>
           {loading ? (
             <p>Carregando...</p>
@@ -126,7 +190,7 @@ export default function PsychologicalTestsTab() {
             <p className="empty-state">Nenhum teste cadastrado.</p>
           ) : (
             <div style={{ overflowX: "auto" }}>
-              <table className="responsive-table" style={{ minWidth: "800px" }}>
+              <table className="responsive-table" style={{ minWidth: "800px", backgroundColor: "#ffffff" }}>
                 <thead>
                   <tr>
                     <th>Nome do Teste</th>
@@ -223,61 +287,6 @@ export default function PsychologicalTestsTab() {
               </table>
             </div>
           )}
-        </div>
-
-        {/* Formulário de Novo Teste */}
-        <div className="admin-card" style={{ flex: 1, minWidth: "300px" }}>
-          <h3 className="admin-card-title">Cadastrar Novo Teste</h3>
-          <form onSubmit={handleAddTest} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <div>
-              <label className="label">Nome do Teste / Protocolo</label>
-              <input 
-                className="input" 
-                value={name} 
-                onChange={e => setName(e.target.value)} 
-                required 
-                placeholder="Ex: Palográfico" 
-              />
-            </div>
-            
-            <div>
-              <label className="label">Descrição (Opcional)</label>
-              <input 
-                className="input" 
-                value={description} 
-                onChange={e => setDescription(e.target.value)} 
-                placeholder="Detalhes adicionais..." 
-              />
-            </div>
-            
-            <div style={{ display: "flex", gap: "1rem" }}>
-              <div style={{ flex: 1 }}>
-                <label className="label">Estoque Inicial</label>
-                <input 
-                  type="number" 
-                  className="input" 
-                  value={initialStock} 
-                  onChange={e => setInitialStock(e.target.value)} 
-                  placeholder="0" 
-                />
-              </div>
-              
-              <div style={{ flex: 1 }}>
-                <label className="label">Aviso (Estoque Mín.)</label>
-                <input 
-                  type="number" 
-                  className="input" 
-                  value={minStock} 
-                  onChange={e => setMinStock(e.target.value)} 
-                  placeholder="0" 
-                />
-              </div>
-            </div>
-            
-            <button type="submit" className="btn" style={{ marginTop: "0.5rem" }}>
-              Cadastrar Teste
-            </button>
-          </form>
         </div>
 
       </div>
