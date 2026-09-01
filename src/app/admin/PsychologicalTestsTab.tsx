@@ -8,6 +8,7 @@ export default function PsychologicalTestsTab() {
   const [tests, setTests] = useState<PsychologicalTest[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [filterLowStock, setFilterLowStock] = useState(false);
 
   // Formulário para novo teste
   const [name, setName] = useState("");
@@ -183,7 +184,16 @@ export default function PsychologicalTestsTab() {
 
         {/* Tabela de Estoque */}
         <div className="admin-card" style={{ width: "100%", backgroundColor: "#ffffff" }}>
-          <h3 className="admin-card-title">Estoque Atual</h3>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <h3 className="admin-card-title" style={{ marginBottom: 0 }}>Estoque Atual</h3>
+            <button 
+              className={`btn ${filterLowStock ? "" : "btn-outline"}`}
+              style={{ padding: "0.4rem 0.8rem", fontSize: "0.85rem" }}
+              onClick={() => setFilterLowStock(!filterLowStock)}
+            >
+              {filterLowStock ? "⚠️ Mostrar Todos" : "⚠️ Mostrar Apenas Alertas"}
+            </button>
+          </div>
           {loading ? (
             <p>Carregando...</p>
           ) : tests.length === 0 ? (
@@ -202,7 +212,7 @@ export default function PsychologicalTestsTab() {
                   </tr>
                 </thead>
                 <tbody>
-                  {tests.map(test => {
+                  {tests.filter(test => !filterLowStock || test.stock <= test.min_stock).map(test => {
                     const isLowStock = test.stock <= test.min_stock;
                     
                     return (
