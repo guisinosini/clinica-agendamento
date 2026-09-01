@@ -2152,15 +2152,16 @@ export default function AdminDashboard() {
             <h2 style={{ fontSize: "1.5rem", fontWeight: "bold" }}>Fila de Espera</h2>
           </div>
 
-          <div style={{ background: "var(--bg-card)", padding: "1.5rem", borderRadius: "8px", border: "1px solid var(--border)" }}>
+          <div style={{ backgroundColor: "var(--bg-card)", padding: "1.5rem", borderRadius: "8px", border: "1px solid var(--border)", boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)" }}>
             <form onSubmit={handleAddWaitingList} style={{ display: "flex", gap: "1rem", alignItems: "flex-end" }}>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 <label style={{ fontSize: "0.875rem", fontWeight: 500 }}>Selecionar Paciente</label>
                 <div style={{ position: "relative" }}>
                   <input
                     type="text"
-                    className="input-field"
-                    placeholder="Buscar paciente pelo nome..."
+                    className="input"
+                    style={{ width: "100%", padding: "0.8rem", fontSize: "0.95rem" }}
+                    placeholder="🔍 Buscar paciente pelo nome..."
                     value={searchPatientQuery}
                     onChange={(e) => {
                       setSearchPatientQuery(e.target.value);
@@ -2173,25 +2174,25 @@ export default function AdminDashboard() {
                   />
                   {showPatientDropdown && (
                     <ul style={{ 
-                      position: "absolute", zIndex: 10, background: "var(--bg-card)", 
+                      position: "absolute", zIndex: 50, backgroundColor: "var(--bg-card)", 
                       border: "1px solid var(--border)", width: "100%", maxHeight: "250px", 
                       overflowY: "auto", listStyle: "none", padding: 0, margin: 0,
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                      boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
                       borderRadius: "0 0 8px 8px"
                     }}>
                       {patientsList.filter(p => p.name.toLowerCase().includes(searchPatientQuery.toLowerCase()) || (p.code && p.code.toLowerCase().includes(searchPatientQuery.toLowerCase()))).map(p => (
                         <li 
                           key={p.id}
-                          style={{ padding: "0.75rem 1rem", cursor: "pointer", borderBottom: "1px solid var(--border)", fontSize: "0.9rem" }}
+                          style={{ padding: "0.8rem 1rem", cursor: "pointer", borderBottom: "1px solid var(--border)", fontSize: "0.95rem", transition: "background 0.2s" }}
                           onMouseDown={() => {
                             setSelectedWaitingPatientId(p.id);
                             setSearchPatientQuery(`${p.name} ${p.code ? `(${p.code})` : ''}`);
                             setShowPatientDropdown(false);
                           }}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--bg-muted)"}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--primary-light)"}
                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
                         >
-                          {p.name} <span style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>{p.code ? `(${p.code})` : ''}</span>
+                          <span style={{ fontWeight: 600 }}>{p.name}</span> <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>{p.code ? `(${p.code})` : ''}</span>
                         </li>
                       ))}
                       {patientsList.filter(p => p.name.toLowerCase().includes(searchPatientQuery.toLowerCase()) || (p.code && p.code.toLowerCase().includes(searchPatientQuery.toLowerCase()))).length === 0 && (
@@ -2207,14 +2208,14 @@ export default function AdminDashboard() {
             </form>
           </div>
 
-          <div style={{ background: "var(--bg-card)", borderRadius: "8px", border: "1px solid var(--border)", overflow: "hidden" }}>
+          <div style={{ backgroundColor: "var(--bg-card)", borderRadius: "8px", border: "1px solid var(--border)", overflow: "hidden", boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)" }}>
             {waitingList.length === 0 ? (
               <p style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)" }}>Nenhum paciente na fila de espera.</p>
             ) : (
               <div className="table-scroll">
-                <table className="responsive-table" style={{ minWidth: "560px" }}>
+                <table className="responsive-table" style={{ minWidth: "560px", backgroundColor: "var(--bg-card)" }}>
                   <thead>
-                    <tr style={{ borderBottom: "2px solid var(--border)", textAlign: "left" }}>
+                    <tr style={{ borderBottom: "2px solid var(--border)", textAlign: "left", backgroundColor: "var(--bg-muted)" }}>
                       <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Posição</th>
                       <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Paciente</th>
                       <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Convênio</th>
