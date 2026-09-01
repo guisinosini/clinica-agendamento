@@ -75,6 +75,7 @@ export default function AdminDashboard() {
   const [selectedWaitingPatientId, setSelectedWaitingPatientId] = useState("");
   const [searchPatientQuery, setSearchPatientQuery] = useState("");
   const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+  const [waitingListHealthPlanFilter, setWaitingListHealthPlanFilter] = useState("");
   
   // Filters State
   const [filterRoom, setFilterRoom] = useState<string>("");
@@ -2150,6 +2151,26 @@ export default function AdminDashboard() {
         <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <h2 style={{ fontSize: "1.5rem", fontWeight: "bold" }}>Fila de Espera</h2>
+            
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <label style={{ fontSize: "0.875rem", fontWeight: 600 }}>Filtrar Convênio:</label>
+              <select 
+                className="input" 
+                style={{ padding: "0.4rem 0.8rem" }}
+                value={waitingListHealthPlanFilter}
+                onChange={(e) => setWaitingListHealthPlanFilter(e.target.value)}
+              >
+                <option value="">Todos os convênios</option>
+                <option value="Particular">Particular</option>
+                <option value="Unimed">Unimed</option>
+                <option value="Prefeitura">Prefeitura</option>
+                <option value="Luminar Saúde">Luminar Saúde</option>
+                <option value="Bradesco">Bradesco</option>
+                <option value="Pró Saúde">Pró Saúde</option>
+                <option value="São Luiz Saúde">São Luiz Saúde</option>
+                <option value="KR Saúde">KR Saúde</option>
+              </select>
+            </div>
           </div>
 
           <div style={{ backgroundColor: "var(--bg-card)", padding: "1.5rem", borderRadius: "8px", border: "1px solid var(--border)", boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)" }}>
@@ -2208,75 +2229,89 @@ export default function AdminDashboard() {
             </form>
           </div>
 
-          <div style={{ backgroundColor: "var(--bg-card)", borderRadius: "8px", border: "1px solid var(--border)", overflow: "hidden", boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)" }}>
-            {waitingList.length === 0 ? (
-              <p style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)" }}>Nenhum paciente na fila de espera.</p>
-            ) : (
-              <div className="table-scroll">
-                <table className="responsive-table" style={{ minWidth: "560px", backgroundColor: "var(--bg-card)" }}>
-                  <thead>
-                    <tr style={{ borderBottom: "2px solid var(--border)", textAlign: "left", backgroundColor: "var(--bg-muted)" }}>
-                      <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Posição</th>
-                      <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Paciente</th>
-                      <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Convênio</th>
-                      <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Data de Entrada</th>
-                      <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {waitingList.map((item, index) => (
-                      <tr key={item.id} style={{ borderBottom: "1px solid var(--border)" }}>
-                        <td style={{ padding: "1rem" }}>
-                          <span style={{ fontWeight: 600, color: "var(--primary)" }}>#{index + 1}</span>
-                        </td>
-                        <td style={{ padding: "1rem", fontWeight: 500 }}>
-                          {item.patients?.name} {item.patients?.code ? <span style={{ color: "var(--text-muted)", fontSize: "0.85em" }}>({item.patients.code})</span> : ''}
-                        </td>
-                        <td style={{ padding: "1rem" }}>
-                          {item.patients?.healthPlan ? <span className="badge badge-primary">{item.patients.healthPlan}</span> : "-"}
-                        </td>
-                        <td style={{ padding: "1rem", color: "var(--text-muted)" }}>
-                          {new Date(item.created_at).toLocaleString("pt-BR")}
-                        </td>
-                        <td style={{ padding: "1rem", display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                          <button 
-                            onClick={() => handleMoveWaitingList(index, 'up')}
-                            disabled={index === 0}
-                            title="Subir posição"
-                            style={{ 
-                              padding: "0.3rem", backgroundColor: "var(--bg-color)", border: "1px solid var(--border)", 
-                              borderRadius: "var(--radius-sm)", cursor: index === 0 ? "not-allowed" : "pointer", 
-                              opacity: index === 0 ? 0.3 : 1 
-                            }}
-                          >
-                            ⬆️
-                          </button>
-                          <button 
-                            onClick={() => handleMoveWaitingList(index, 'down')}
-                            disabled={index === waitingList.length - 1}
-                            title="Descer posição"
-                            style={{ 
-                              padding: "0.3rem", backgroundColor: "var(--bg-color)", border: "1px solid var(--border)", 
-                              borderRadius: "var(--radius-sm)", cursor: index === waitingList.length - 1 ? "not-allowed" : "pointer", 
-                              opacity: index === waitingList.length - 1 ? 0.3 : 1 
-                            }}
-                          >
-                            ⬇️
-                          </button>
-                          <button 
-                            onClick={() => handleRemoveWaitingList(item.id)}
-                            title="Remover da fila"
-                            style={{ padding: "0.3rem 0.6rem", backgroundColor: "var(--danger-light)", color: "var(--danger)", border: "none", borderRadius: "var(--radius-sm)", fontSize: "0.75rem", fontWeight: 600 }}
-                          >
-                            Remover da Fila
-                          </button>
-                        </td>
+          <div style={{ backgroundColor: "#ffffff", borderRadius: "8px", border: "1px solid var(--border)", overflow: "hidden", boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)" }}>
+            {(() => {
+              const filteredWaitingList = waitingListHealthPlanFilter 
+                ? waitingList.filter(item => item.patients?.healthPlan === waitingListHealthPlanFilter)
+                : waitingList;
+
+              if (filteredWaitingList.length === 0) {
+                return <p style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)" }}>Nenhum paciente na fila de espera com os filtros atuais.</p>;
+              }
+
+              return (
+                <div className="table-scroll">
+                  <table className="responsive-table" style={{ minWidth: "560px", backgroundColor: "#ffffff" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "2px solid var(--border)", textAlign: "left", backgroundColor: "var(--bg-muted)" }}>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Posição</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Paciente</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Convênio</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Data de Entrada</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Ações</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                    </thead>
+                    <tbody>
+                      {filteredWaitingList.map((item, index) => {
+                        // Quando filtrado, desativamos reordenação para não bagunçar a lista principal.
+                        // Caso contrário, calculamos o index normal (que será idêntico a este index local pois não há filtro).
+                        const isFiltered = waitingListHealthPlanFilter !== "";
+                        
+                        return (
+                          <tr key={item.id} style={{ borderBottom: "1px solid var(--border)" }}>
+                            <td style={{ padding: "1rem" }}>
+                              <span style={{ fontWeight: 600, color: "var(--primary)" }}>#{waitingList.findIndex(w => w.id === item.id) + 1}</span>
+                            </td>
+                            <td style={{ padding: "1rem", fontWeight: 500 }}>
+                              {item.patients?.name} {item.patients?.code ? <span style={{ color: "var(--text-muted)", fontSize: "0.85em" }}>({item.patients.code})</span> : ''}
+                            </td>
+                            <td style={{ padding: "1rem" }}>
+                              {item.patients?.healthPlan ? <span className="badge badge-primary">{item.patients.healthPlan}</span> : "-"}
+                            </td>
+                            <td style={{ padding: "1rem", color: "var(--text-muted)" }}>
+                              {new Date(item.created_at).toLocaleString("pt-BR")}
+                            </td>
+                            <td style={{ padding: "1rem", display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                              <button 
+                                onClick={() => handleMoveWaitingList(index, 'up')}
+                                disabled={index === 0 || isFiltered}
+                                title={isFiltered ? "Desabilitado durante filtros" : "Subir posição"}
+                                style={{ 
+                                  padding: "0.3rem", backgroundColor: "var(--bg-color)", border: "1px solid var(--border)", 
+                                  borderRadius: "var(--radius-sm)", cursor: (index === 0 || isFiltered) ? "not-allowed" : "pointer", 
+                                  opacity: (index === 0 || isFiltered) ? 0.3 : 1 
+                                }}
+                              >
+                                ⬆️
+                              </button>
+                              <button 
+                                onClick={() => handleMoveWaitingList(index, 'down')}
+                                disabled={index === waitingList.length - 1 || isFiltered}
+                                title={isFiltered ? "Desabilitado durante filtros" : "Descer posição"}
+                                style={{ 
+                                  padding: "0.3rem", backgroundColor: "var(--bg-color)", border: "1px solid var(--border)", 
+                                  borderRadius: "var(--radius-sm)", cursor: (index === waitingList.length - 1 || isFiltered) ? "not-allowed" : "pointer", 
+                                  opacity: (index === waitingList.length - 1 || isFiltered) ? 0.3 : 1 
+                                }}
+                              >
+                                ⬇️
+                              </button>
+                              <button 
+                                onClick={() => handleRemoveWaitingList(item.id)}
+                                title="Remover da fila"
+                                style={{ padding: "0.3rem 0.6rem", backgroundColor: "var(--danger-light)", color: "var(--danger)", border: "none", borderRadius: "var(--radius-sm)", fontSize: "0.75rem", fontWeight: 600 }}
+                              >
+                                Remover da Fila
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
