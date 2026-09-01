@@ -193,12 +193,12 @@ export default function PsychologicalTestsTab() {
               <table className="responsive-table" style={{ minWidth: "800px", backgroundColor: "#ffffff" }}>
                 <thead>
                   <tr>
-                    <th>Nome do Teste</th>
-                    <th>Estoque Mín.</th>
-                    <th>Em Estoque</th>
-                    <th>Registrar Uso (Saída)</th>
-                    <th>Registrar Compra (Entrada)</th>
-                    <th style={{ textAlign: "right" }}>Ações</th>
+                    <th style={{ textAlign: "center", padding: "1rem" }}>Nome do Teste</th>
+                    <th style={{ textAlign: "center", padding: "1rem" }}>Estoque Mín.</th>
+                    <th style={{ textAlign: "center", padding: "1rem" }}>Em Estoque</th>
+                    <th style={{ textAlign: "center", padding: "1rem" }}>Registrar Uso (Saída)</th>
+                    <th style={{ textAlign: "center", padding: "1rem" }}>Registrar Compra (Entrada)</th>
+                    <th style={{ textAlign: "center", padding: "1rem" }}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -207,12 +207,12 @@ export default function PsychologicalTestsTab() {
                     
                     return (
                       <tr key={test.id} style={isLowStock ? { backgroundColor: "var(--danger-light)" } : {}}>
-                        <td style={{ fontWeight: 600 }}>
+                        <td style={{ textAlign: "center", padding: "1rem", verticalAlign: "middle", fontWeight: 600 }}>
                           {test.name}
-                          {test.description && <div style={{ fontSize: "0.8rem", color: "var(--text-light)", fontWeight: "normal" }}>{test.description}</div>}
+                          {test.description && <div style={{ fontSize: "0.8rem", color: "var(--text-light)", fontWeight: "normal", marginTop: "0.25rem" }}>{test.description}</div>}
                         </td>
-                        <td>{test.min_stock}</td>
-                        <td>
+                        <td style={{ textAlign: "center", padding: "1rem", verticalAlign: "middle" }}>{test.min_stock}</td>
+                        <td style={{ textAlign: "center", padding: "1rem", verticalAlign: "middle" }}>
                           <span style={{ 
                             fontWeight: "bold", 
                             color: isLowStock ? "var(--danger)" : "var(--primary)" 
@@ -220,17 +220,17 @@ export default function PsychologicalTestsTab() {
                             {test.stock}
                           </span>
                           {isLowStock && (
-                            <span style={{ display: "block", fontSize: "0.75rem", color: "var(--danger)" }}>
+                            <span style={{ display: "block", fontSize: "0.75rem", color: "var(--danger)", marginTop: "0.25rem" }}>
                               ⚠️ Estoque Mínimo
                             </span>
                           )}
                         </td>
-                        <td>
-                          <div style={{ display: "flex", gap: "0.5rem" }}>
+                        <td style={{ textAlign: "center", padding: "1rem", verticalAlign: "middle" }}>
+                          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", alignItems: "center" }}>
                             <input 
                               type="number" 
                               className="input" 
-                              style={{ width: "70px", padding: "0.4rem" }} 
+                              style={{ width: "70px", padding: "0.4rem", textAlign: "center" }} 
                               placeholder="Qtd" 
                               value={useInputs[test.id] || ""}
                               onChange={e => setUseInputs(prev => ({ ...prev, [test.id]: e.target.value }))}
@@ -244,12 +244,12 @@ export default function PsychologicalTestsTab() {
                             </button>
                           </div>
                         </td>
-                        <td>
-                          <div style={{ display: "flex", gap: "0.5rem" }}>
+                        <td style={{ textAlign: "center", padding: "1rem", verticalAlign: "middle" }}>
+                          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", alignItems: "center" }}>
                             <input 
                               type="number" 
                               className="input" 
-                              style={{ width: "70px", padding: "0.4rem" }} 
+                              style={{ width: "70px", padding: "0.4rem", textAlign: "center" }} 
                               placeholder="Qtd" 
                               value={buyInputs[test.id] || ""}
                               onChange={e => setBuyInputs(prev => ({ ...prev, [test.id]: e.target.value }))}
@@ -263,7 +263,7 @@ export default function PsychologicalTestsTab() {
                             </button>
                           </div>
                         </td>
-                        <td style={{ textAlign: "right" }}>
+                        <td style={{ textAlign: "center", padding: "1rem", verticalAlign: "middle" }}>
                           <button 
                             onClick={() => handleDeleteTest(test.id)} 
                             style={{ 
