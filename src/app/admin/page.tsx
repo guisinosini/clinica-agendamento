@@ -2174,7 +2174,7 @@ export default function AdminDashboard() {
                   />
                   {showPatientDropdown && (
                     <ul style={{ 
-                      position: "absolute", zIndex: 50, backgroundColor: "var(--bg-card)", 
+                      position: "absolute", zIndex: 50, backgroundColor: "#ffffff", color: "#333333",
                       border: "1px solid var(--border)", width: "100%", maxHeight: "250px", 
                       overflowY: "auto", listStyle: "none", padding: 0, margin: 0,
                       boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
