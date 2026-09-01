@@ -81,3 +81,12 @@ export type TaskAssignment = {
   task?: Task; // Relação para quando fizermos JOIN
   professional?: Professional; // Relação para quem atribuiu/recebeu
 };
+
+export type PsychologicalTest = {
+  id: string;
+  name: string;
+  description?: string;
+  stock: number;
+  min_stock: number;
+  created_at?: string;
+};
