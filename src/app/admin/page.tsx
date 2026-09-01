@@ -1223,6 +1223,11 @@ export default function AdminDashboard() {
       .from('task_assignments')
       .select(`*, task:tasks(*), professional:professionals(*)`);
 
+    const { data: testsData } = await supabase
+      .from('psychological_tests')
+      .select('*')
+      .order('name', { ascending: true });
+
     // 1. Pacientes
     const patientsExport = patientsList.map(p => ({
        'ID do Paciente': p.id,
@@ -1238,13 +1243,26 @@ export default function AdminDashboard() {
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(patientsExport), "Pacientes");
 
     // 2. Anamneses
-    const anamnesesExport = (anamnesesData || []).map(a => ({
-       'ID da Anamnese': a.id,
-       'ID do Paciente': a.patient_id,
-       'Paciente': a.patient?.name || 'Desconhecido',
-       'Data Criação': new Date(a.created_at).toLocaleString("pt-BR"),
-       'Respostas': JSON.stringify(a.responses)
-    }));
+    const anamnesesExport = (anamnesesData || []).map(a => {
+       let respostasFormatadas = "";
+       try {
+         if (a.responses) {
+           respostasFormatadas = Object.entries(a.responses)
+             .map(([key, value]) => `${key}: ${value}`)
+             .join('\n');
+         }
+       } catch (e) {
+         respostasFormatadas = JSON.stringify(a.responses);
+       }
+       
+       return {
+         'ID da Anamnese': a.id,
+         'ID do Paciente': a.patient_id,
+         'Paciente': a.patient?.name || 'Desconhecido',
+         'Data Criação': new Date(a.created_at).toLocaleString("pt-BR"),
+         'Respostas': respostasFormatadas
+       };
+    });
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(anamnesesExport), "Anamneses");
 
     // 3. Agendamentos
@@ -1316,7 +1334,20 @@ export default function AdminDashboard() {
        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(financesExport), "Finanças");
     }
 
-    // 9. Gerar Arquivo XLSX Real
+    // 9. Estoque de Testes
+    if (testsData && testsData.length > 0) {
+       const testsExport = testsData.map(t => ({
+          'ID': t.id,
+          'Nome': t.name,
+          'Descrição': t.description || '',
+          'Estoque Atual': t.stock || 0,
+          'Estoque Mínimo': t.min_stock || 0,
+          'Data de Criação': new Date(t.created_at).toLocaleDateString("pt-BR")
+       }));
+       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(testsExport), "Estoque de Testes");
+    }
+
+    // 10. Gerar Arquivo XLSX Real
     XLSX.writeFile(wb, `relatorio_clinica_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
@@ -1331,7 +1362,8 @@ export default function AdminDashboard() {
 
       const tables = [
         'professionals', 'rooms', 'reservations', 'patients',
-        'services', 'finances', 'anamneses', 'tasks', 'task_assignments'
+        'services', 'finances', 'anamneses', 'tasks', 'task_assignments',
+        'psychological_tests', 'waiting_list'
       ];
 
       for (const table of tables) {
