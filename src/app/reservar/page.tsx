@@ -1,18 +1,19 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useReservation, NEXT_DAYS, TIME_SLOTS } from "../../context/ReservationContext";
 import { supabase } from "../../lib/supabase";
 
-export default function ReservarPage() {
+function ReservarForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { rooms, reservations, addReservations, professional, loading, allProfessionals, servicesList } = useReservation();
   
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string>(NEXT_DAYS[0]);
-  const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
+  const [selectedDate, setSelectedDate] = useState<string>(searchParams.get("date") || NEXT_DAYS[0]);
+  const [selectedSlots, setSelectedSlots] = useState<string[]>(searchParams.get("time") ? [searchParams.get("time")!] : []);
   const [patientId, setPatientId] = useState("");
   const [patientName, setPatientName] = useState("");
   const [service, setService] = useState("");
@@ -900,5 +901,13 @@ export default function ReservarPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ReservarPage() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <ReservarForm />
+    </Suspense>
   );
 }

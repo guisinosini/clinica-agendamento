@@ -59,6 +59,7 @@ export default function ProfessionalAgendaPage() {
   const [currentWeekStart, setCurrentWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [filterService, setFilterService] = useState("");
+  const [showVacantSlots, setShowVacantSlots] = useState(false);
 
   // Estado do Modal de Bloqueio
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
@@ -125,6 +126,18 @@ export default function ProfessionalAgendaPage() {
   };
 
   const { TIME_SLOTS } = require("../../context/ReservationContext");
+
+  const openBlockModalFor = (date: string, startTime: string) => {
+    setBlockDate(date);
+    setBlockStartTime(startTime);
+    const startIndex = TIME_SLOTS.indexOf(startTime);
+    const endStr = startIndex !== -1 && startIndex + 1 < TIME_SLOTS.length ? TIME_SLOTS[startIndex + 1] : startTime;
+    setBlockEndTime(endStr);
+    setBlockReason("");
+    setBlockRecurrence("none");
+    setBlockRecurrenceEnd("");
+    setIsBlockModalOpen(true);
+  };
 
   useEffect(() => {
     if (!loading && !professional) router.push("/");
@@ -251,6 +264,9 @@ export default function ProfessionalAgendaPage() {
   }, {} as Record<string, typeof periodReservations>);
 
   const sortedDates = Object.keys(groupedReservations).sort();
+  const targetDates = (viewMode === "daily" && showVacantSlots) 
+    ? [format(selectedDate, "yyyy-MM-dd")]
+    : sortedDates;
 
   // Navegação
   const handlePrev = () => {
@@ -352,6 +368,16 @@ export default function ProfessionalAgendaPage() {
               <option value="weekly">Semanal</option>
               <option value="monthly">Mensal</option>
             </select>
+            {viewMode === "daily" && (
+              <button 
+                onClick={() => setShowVacantSlots(!showVacantSlots)} 
+                className={showVacantSlots ? "btn" : "btn btn-outline"} 
+                style={{ padding: "0.4rem 0.8rem", fontSize: "0.85rem", marginRight: "0.5rem" }}
+                title="Mostrar horários vagos na agenda diária"
+              >
+                {showVacantSlots ? "Ocultar Vagos" : "Mostrar Vagos"}
+              </button>
+            )}
             <button onClick={handleToday} className="btn btn-outline" style={{ padding: "0.4rem 0.8rem", fontSize: "0.85rem" }}>Hoje</button>
             <button onClick={handlePrev} className="btn btn-outline" style={{ padding: "0.4rem 0.8rem" }}>&lt;</button>
             <button onClick={handleNext} className="btn btn-outline" style={{ padding: "0.4rem 0.8rem" }}>&gt;</button>
@@ -468,15 +494,36 @@ export default function ProfessionalAgendaPage() {
             })}
           </div>
         ) : (
-          sortedDates.length === 0 ? (
+          targetDates.length === 0 ? (
             <div style={{ textAlign: "center", padding: "3rem 1rem", border: "2px dashed var(--border-color)", borderRadius: "var(--radius-lg)" }}>
               <div style={{ fontSize: "2.5rem", marginBottom: "1rem", opacity: 0.5 }}>🛋️</div>
               <p style={{ color: "var(--text-muted)", fontWeight: 500 }}>Nenhum agendamento encontrado neste período.</p>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-              {sortedDates.map(dateStr => {
+              {targetDates.map(dateStr => {
                 const dateObj = new Date(dateStr + "T00:00:00");
+                const dayReservations = groupedReservations[dateStr] || [];
+                let displaySlots: any[] = [];
+
+                if (viewMode === "daily" && showVacantSlots) {
+                  let skipUntil = "";
+                  for (const slot of TIME_SLOTS) {
+                    if (skipUntil && slot < skipUntil) continue;
+                    const coveringRes = dayReservations.find((r: any) => r.startTime <= slot && r.endTime > slot);
+                    if (coveringRes) {
+                      if (!displaySlots.some(s => s.isReservation && s.data.id === coveringRes.id)) {
+                        displaySlots.push({ isReservation: true, data: coveringRes });
+                      }
+                      if (coveringRes.endTime > skipUntil) skipUntil = coveringRes.endTime;
+                    } else {
+                      displaySlots.push({ isReservation: false, time: slot });
+                    }
+                  }
+                } else {
+                  displaySlots = dayReservations.map((res: any) => ({ isReservation: true, data: res }));
+                }
+
                 return (
                   <div key={dateStr}>
                     <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-secondary)", textTransform: "capitalize", display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -484,7 +531,27 @@ export default function ProfessionalAgendaPage() {
                       {format(dateObj, "EEEE, dd 'de' MMMM", { locale: ptBR })}
                     </h3>
                     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                      {groupedReservations[dateStr].map(res => {
+                      {displaySlots.map((slotItem, index) => {
+                        if (!slotItem.isReservation) {
+                          return (
+                            <div key={`vacant-${dateStr}-${slotItem.time}`} className="card" style={{ padding: "0.6rem 1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center", borderLeft: "4px solid var(--border-color)", opacity: 0.7 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                                <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-muted)", minWidth: "70px", textAlign: "center" }}>{slotItem.time}</span>
+                                <span style={{ fontSize: "0.9rem", color: "var(--text-muted)", fontWeight: 600 }}>Livre</span>
+                              </div>
+                              <div style={{ display: "flex", gap: "0.5rem" }}>
+                                <Link href={`/reservar?date=${dateStr}&time=${slotItem.time}`} className="btn btn-outline" style={{ fontSize: "0.8rem", padding: "0.4rem 0.6rem" }}>
+                                  + Agendar
+                                </Link>
+                                <button onClick={() => openBlockModalFor(dateStr, slotItem.time)} className="btn btn-outline" style={{ fontSize: "0.8rem", padding: "0.4rem 0.6rem", borderColor: "var(--danger)", color: "var(--danger)" }}>
+                                  Bloquear
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        const res = slotItem.data;
                         const isBlocked = res.status === 'indisponivel';
                         const patientInfo = res.patientId ? patientsDict[res.patientId] : patientsDict[res.patientName || ""];
                         const ageStr = patientInfo?.birthDate ? calculateAge(patientInfo.birthDate) : "";
