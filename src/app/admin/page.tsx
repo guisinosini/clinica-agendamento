@@ -186,6 +186,7 @@ export default function AdminDashboard() {
   const [isFetchingPatientPayments, setIsFetchingPatientPayments] = useState(false);
   const [financePatientFilterHealthPlan, setFinancePatientFilterHealthPlan] = useState("todos");
   const [financePatientFilterName, setFinancePatientFilterName] = useState("");
+  const [financePatientFilterStatus, setFinancePatientFilterStatus] = useState("todos");
   const [paymentDateInputs, setPaymentDateInputs] = useState<Record<string, string>>({});
 
   const fetchFinances = async () => {
@@ -234,7 +235,7 @@ export default function AdminDashboard() {
             professionals ( name )
           `)
           .order('date', { ascending: false }),
-        supabase.from('patients').select('id, name, "healthPlan", is_paid, payment_date').order('name', { ascending: true })
+        supabase.from('patients').select('id, name, "healthPlan", is_paid, payment_date, created_at').order('name', { ascending: true })
       ]);
 
       const data = reservationsRes.data || [];
@@ -257,6 +258,7 @@ export default function AdminDashboard() {
             healthPlan: p.healthPlan || "Particular/Sem Convênio",
             is_paid: p.is_paid || false,
             payment_date: p.payment_date,
+            created_at: p.created_at,
             reservations: pReservations
          };
       });
@@ -3880,6 +3882,8 @@ export default function AdminDashboard() {
                   const filteredPatientPayments = patientPayments.filter(p => {
                     if (financePatientFilterHealthPlan !== "todos" && p.healthPlan !== financePatientFilterHealthPlan) return false;
                     if (financePatientFilterName.trim() !== "" && !p.patient_name.toLowerCase().includes(financePatientFilterName.toLowerCase())) return false;
+                    if (financePatientFilterStatus === "pagos" && !p.is_paid) return false;
+                    if (financePatientFilterStatus === "pendentes" && p.is_paid) return false;
                     return true;
                   });
                   const totalPaid = filteredPatientPayments.filter(p => p.is_paid).length;
@@ -3915,6 +3919,14 @@ export default function AdminDashboard() {
                               ))}
                             </select>
                           </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Status:</label>
+                            <select className="input" value={financePatientFilterStatus} onChange={e => setFinancePatientFilterStatus(e.target.value)} style={{ padding: "0.4rem 0.8rem", fontSize: "0.85rem" }}>
+                              <option value="todos">Todos</option>
+                              <option value="pagos">Pagos</option>
+                              <option value="pendentes">Pendentes</option>
+                            </select>
+                          </div>
                         </div>
                       </div>
 
@@ -3923,6 +3935,7 @@ export default function AdminDashboard() {
                     <thead>
                       <tr style={{ borderBottom: "2px solid var(--border-color)", textAlign: "left" }}>
                         <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Paciente</th>
+                        <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Data de Cadastramento</th>
                         <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Total de Sessões</th>
                         <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Convênio</th>
                         <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Profissionais</th>
@@ -3932,13 +3945,13 @@ export default function AdminDashboard() {
                     <tbody>
                       {isFetchingPatientPayments ? (
                         <tr>
-                          <td colSpan={5} style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>
+                          <td colSpan={6} style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>
                             Carregando...
                           </td>
                         </tr>
                       ) : filteredPatientPayments.length === 0 ? (
                         <tr>
-                          <td colSpan={5} style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>
+                          <td colSpan={6} style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>
                             Nenhum paciente encontrado neste período.
                           </td>
                         </tr>
@@ -3947,6 +3960,9 @@ export default function AdminDashboard() {
                           <tr key={index} style={{ borderBottom: "1px solid var(--border-color)", opacity: payment.is_paid ? 0.7 : 1 }}>
                             <td style={{ padding: "1rem", color: "var(--text-main)", fontWeight: 500 }}>
                               {payment.patient_name}
+                            </td>
+                            <td style={{ padding: "1rem", color: "var(--text-main)" }}>
+                               {payment.created_at ? new Date(payment.created_at).toLocaleDateString("pt-BR") : "Não informada"}
                             </td>
                             <td style={{ padding: "1rem", color: "var(--text-main)" }}>
                               <span style={{ fontWeight: 600 }}>
