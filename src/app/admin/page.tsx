@@ -187,6 +187,7 @@ export default function AdminDashboard() {
   const [financePatientFilterHealthPlan, setFinancePatientFilterHealthPlan] = useState("todos");
   const [financePatientFilterName, setFinancePatientFilterName] = useState("");
   const [financePatientFilterStatus, setFinancePatientFilterStatus] = useState("todos");
+  const [financePatientSortBy, setFinancePatientSortBy] = useState<"nome_asc" | "data_cadastramento_asc">("nome_asc");
   const [paymentDateInputs, setPaymentDateInputs] = useState<Record<string, string>>({});
 
   const fetchFinances = async () => {
@@ -3885,6 +3886,15 @@ export default function AdminDashboard() {
                     if (financePatientFilterStatus === "pagos" && !p.is_paid) return false;
                     if (financePatientFilterStatus === "pendentes" && p.is_paid) return false;
                     return true;
+                  }).sort((a, b) => {
+                    if (financePatientSortBy === "nome_asc") {
+                      return a.patient_name.localeCompare(b.patient_name);
+                    } else if (financePatientSortBy === "data_cadastramento_asc") {
+                      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                      return dateA - dateB;
+                    }
+                    return 0;
                   });
                   const totalPaid = filteredPatientPayments.filter(p => p.is_paid).length;
                   const totalPending = filteredPatientPayments.length - totalPaid;
@@ -3925,6 +3935,13 @@ export default function AdminDashboard() {
                               <option value="todos">Todos</option>
                               <option value="pagos">Pagos</option>
                               <option value="pendentes">Pendentes</option>
+                            </select>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Ordenar:</label>
+                            <select className="input" value={financePatientSortBy} onChange={e => setFinancePatientSortBy(e.target.value as any)} style={{ padding: "0.4rem 0.8rem", fontSize: "0.85rem" }}>
+                              <option value="nome_asc">Nome (A-Z)</option>
+                              <option value="data_cadastramento_asc">Data Cadastro (Mais antigo)</option>
                             </select>
                           </div>
                         </div>
