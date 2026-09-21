@@ -43,6 +43,7 @@ function ReservarForm() {
 
   // Estado de Sucesso
   const [successReservationData, setSuccessReservationData] = useState<any>(null);
+  const [successReservationsList, setSuccessReservationsList] = useState<any[]>([]);
 
   useEffect(() => {
     if (!loading && !professional) router.push("/");
@@ -213,8 +214,9 @@ function ReservarForm() {
       await addReservations(finalReservations);
       
       // Mostrar tela de sucesso usando a primeira reserva real criada pelo dono
-      const hostFirstRes = allReservations.find(r => r.professionalId === professional.id);
-      setSuccessReservationData(hostFirstRes || allReservations[0]);
+      const hostReservations = finalReservations.filter(r => r.professionalId === professional.id);
+      setSuccessReservationsList(hostReservations);
+      setSuccessReservationData(hostReservations[0] || finalReservations[0]);
       
     } catch (error) {
       console.error(error);
@@ -269,8 +271,17 @@ function ReservarForm() {
           </a>
           
           <button 
+            onClick={() => window.print()}
+            className="btn btn-secondary"
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "1rem", backgroundColor: "var(--text-main)", color: "white" }}
+          >
+            🖨️ Imprimir Próximas Sessões
+          </button>
+          
+          <button 
             onClick={() => {
               setSuccessReservationData(null);
+              setSuccessReservationsList([]);
               setSelectedRoom(null);
               setSelectedSlots([]);
               setPatientName("");
@@ -286,6 +297,134 @@ function ReservarForm() {
             Ver Minhas Reservas
           </button>
         </div>
+
+        {/* --- Início do Layout de Impressão (Oculto na tela normal) --- */}
+        <div className="print-only">
+          <style>{`
+            @media screen {
+              .print-only { display: none; }
+            }
+            @media print {
+              body * { visibility: hidden; }
+              .print-only, .print-only * { visibility: visible; }
+              .print-only {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 40px;
+                background: white;
+                font-family: 'Inter', Arial, sans-serif;
+                color: #333;
+              }
+              .print-header {
+                text-align: center;
+                margin-bottom: 30px;
+                border-bottom: 2px solid #eee;
+                padding-bottom: 20px;
+              }
+              .print-header h1 {
+                font-size: 28px;
+                color: #222;
+                margin-bottom: 10px;
+              }
+              .print-header p {
+                font-size: 18px;
+                color: #555;
+                margin: 5px 0;
+              }
+              .print-sessions {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+              }
+              .print-session-card {
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                padding: 15px 20px;
+                background: #fafafa;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                page-break-inside: avoid;
+              }
+              .print-session-date {
+                font-size: 20px;
+                font-weight: 700;
+                color: #000;
+              }
+              .print-session-time {
+                font-size: 18px;
+                color: #444;
+                margin-top: 5px;
+              }
+              .print-footer {
+                margin-top: 50px;
+                text-align: center;
+                border-top: 1px solid #eee;
+                padding-top: 20px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+              }
+              .print-footer-text p {
+                font-size: 15px;
+                color: #666;
+                margin: 5px 0;
+              }
+              .print-qr {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+                margin-top: 10px;
+              }
+              .print-qr img {
+                width: 120px;
+                height: 120px;
+              }
+              .print-qr span {
+                font-size: 14px;
+                color: #444;
+                font-weight: 500;
+              }
+            }
+          `}</style>
+
+          <div className="print-header">
+            <h1>Suas Próximas Sessões</h1>
+            <p>Paciente: <strong>{successReservationsList[0]?.patientName || "Não informado"}</strong></p>
+            <p>Profissional: {professional?.name || ""}</p>
+          </div>
+          
+          <div className="print-sessions">
+            {successReservationsList.map((res, i) => (
+              <div className="print-session-card" key={i}>
+                <div>
+                  <div className="print-session-date">🗓️ {formatSelectedDate(res.date)}</div>
+                  <div className="print-session-time">⏰ {res.startTime} às {res.endTime}</div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  {res.service && <div style={{ fontSize: "16px", color: "#333", fontWeight: 500 }}>{res.service}</div>}
+                  <div style={{ fontSize: "15px", color: "#666", marginTop: "4px" }}>Sala: {getRoomName(res.roomId)}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="print-footer">
+            <div className="print-footer-text">
+              <p>Por favor, tente chegar com pelo menos 10 minutos de antecedência.</p>
+              <p>Em caso de imprevistos, desmarque com 24h de antecedência.</p>
+            </div>
+            <div className="print-qr">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://wa.me/5519971991367" alt="WhatsApp QR Code" />
+              <span>Escaneie para falar conosco no WhatsApp</span>
+            </div>
+          </div>
+        </div>
+        {/* --- Fim do Layout de Impressão --- */}
       </div>
     );
   }
