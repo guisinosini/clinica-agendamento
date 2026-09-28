@@ -1710,6 +1710,7 @@ export default function AdminDashboard() {
                     <th style={{ padding: "1rem", color: "var(--text-secondary)", minWidth: "140px" }}>Horário</th>
                     <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Profissional</th>
                     <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Sala / Paciente</th>
+                    <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Convênio</th>
                     <th style={{ padding: "1rem", color: "var(--text-secondary)", textAlign: "right" }}>Ações</th>
                   </tr>
                 </thead>
@@ -1744,6 +1745,11 @@ export default function AdminDashboard() {
                           {res.status !== 'indisponivel' && res.service && <span> • </span>}
                           {res.service && <span>{res.service}</span>}
                         </div>
+                      </td>
+                      <td style={{ padding: "1rem" }}>
+                        {res.status !== 'indisponivel' && (res.patientId || res.patientName) 
+                          ? (patientsList.find((x: any) => x.id === res.patientId || x.name === res.patientName)?.healthPlan || "-")
+                          : "-"}
                       </td>
                       <td style={{ padding: "1rem", textAlign: "right" }}>
                         <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap" }}>
