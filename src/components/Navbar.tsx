@@ -40,6 +40,7 @@ export default function Navbar() {
     { href: "/disponibilidade", label: "Disponibilidade" },
     { href: "/minhas-reservas", label: "Minha Agenda" },
     { href: "/tarefas", label: "Tarefas" },
+    { href: "/meus-pacientes", label: "Meus pacientes" },
   ];
 
   return (
