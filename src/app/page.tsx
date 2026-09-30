@@ -154,7 +154,7 @@ export default function Home() {
             <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", marginTop: "0.4rem" }}>
               {isRegistering
                 ? "Preencha seus dados para começar."
-                : "Gestão de salas de atendimento."}
+                : "Mais compreensão, mais direção, mais vida!"}
             </p>
 
             {!isRegistering && (

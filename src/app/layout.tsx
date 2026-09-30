@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 
 export const metadata: Metadata = {
   title: "Instituto NeuroVida | Clínica de Neuropsicologia",
-  description: "Sistema de agendamento de salas de atendimento para profissionais de saúde.",
+  description: "Mais compreensão, mais direção, mais vida!",
 };
 
 export default function RootLayout({

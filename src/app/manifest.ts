@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Instituto NeuroVida',
     short_name: 'NeuroVida',
-    description: 'Sistema de agendamento de salas de atendimento para profissionais de saúde.',
+    description: 'Mais compreensão, mais direção, mais vida!',
     start_url: '/',
     display: 'standalone',
     background_color: '#F5F6FA',
