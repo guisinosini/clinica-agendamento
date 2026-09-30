@@ -141,7 +141,7 @@ export default function MeusPacientesPage() {
         <div id="print-section" style={{ color: "#000", fontFamily: "sans-serif", maxWidth: "800px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "2rem", borderBottom: "2px solid #eee", paddingBottom: "1rem" }}>
             <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", margin: 0 }}>Relatório de Atendimentos</h1>
-            <p style={{ fontSize: "1rem", margin: "0.5rem 0 0 0" }}>Clínica de Psicologia</p>
+            <p style={{ fontSize: "1rem", margin: "0.5rem 0 0 0" }}>Instituto NeuroVida</p>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "2rem", padding: "1rem", backgroundColor: "#f9f9f9", borderRadius: "8px", border: "1px solid #eee" }}>
@@ -445,7 +445,7 @@ export default function MeusPacientesPage() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", border: "2px solid #000", padding: "1rem", borderRadius: "8px" }}>
                 <div>
                   <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#000", margin: 0 }}>{viewingPatient.name}</h2>
-                  <p style={{ margin: "0.5rem 0 0 0", color: "#333", fontSize: "1rem" }}>Clínica de Psicologia</p>
+                  <p style={{ margin: "0.5rem 0 0 0", color: "#333", fontSize: "1rem" }}>Instituto NeuroVida</p>
                 </div>
                 {viewingPatient.code && (
                   <div style={{ textAlign: "right" }}>

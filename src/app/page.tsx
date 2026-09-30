@@ -146,15 +146,10 @@ export default function Home() {
               display: "flex", alignItems: "center", justifyContent: "center",
               boxShadow: "var(--clay-btn)",
             }}>
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" />
-                <line x1="16" y1="2" x2="16" y2="6" />
-                <line x1="8" y1="2" x2="8" y2="6" />
-                <line x1="3" y1="10" x2="21" y2="10" />
-              </svg>
+              <img src="/icon-512x512.png" alt="Instituto NeuroVida" style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "16px", background: "white" }} />
             </div>
             <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
-              {isRegistering ? "Criar Conta" : "Clínica de Psicologia"}
+              {isRegistering ? "Criar Conta" : "Instituto NeuroVida"}
             </h1>
             <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", marginTop: "0.4rem" }}>
               {isRegistering
@@ -649,7 +644,7 @@ export default function Home() {
             </button>
             <h2 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "1rem" }}>📱 Instalar Aplicativo</h2>
             <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", marginBottom: "1.5rem", lineHeight: "1.5" }}>
-              Adicione a Clínica de Psicologia à sua tela inicial para acessar rapidamente, como um aplicativo nativo!
+              Adicione a Instituto NeuroVida à sua tela inicial para acessar rapidamente, como um aplicativo nativo!
             </p>
             
             <div style={{ background: "var(--primary-light)", padding: "1rem", borderRadius: "var(--radius-md)", marginBottom: "1rem" }}>

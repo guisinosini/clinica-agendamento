@@ -760,7 +760,7 @@ export default function ProfessionalAgendaPage() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", border: "2px solid #000", padding: "1rem", borderRadius: "8px" }}>
                 <div>
                   <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#000", margin: 0 }}>{viewingPatient.name}</h2>
-                  <p style={{ margin: "0.5rem 0 0 0", color: "#333", fontSize: "1rem" }}>Clínica de Psicologia</p>
+                  <p style={{ margin: "0.5rem 0 0 0", color: "#333", fontSize: "1rem" }}>Instituto NeuroVida</p>
                 </div>
                 {viewingPatient.code && (
                   <div style={{ textAlign: "right" }}>

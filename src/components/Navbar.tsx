@@ -48,15 +48,8 @@ export default function Navbar() {
       <div className="navbar-inner">
         {/* Logo / Marca */}
         <Link href="/" className="navbar-brand">
-          <div className="navbar-brand-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-            </svg>
-          </div>
-          <span className="hide-mobile">Clínica de Psicologia</span>
+          <img src="/icon-192x192.png" alt="Instituto NeuroVida" style={{ width: 40, height: 40, borderRadius: 8, objectFit: "contain" }} />
+          <span className="hide-mobile">Instituto NeuroVida</span>
         </Link>
 
         {/* Links de Navegação */}
