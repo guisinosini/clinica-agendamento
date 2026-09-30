@@ -17,6 +17,7 @@ function ReservarForm() {
   const [patientId, setPatientId] = useState("");
   const [patientName, setPatientName] = useState("");
   const [service, setService] = useState("");
+  const [observation, setObservation] = useState("");
   const [feedbackMsg, setFeedbackMsg] = useState<string>("");
 
   // Patients Data
@@ -146,7 +147,8 @@ function ReservarForm() {
           endTime: formattedEndTime,
           patientId: patientId || undefined,
           patientName: patientId ? (patientsList.find(p => p.id === patientId)?.name) : (patientName || undefined),
-          service: service || undefined
+          service: service || undefined,
+          observation: observation || undefined
         };
 
         const guestRes = invitedProfessionals.map(guestId => ({
@@ -286,6 +288,7 @@ function ReservarForm() {
               setSelectedSlots([]);
               setPatientName("");
               setService("");
+              setObservation("");
               setIsRecurring(false);
               setRecurrenceCount(4);
               setInvitedProfessionals([]);
@@ -655,6 +658,16 @@ function ReservarForm() {
                       </option>
                     ))}
                   </select>
+                </div>
+                <div>
+                  <label className="label">Observação (Opcional)</label>
+                  <input
+                    type="text"
+                    className="input"
+                    value={observation}
+                    onChange={(e) => setObservation(e.target.value)}
+                    placeholder="Detalhes adicionais..."
+                  />
                 </div>
               </div>
             </div>

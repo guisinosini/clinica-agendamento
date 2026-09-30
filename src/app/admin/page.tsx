@@ -1745,6 +1745,11 @@ export default function AdminDashboard() {
                           {res.status !== 'indisponivel' && res.service && <span> • </span>}
                           {res.service && <span>{res.service}</span>}
                         </div>
+                        {res.observation && (
+                          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.2rem", fontStyle: "italic", whiteSpace: "pre-wrap" }}>
+                            Obs: {res.observation}
+                          </div>
+                        )}
                       </td>
                       <td style={{ padding: "1rem" }}>
                         {res.status !== 'indisponivel' && (res.patientId || res.patientName) 

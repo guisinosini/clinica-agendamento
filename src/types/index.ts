@@ -22,6 +22,7 @@ export type Reservation = {
   patientId?: string; // Novo campo para o vínculo estrutural
   patientName?: string; // Mantido para fallback de reservas antigas não migradas
   service?: string;
+  observation?: string;
   status?: "agendado" | "reagendado" | "falta" | "cancelado" | "concluido" | "confirmado" | "realizado" | "indisponivel";
   created_at?: string;
   created_by_name?: string;

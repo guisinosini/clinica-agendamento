@@ -311,6 +311,7 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
         patientId: r.patient_id,
         patientName: r.patients?.name || r.patient_name,
         service: r.service,
+        observation: r.observation,
         status: r.status || 'agendado',
         created_at: r.created_at,
         created_by_name: r.created_by_name
@@ -328,6 +329,7 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
       patient_id: res.patientId || null,
       patient_name: res.patientName || null,
       service: res.service || null,
+      observation: res.observation || null,
       status: res.status || 'agendado',
       created_by_name: professional?.name || 'Admin'
     }));

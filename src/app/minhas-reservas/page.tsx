@@ -466,7 +466,7 @@ export default function ProfessionalAgendaPage() {
                             >
                               {res.patientName || "Paciente"} {extraInfo && !isBlocked && <span style={{ fontSize: "0.8em", fontWeight: "normal", color: "var(--text-muted)" }}>({extraInfo})</span>}
                             </div>
-                            <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={res.observation ? `Obs: ${res.observation}` : ""}>
                               {isBlocked ? blockReason || "Indisponível" : res.service}
                             </div>
                             
@@ -585,6 +585,11 @@ export default function ProfessionalAgendaPage() {
                     <p style={{ fontSize: "0.85rem", color: isBlocked ? "var(--danger)" : "var(--text-secondary)", marginBottom: "0.4rem" }}>
                       {isBlocked ? "Profissional indisponível" : `${getRoomName(res.roomId || '')} ${res.service ? `• ${res.service}` : ''}`}
                     </p>
+                    {res.observation && !isBlocked && (
+                      <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "0.4rem", fontStyle: "italic", whiteSpace: "pre-wrap" }}>
+                        Obs: {res.observation}
+                      </p>
+                    )}
                   </div>
   
                   {/* Ações */}
