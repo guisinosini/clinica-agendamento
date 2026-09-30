@@ -49,7 +49,7 @@ export default function Navbar() {
         {/* Logo / Marca */}
         <Link href="/" className="navbar-brand">
           <div style={{ width: 40, height: 40, borderRadius: 8, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <img src="/icon-192x192.png" alt="Instituto NeuroVida" style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scale(1.8)" }} />
+            <img src="/icon-192x192.png" alt="Instituto NeuroVida" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
           </div>
           <span className="hide-mobile">Instituto NeuroVida</span>
         </Link>

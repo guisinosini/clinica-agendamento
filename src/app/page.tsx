@@ -146,7 +146,7 @@ export default function Home() {
               display: "flex", alignItems: "center", justifyContent: "center",
               boxShadow: "var(--clay-btn)",
             }}>
-              <img src="/icon-512x512.png" alt="Instituto NeuroVida" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "16px", background: "white", transform: "scale(1.8)" }} />
+              <img src="/icon-512x512.png" alt="Instituto NeuroVida" style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "16px", background: "white" }} />
             </div>
             <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
               {isRegistering ? "Criar Conta" : "Instituto NeuroVida"}
