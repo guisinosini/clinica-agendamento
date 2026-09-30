@@ -120,6 +120,7 @@ export default function AdminDashboard() {
   const [editResPatientId, setEditResPatientId] = useState<string>("");
   const [editResPatient, setEditResPatient] = useState("");
   const [editResService, setEditResService] = useState("");
+  const [editResObservation, setEditResObservation] = useState("");
 
   const [visibleReservationsCount, setVisibleReservationsCount] = useState(20);
   const [activeTooltipResId, setActiveTooltipResId] = useState<string | null>(null);
@@ -1009,6 +1010,7 @@ export default function AdminDashboard() {
     setEditResPatientId(res.patientId || "");
     setEditResPatient(res.patientName || "");
     setEditResService(res.service || "");
+    setEditResObservation(res.observation || "");
   };
 
 
@@ -1056,13 +1058,15 @@ export default function AdminDashboard() {
         professional_id: editResProfId,
         patient_id: editResPatientId || null,
         patient_name: editResPatientId ? (patientsList.find(p => p.id === editResPatientId)?.name) : (editResPatient || null),
-        service: editResService
+        service: editResService,
+        observation: editResObservation || null
       }).eq('id', editingResId);
 
       if (error) throw error;
       
       alert("Reserva atualizada com sucesso!");
       setEditingResId(null);
+      setEditResObservation("");
       window.location.reload(); 
     } catch (err) {
       console.error(err);
@@ -3119,6 +3123,16 @@ export default function AdminDashboard() {
                 </select>
               </div>
 
+              <div>
+                <label className="label">Observação (Opcional)</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={editResObservation}
+                  onChange={e => setEditResObservation(e.target.value)}
+                  placeholder="Detalhes adicionais..."
+                />
+              </div>
               <div>
                 <label className="label">Data</label>
                 <input type="date" className="input" value={editResDate} onChange={e => setEditResDate(e.target.value)} required />
