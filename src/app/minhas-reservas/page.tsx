@@ -860,6 +860,28 @@ export default function ProfessionalAgendaPage() {
               )}
               
               <div className="only-print print-full data-box" style={{ display: "none", marginTop: "1rem" }}>
+                  <h4 style={{ fontSize: "1rem", color: "#000", textTransform: "uppercase", borderBottom: "1px solid #ddd", paddingBottom: "0.4rem", marginBottom: "1rem", fontWeight: 700 }}>Documentos e Questionários</h4>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.5rem" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <div style={{ width: "16px", height: "16px", border: "1px solid #000", borderRadius: "3px" }}></div>
+                          <span style={{ fontSize: "0.9rem", color: "#000", fontWeight: 500 }}>Relatório Psicólogo</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <div style={{ width: "16px", height: "16px", border: "1px solid #000", borderRadius: "3px" }}></div>
+                          <span style={{ fontSize: "0.9rem", color: "#000", fontWeight: 500 }}>Relatório Pedagógico</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <div style={{ width: "16px", height: "16px", border: "1px solid #000", borderRadius: "3px" }}></div>
+                          <span style={{ fontSize: "0.9rem", color: "#000", fontWeight: 500 }}>Relatório Terapeuta</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <div style={{ width: "16px", height: "16px", border: "1px solid #000", borderRadius: "3px" }}></div>
+                          <span style={{ fontSize: "0.9rem", color: "#000", fontWeight: 500 }}>Questionários (SRS-2, ETDAH, BECK, BFP)</span>
+                      </div>
+                  </div>
+              </div>
+
+              <div className="only-print print-full data-box" style={{ display: "none", marginTop: "1rem" }}>
                   <h4 style={{ fontSize: "1rem", color: "#000", textTransform: "uppercase", borderBottom: "1px solid #ddd", paddingBottom: "0.4rem", marginBottom: "1rem", fontWeight: 700 }}>Datas das Sessões</h4>
                   <div style={{ display: "flex", flexDirection: "column", gap: "2.5rem", marginTop: "1.5rem" }}>
                       <div style={{ borderBottom: "1px solid #999", width: "100%" }}></div>
