@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from "react";
-import { Reservation, Room, Professional, Service } from "../types";
+import { Reservation, Room, Professional, Service, Holiday } from "../types";
 import { supabase } from "../lib/supabase";
 
 export const getNext7Days = () => {
@@ -48,6 +48,7 @@ interface ReservationContextData {
   addService: (name: string, description?: string, duration?: number) => Promise<boolean>;
   updateService: (id: string, name: string, description?: string, duration?: number) => Promise<boolean>;
   deleteService: (id: string) => Promise<boolean>;
+  holidays: Holiday[];
 }
 
 const ReservationContext = createContext<ReservationContextData>({} as ReservationContextData);
@@ -58,6 +59,7 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
   const [professional, setProfessional] = useState<Professional | null>(null);
   const [allProfessionals, setAllProfessionals] = useState<Professional[]>([]);
   const [servicesList, setServicesList] = useState<Service[]>([]);
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -105,8 +107,30 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
+  const fetchHolidays = async () => {
+    try {
+      const year = new Date().getFullYear();
+      
+      // Checa se já temos no cache da sessão
+      const cached = sessionStorage.getItem(`holidays-${year}`);
+      if (cached) {
+        setHolidays(JSON.parse(cached));
+        return;
+      }
+      
+      const res = await fetch(`https://brasilapi.com.br/api/feriados/v1/${year}`);
+      if (res.ok) {
+        const data = await res.json();
+        setHolidays(data);
+        sessionStorage.setItem(`holidays-${year}`, JSON.stringify(data));
+      }
+    } catch (err) {
+      console.error("Erro ao buscar feriados:", err);
+    }
+  };
+
   const fetchData = async () => {
-    await Promise.all([fetchRooms(), fetchReservations(), fetchProfessionals(), fetchServices()]);
+    await Promise.all([fetchRooms(), fetchReservations(), fetchProfessionals(), fetchServices(), fetchHolidays()]);
   };
 
   const fetchProfessionals = async () => {
@@ -388,8 +412,9 @@ export const ReservationProvider = ({ children }: { children: ReactNode }) => {
     fetchServices,
     addService,
     updateService,
-    deleteService
-  }), [reservations, rooms, professional, loading, allProfessionals, servicesList]);
+    deleteService,
+    holidays
+  }), [reservations, rooms, professional, loading, allProfessionals, servicesList, holidays]);
 
   return (
     <ReservationContext.Provider value={contextValue}>

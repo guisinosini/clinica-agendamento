@@ -63,7 +63,7 @@ const formatName = (name: string) => {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { rooms, fetchAllReservations, cancelReservation, updateReservationStatus, addRoom, updateRoom, deleteRoom, loading, addReservations, servicesList, addService, updateService, deleteService, professional } = useReservation();
+  const { rooms, fetchAllReservations, cancelReservation, updateReservationStatus, addRoom, updateRoom, deleteRoom, loading, addReservations, servicesList, addService, updateService, deleteService, professional, holidays } = useReservation();
   const allReservations = fetchAllReservations();
   
   const [isAdmin, setIsAdmin] = useState(false);
@@ -2724,6 +2724,15 @@ export default function AdminDashboard() {
               <div>
                 <label className="label">Data</label>
                 <input type="date" className="input" value={newResDate} onChange={e => { setNewResDate(e.target.value); setNewResSlots([]); }} required />
+                {holidays?.find(h => h.date === newResDate) && (
+                  <div className="animate-fade" style={{
+                    marginTop: "0.5rem", padding: "0.75rem", borderRadius: "6px", 
+                    backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)",
+                    color: "#b91c1c", fontSize: "0.85rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.5rem"
+                  }}>
+                    ⚠️ Feriado: {holidays.find(h => h.date === newResDate)?.name}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -2830,6 +2839,15 @@ export default function AdminDashboard() {
               style={{ width: "200px" }}
             />
           </div>
+          {holidays?.find(h => h.date === selectedDispDate) && (
+            <div className="animate-fade" style={{
+              marginBottom: "1rem", padding: "0.75rem", borderRadius: "6px", 
+              backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)",
+              color: "#b91c1c", fontSize: "0.85rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.5rem"
+            }}>
+              ⚠️ Feriado: {holidays.find(h => h.date === selectedDispDate)?.name}
+            </div>
+          )}
 
           <div className="card" style={{ padding: "0", overflow: "hidden" }}>
             <div style={{ overflowX: "auto" }}>
@@ -3136,6 +3154,15 @@ export default function AdminDashboard() {
               <div>
                 <label className="label">Data</label>
                 <input type="date" className="input" value={editResDate} onChange={e => setEditResDate(e.target.value)} required />
+                {holidays?.find(h => h.date === editResDate) && (
+                  <div className="animate-fade" style={{
+                    marginTop: "0.5rem", padding: "0.75rem", borderRadius: "6px", 
+                    backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)",
+                    color: "#b91c1c", fontSize: "0.85rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.5rem"
+                  }}>
+                    ⚠️ Feriado: {holidays.find(h => h.date === editResDate)?.name}
+                  </div>
+                )}
               </div>
               
               {editResDate && editResRoom && editResProfId && editResService && (

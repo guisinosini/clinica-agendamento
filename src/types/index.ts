@@ -91,3 +91,10 @@ export type PsychologicalTest = {
   min_stock: number;
   created_at?: string;
 };
+
+export type Holiday = {
+  date: string;
+  name: string;
+  type: string;
+};
+

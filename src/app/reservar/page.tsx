@@ -9,7 +9,7 @@ import { supabase } from "../../lib/supabase";
 function ReservarForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { rooms, reservations, addReservations, professional, loading, allProfessionals, servicesList } = useReservation();
+  const { rooms, reservations, addReservations, professional, loading, allProfessionals, servicesList, holidays } = useReservation();
   
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(searchParams.get("date") || NEXT_DAYS[0]);
@@ -710,9 +710,20 @@ function ReservarForm() {
                 }}
               />
               {selectedDate && (
-                <p style={{ fontSize: "0.875rem", color: "var(--text-muted)", textTransform: "capitalize", marginTop: "0.25rem" }}>
-                  {formatSelectedDate(selectedDate)}
-                </p>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
+                  <p style={{ fontSize: "0.875rem", color: "var(--text-muted)", textTransform: "capitalize", marginTop: "0.25rem" }}>
+                    {formatSelectedDate(selectedDate)}
+                  </p>
+                  {holidays?.find(h => h.date === selectedDate) && (
+                    <div className="animate-fade" style={{
+                      marginTop: "0.5rem", padding: "0.75rem 1rem", borderRadius: "8px", 
+                      backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)",
+                      color: "#b91c1c", fontSize: "0.85rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.5rem"
+                    }}>
+                      ⚠️ Atenção: A data selecionada é um feriado ({holidays.find(h => h.date === selectedDate)?.name}).
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </section>
