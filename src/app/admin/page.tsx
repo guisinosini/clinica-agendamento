@@ -455,6 +455,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (activeTab === "tarefas") {
       fetchAdminTasks();
+    } else if (activeTab === "reservations") {
+      const today = new Date().toISOString().split("T")[0];
+      setFilterStartDate(today);
+      setFilterEndDate(today);
     }
   }, [activeTab]);
 
