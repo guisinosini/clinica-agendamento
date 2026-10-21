@@ -2795,7 +2795,7 @@ export default function AdminDashboard() {
                   }} 
                 >
                   <option value="">-- Selecione o Paciente --</option>
-                  {patientsList.map(pat => {
+                  {patientsList.filter(pat => pat.status !== 'concluido').map(pat => {
                     let ageStr = "";
                     if (pat.birthDate) {
                       const birthDate = new Date(pat.birthDate);
@@ -3106,7 +3106,7 @@ export default function AdminDashboard() {
                     }} 
                   >
                     <option value="">-- Selecione o Paciente --</option>
-                    {patientsList.map(pat => {
+                    {patientsList.filter(pat => pat.status !== 'concluido' || pat.id === editResPatientId).map(pat => {
                       let ageStr = "";
                       if (pat.birthDate) {
                         const birthDate = new Date(pat.birthDate);

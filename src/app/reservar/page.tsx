@@ -51,8 +51,8 @@ function ReservarForm() {
     
     // Fetch patients list
     const fetchPatients = async () => {
-      const { data } = await supabase.from("patients").select("id, name, phone, birthDate").order("name");
-      if (data) setPatientsList(data);
+      const { data } = await supabase.from("patients").select("id, name, code, phone, birthDate, status").order("name");
+      if (data) setPatientsList(data.filter(pat => pat.status !== "concluido"));
     };
     if (professional) {
       fetchPatients();
@@ -614,7 +614,7 @@ function ReservarForm() {
                         }}
                       >
                         <option value="">-- Selecione o Paciente --</option>
-                        {patientsList.map(pat => {
+                        {patientsList.filter(pat => pat.status !== "concluido").map(pat => {
                           let ageStr = "";
                           if (pat.birthDate) {
                             const birthDate = new Date(pat.birthDate);
