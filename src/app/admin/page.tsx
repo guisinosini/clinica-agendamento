@@ -147,6 +147,8 @@ export default function AdminDashboard() {
   const [patientSearchCpf, setPatientSearchCpf] = useState("");
   const [patientFilterHealthPlan, setPatientFilterHealthPlan] = useState("");
   const [patientFilterAgeGroup, setPatientFilterAgeGroup] = useState("");
+  const [patientSortBy, setPatientSortBy] = useState<"name" | "code">("name");
+  const [patientSortOrder, setPatientSortOrder] = useState<"asc" | "desc">("asc");
   const [showPatientForm, setShowPatientForm] = useState(false);
   const [viewingPatient, setViewingPatient] = useState<any | null>(null);
 
@@ -2551,7 +2553,58 @@ export default function AdminDashboard() {
 
           {/* Lista de Pacientes */}
           <div className="card animate-slide">
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem" }}>Pacientes ({patientsList.length})</h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem", marginBottom: "1rem" }}>
+              <h2 style={{ fontSize: "1.2rem", fontWeight: 700, margin: 0 }}>Pacientes ({patientsList.length})</h2>
+              <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 600 }}>Ordenar por:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (patientSortBy === "name") {
+                      setPatientSortOrder(prev => prev === "asc" ? "desc" : "asc");
+                    } else {
+                      setPatientSortBy("name");
+                      setPatientSortOrder("asc");
+                    }
+                  }}
+                  style={{
+                    padding: "0.35rem 0.75rem",
+                    borderRadius: "var(--radius-sm)",
+                    border: "1px solid var(--border-color)",
+                    backgroundColor: patientSortBy === "name" ? "var(--primary)" : "var(--bg-color)",
+                    color: patientSortBy === "name" ? "white" : "var(--text-main)",
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                    cursor: "pointer"
+                  }}
+                >
+                  🔤 Ordem Alfabética {patientSortBy === "name" ? (patientSortOrder === "asc" ? "(A-Z)" : "(Z-A)") : ""}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (patientSortBy === "code") {
+                      setPatientSortOrder(prev => prev === "asc" ? "desc" : "asc");
+                    } else {
+                      setPatientSortBy("code");
+                      setPatientSortOrder("asc");
+                    }
+                  }}
+                  style={{
+                    padding: "0.35rem 0.75rem",
+                    borderRadius: "var(--radius-sm)",
+                    border: "1px solid var(--border-color)",
+                    backgroundColor: patientSortBy === "code" ? "var(--primary)" : "var(--bg-color)",
+                    color: patientSortBy === "code" ? "white" : "var(--text-main)",
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                    cursor: "pointer"
+                  }}
+                >
+                  🔢 Nº do Cadastro {patientSortBy === "code" ? (patientSortOrder === "asc" ? "↑" : "↓") : ""}
+                </button>
+              </div>
+            </div>
             <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
               <div style={{ flex: "1 1 200px" }}>
                 <label className="label" style={{ fontSize: "0.85rem", marginBottom: "0.2rem" }}>Pesquisar por Nome</label>
@@ -2633,6 +2686,29 @@ export default function AdminDashboard() {
                   }
 
                   return true;
+                }).sort((a, b) => {
+                  if (patientSortBy === "name") {
+                    const cmp = (a.name || "").localeCompare(b.name || "", "pt-BR", { sensitivity: "base" });
+                    return patientSortOrder === "asc" ? cmp : -cmp;
+                  } else {
+                    const parseCode = (code?: string) => {
+                      if (!code || !code.includes("/")) return null;
+                      const [seqStr, yearStr] = code.split("/");
+                      const yearNum = parseInt(yearStr.replace(/\D/g, ""), 10) || 0;
+                      const yearLetter = yearStr.replace(/\d/g, "") || "";
+                      const seqNum = parseInt(seqStr.replace(/\D/g, ""), 10) || 0;
+                      return { yearNum, yearLetter, seqNum };
+                    };
+                    const ca = parseCode(a.code);
+                    const cb = parseCode(b.code);
+                    if (!ca && !cb) return (a.name || "").localeCompare(b.name || "", "pt-BR");
+                    if (!ca) return 1;
+                    if (!cb) return -1;
+                    let cmp = ca.yearNum - cb.yearNum;
+                    if (cmp === 0) cmp = ca.yearLetter.localeCompare(cb.yearLetter);
+                    if (cmp === 0) cmp = ca.seqNum - cb.seqNum;
+                    return patientSortOrder === "asc" ? cmp : -cmp;
+                  }
                 });
                 if (filteredPatients.length === 0) {
                   return <p style={{ color: "var(--text-muted)" }}>Nenhum paciente encontrado.</p>;
