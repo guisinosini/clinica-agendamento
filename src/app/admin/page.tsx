@@ -943,6 +943,18 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleReopenPatientProcess = async (id: string, name: string) => {
+    if (confirm(`Deseja retornar o paciente ${name} para ATIVO (remover status de concluído)?`)) {
+      const { error } = await supabase.from("patients").update({ status: "ativo" }).eq("id", id);
+      if (!error) {
+        fetchPatients();
+        alert(`Paciente ${name} retornado para ativo.`);
+      } else {
+        alert("Erro ao reativar o paciente.");
+      }
+    }
+  };
+
   const handleAdminCreateReservation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newResProfId || !newResRoomId || !newResDate || newResSlots.length === 0 || !newResService) {
@@ -2747,12 +2759,19 @@ export default function AdminDashboard() {
                         )}
                       </div>
                       <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                        {pat.status !== 'concluido' && (
+                        {pat.status !== 'concluido' ? (
                           <button
                             onClick={() => handleConcludePatientProcess(pat.id, pat.name)}
                             style={{ padding: "0.3rem 0.6rem", backgroundColor: "var(--success)", color: "white", border: "none", borderRadius: "var(--radius-sm)", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
                           >
                             ✓ Concluir Processo
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleReopenPatientProcess(pat.id, pat.name)}
+                            style={{ padding: "0.3rem 0.6rem", backgroundColor: "var(--bg-color)", color: "var(--text-main)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
+                          >
+                            ↩️ Reativar Paciente
                           </button>
                         )}
                         <button 
