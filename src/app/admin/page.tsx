@@ -929,6 +929,18 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleConcludePatientProcess = async (id: string, name: string) => {
+    if (confirm(`Deseja marcar o processo de ${name} como CONCLUÍDO (Alta)?`)) {
+      const { error } = await supabase.from("patients").update({ status: "concluido" }).eq("id", id);
+      if (!error) {
+        fetchPatients();
+        alert(`Processo de ${name} marcado como concluído.`);
+      } else {
+        alert("Erro ao concluir o processo do paciente.");
+      }
+    }
+  };
+
   const handleAdminCreateReservation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newResProfId || !newResRoomId || !newResDate || newResSlots.length === 0 || !newResService) {
@@ -2643,6 +2655,11 @@ export default function AdminDashboard() {
                               {pat.healthPlan} {pat.healthPlanNumber ? `- Nº: ${pat.healthPlanNumber}` : ''}
                             </span>
                           )}
+                          {pat.status === 'concluido' && (
+                            <span className="badge" style={{ backgroundColor: "#dcfce7", color: "#166534", fontSize: "0.65rem", padding: "0.1rem 0.4rem" }}>
+                              ✓ Processo Concluído
+                            </span>
+                          )}
                         </div>
                         {(pat.phone || pat.email) && (
                           <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>
@@ -2653,7 +2670,15 @@ export default function AdminDashboard() {
                           <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.1rem" }}>Resp: {pat.guardianName}</p>
                         )}
                       </div>
-                      <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                        {pat.status !== 'concluido' && (
+                          <button
+                            onClick={() => handleConcludePatientProcess(pat.id, pat.name)}
+                            style={{ padding: "0.3rem 0.6rem", backgroundColor: "var(--success)", color: "white", border: "none", borderRadius: "var(--radius-sm)", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
+                          >
+                            ✓ Concluir Processo
+                          </button>
+                        )}
                         <button 
                           onClick={() => {
                             setReportPatient(pat.name);
