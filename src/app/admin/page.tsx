@@ -555,6 +555,49 @@ export default function AdminDashboard() {
     })).sort((a, b) => b.reservas - a.reservas);
   }, [allReservations, professionalsList, professionalsMap]);
 
+  const ageGroupChartData = useMemo(() => {
+    const groups: Record<string, number> = {
+      "Criança (0 a 11 anos)": 0,
+      "Adolescente (12 a 17 anos)": 0,
+      "Adulto (18 a 59 anos)": 0,
+      "Idoso (60+ anos)": 0,
+    };
+
+    const today = new Date();
+    patientsList.forEach(pat => {
+      if (!pat.birthDate) return;
+      const birth = new Date(pat.birthDate + "T00:00:00");
+      if (isNaN(birth.getTime())) return;
+      let age = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+
+      if (age < 0) return;
+      if (age <= 11) groups["Criança (0 a 11 anos)"]++;
+      else if (age <= 17) groups["Adolescente (12 a 17 anos)"]++;
+      else if (age <= 59) groups["Adulto (18 a 59 anos)"]++;
+      else groups["Idoso (60+ anos)"]++;
+    });
+
+    return Object.entries(groups).map(([name, pacientes]) => ({
+      name,
+      pacientes
+    }));
+  }, [patientsList]);
+
+  const healthPlanChartData = useMemo(() => {
+    const plans: Record<string, number> = {};
+
+    patientsList.forEach(pat => {
+      const plan = (pat.healthPlan && pat.healthPlan.trim() !== "") ? pat.healthPlan.trim() : "Sem Classificação";
+      plans[plan] = (plans[plan] || 0) + 1;
+    });
+
+    return Object.entries(plans)
+      .map(([name, pacientes]) => ({ name, pacientes }))
+      .sort((a, b) => b.pacientes - a.pacientes);
+  }, [patientsList]);
+
   useEffect(() => {
     // Check real Supabase Auth session for admin
     if (loading) return; // Wait for context to load
@@ -1651,6 +1694,36 @@ export default function AdminDashboard() {
               </ResponsiveContainer>
             </div>
           </div>
+
+          <div className="card" style={{ padding: "1.5rem", marginTop: "1.5rem" }}>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1.5rem", color: "var(--text-main)" }}>Faixa Etária dos Pacientes Atendidos</h2>
+            <div style={{ width: "100%", height: "350px" }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={ageGroupChartData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.5} />
+                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: "var(--text-secondary)" }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "var(--text-secondary)" }} />
+                  <Tooltip cursor={{ fill: "var(--bg-color)" }} contentStyle={{ borderRadius: "8px", border: "1px solid var(--border-color)", backgroundColor: "var(--card-bg)" }} />
+                  <Bar dataKey="pacientes" fill="var(--success)" radius={[4, 4, 0, 0]} name="Qtd de Pacientes" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: "1.5rem", marginTop: "1.5rem" }}>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1.5rem", color: "var(--text-main)" }}>Pacientes Atendidos por Convênio</h2>
+            <div style={{ width: "100%", height: "400px" }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={healthPlanChartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.5} />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 12, fill: "var(--text-secondary)" }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "var(--text-secondary)" }} />
+                  <Tooltip cursor={{ fill: "var(--bg-color)" }} contentStyle={{ borderRadius: "8px", border: "1px solid var(--border-color)", backgroundColor: "var(--card-bg)" }} />
+                  <Bar dataKey="pacientes" fill="var(--primary)" radius={[4, 4, 0, 0]} name="Qtd de Pacientes" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
       )}
 
@@ -2476,7 +2549,8 @@ export default function AdminDashboard() {
                 <div style={{ flex: "1 1 150px" }}>
                   <label className="label">Convênio</label>
                   <select className="input" value={patHealthPlan} onChange={e => setPatHealthPlan(e.target.value)}>
-                    <option value="">Particular (Sem Convênio)</option>
+                    <option value="">Sem Classificação</option>
+                    <option value="Particular">Particular</option>
                     <option value="Unimed">Unimed</option>
                     <option value="Prefeitura">Prefeitura</option>
                     <option value="Prefeitura NeuroVida">Prefeitura NeuroVida</option>
@@ -2487,7 +2561,7 @@ export default function AdminDashboard() {
                     <option value="KR Saúde">KR Saúde</option>
                   </select>
                 </div>
-                {patHealthPlan && (
+                {patHealthPlan && patHealthPlan !== "Particular" && (
                   <div style={{ flex: "1 1 150px" }}>
                     <label className="label">Nº da Carteirinha</label>
                     <input className="input" value={patHealthPlanNumber} onChange={e => setPatHealthPlanNumber(e.target.value)} placeholder="Apenas se tiver convênio" />
@@ -2647,6 +2721,7 @@ export default function AdminDashboard() {
                 <label className="label" style={{ fontSize: "0.85rem", marginBottom: "0.2rem" }}>Convênio</label>
                 <select className="input" style={{ padding: "0.4rem" }} value={patientFilterHealthPlan} onChange={(e) => setPatientFilterHealthPlan(e.target.value)}>
                   <option value="">Todos</option>
+                  <option value="Sem Classificação">Sem Classificação</option>
                   <option value="Particular">Particular</option>
                   <option value="Unimed">Unimed</option>
                   <option value="Prefeitura">Prefeitura</option>
@@ -2681,8 +2756,8 @@ export default function AdminDashboard() {
                   }
                   
                   if (patientFilterHealthPlan) {
-                    if (patientFilterHealthPlan === "Particular" && pat.healthPlan && pat.healthPlan !== "Particular") return false;
-                    if (patientFilterHealthPlan !== "Particular" && pat.healthPlan !== patientFilterHealthPlan) return false;
+                    if (patientFilterHealthPlan === "Sem Classificação" && pat.healthPlan && pat.healthPlan.trim() !== "") return false;
+                    if (patientFilterHealthPlan !== "Sem Classificação" && pat.healthPlan !== patientFilterHealthPlan) return false;
                   }
 
                   if (patientFilterAgeGroup && pat.birthDate) {
