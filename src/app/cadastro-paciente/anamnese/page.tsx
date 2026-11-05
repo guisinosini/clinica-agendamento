@@ -152,6 +152,48 @@ function AnamneseForm() {
     }));
   };
 
+  const sanitizeFileName = (name: string) => {
+    return name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9._-]/g, "_")
+      .replace(/_+/g, "_");
+  };
+
+  const uploadPatientDocument = async (file: File): Promise<string | null> => {
+    const safeName = sanitizeFileName(file.name || "documento");
+    const uniqueFileName = `${Date.now()}_${Math.random().toString(36).substring(2, 6)}__${safeName}`;
+    const primaryPath = `${patientId}/${uniqueFileName}`;
+
+    // 1. Tenta o bucket dedicado 'patient-documents'
+    const { data: primaryData, error: primaryError } = await supabase.storage
+      .from("patient-documents")
+      .upload(primaryPath, file, { upsert: true });
+
+    if (!primaryError && primaryData) {
+      const { data: urlData } = supabase.storage
+        .from("patient-documents")
+        .getPublicUrl(primaryPath);
+      return urlData.publicUrl;
+    }
+
+    // 2. Fallback automático para o bucket 'avatars' (pasta patient-documents/) caso RLS bloqueie o bucket principal
+    const fallbackPath = `patient-documents/${patientId}/${uniqueFileName}`;
+    const { data: fallbackData, error: fallbackError } = await supabase.storage
+      .from("avatars")
+      .upload(fallbackPath, file, { upsert: true });
+
+    if (!fallbackError && fallbackData) {
+      const { data: urlData } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(fallbackPath);
+      return urlData.publicUrl;
+    }
+
+    console.error("Erro no upload do arquivo:", file.name, primaryError, fallbackError);
+    return null;
+  };
+
   const saveAnamnese = async () => {
     if (!patientId) return;
     setLoading(true);
@@ -161,20 +203,13 @@ function AnamneseForm() {
     
     if (files.length > 0) {
       for (const file of files) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${patientId}_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const filePath = `${patientId}/${fileName}`;
-
-        const { error: uploadError, data } = await supabase.storage
-          .from('patient-documents')
-          .upload(filePath, file);
-
-        if (uploadError) {
-          console.error("Erro no upload do arquivo:", file.name, uploadError);
-        } else if (data) {
-          const { data: urlData } = supabase.storage.from('patient-documents').getPublicUrl(filePath);
-          uploadedUrls.push(urlData.publicUrl);
+        const publicUrl = await uploadPatientDocument(file);
+        if (!publicUrl) {
+          setLoading(false);
+          setError(`Não foi possível enviar o arquivo "${file.name}". Verifique sua conexão e tente novamente.`);
+          return;
         }
+        uploadedUrls.push(publicUrl);
       }
     }
 
@@ -626,15 +661,33 @@ function AnamneseForm() {
               <input 
                 type="file" 
                 multiple 
-                onChange={(e) => setFiles(e.target.files ? Array.from(e.target.files) : [])}
+                onChange={(e) => {
+                  if (e.target.files && e.target.files.length > 0) {
+                    const newFiles = Array.from(e.target.files);
+                    setFiles(prev => [...prev, ...newFiles]);
+                    e.target.value = "";
+                  }
+                }}
                 className="input" 
                 style={{ padding: '0.5rem', background: 'var(--bg-color)', border: '1px solid var(--border-color)' }} 
               />
               {files.length > 0 && (
                 <div style={{ marginTop: '1rem', fontSize: '0.9rem' }}>
                   <strong style={{ color: 'var(--text-main)' }}>Arquivos selecionados ({files.length}):</strong>
-                  <ul style={{ paddingLeft: '1.5rem', marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
-                    {files.map((f, i) => <li key={i}>{f.name}</li>)}
+                  <ul style={{ paddingLeft: 0, listStyle: 'none', marginTop: '0.5rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                    {files.map((f, i) => (
+                      <li key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'var(--bg-color)', padding: '0.4rem 0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+                        <span style={{ wordBreak: 'break-all' }}>📄 {f.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))}
+                          style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontWeight: 700, marginLeft: '0.5rem' }}
+                          title="Remover arquivo"
+                        >
+                          ✕
+                        </button>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               )}

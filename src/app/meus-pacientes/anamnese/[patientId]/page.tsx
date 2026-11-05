@@ -13,6 +13,7 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingDocs, setUploadingDocs] = useState(false);
   const [patient, setPatient] = useState<any>(null);
   const [anamneseId, setAnamneseId] = useState<string | null>(null);
   const [anamneseDate, setAnamneseDate] = useState<string | null>(null);
@@ -94,6 +95,102 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
     
     setSaving(false);
     alert("Anamnese salva com sucesso!");
+  };
+
+  const getDisplayFileName = (url: string, idx: number) => {
+    const rawSegment = url.split("/").pop()?.split("?")[0] || `Documento ${idx + 1}`;
+    const decoded = decodeURIComponent(rawSegment);
+    if (decoded.includes("__")) {
+      return decoded.split("__").slice(1).join("__");
+    }
+    return decoded;
+  };
+
+  const sanitizeFileName = (name: string) => {
+    return name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9._-]/g, "_")
+      .replace(/_+/g, "_");
+  };
+
+  const uploadSingleDocument = async (file: File): Promise<string | null> => {
+    const safeName = sanitizeFileName(file.name || "documento");
+    const uniqueFileName = `${Date.now()}_${Math.random().toString(36).substring(2, 6)}__${safeName}`;
+    const primaryPath = `${patientId}/${uniqueFileName}`;
+
+    const { data: primaryData, error: primaryError } = await supabase.storage
+      .from("patient-documents")
+      .upload(primaryPath, file, { upsert: true });
+
+    if (!primaryError && primaryData) {
+      const { data: urlData } = supabase.storage
+        .from("patient-documents")
+        .getPublicUrl(primaryPath);
+      return urlData.publicUrl;
+    }
+
+    const fallbackPath = `patient-documents/${patientId}/${uniqueFileName}`;
+    const { data: fallbackData, error: fallbackError } = await supabase.storage
+      .from("avatars")
+      .upload(fallbackPath, file, { upsert: true });
+
+    if (!fallbackError && fallbackData) {
+      const { data: urlData } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(fallbackPath);
+      return urlData.publicUrl;
+    }
+
+    console.error("Erro no upload do arquivo:", file.name, primaryError, fallbackError);
+    return null;
+  };
+
+  const handleUploadProfDocuments = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files ? Array.from(e.target.files) : [];
+    e.target.value = "";
+    if (selectedFiles.length === 0) return;
+
+    setUploadingDocs(true);
+    const newUrls: string[] = [];
+
+    for (const file of selectedFiles) {
+      const url = await uploadSingleDocument(file);
+      if (!url) {
+        alert(`Erro ao enviar o arquivo "${file.name}". Tente novamente.`);
+        setUploadingDocs(false);
+        return;
+      }
+      newUrls.push(url);
+    }
+
+    const updatedDocs = [...(formData.documentosAnexos || []), ...newUrls];
+    const updatedFormData = { ...formData, documentosAnexos: updatedDocs };
+    setFormData(updatedFormData);
+
+    if (anamneseId) {
+      await supabase.from("anamneses").update({ responses: updatedFormData }).eq("id", anamneseId);
+    } else {
+      const { data } = await supabase
+        .from("anamneses")
+        .insert([{ patient_id: patientId, responses: updatedFormData }])
+        .select()
+        .single();
+      if (data) setAnamneseId(data.id);
+    }
+
+    setUploadingDocs(false);
+  };
+
+  const handleRemoveDocument = async (indexToRemove: number) => {
+    if (!window.confirm("Deseja remover este documento anexado da anamnese?")) return;
+    const updatedDocs = (formData.documentosAnexos || []).filter((_: string, idx: number) => idx !== indexToRemove);
+    const updatedFormData = { ...formData, documentosAnexos: updatedDocs };
+    setFormData(updatedFormData);
+
+    if (anamneseId) {
+      await supabase.from("anamneses").update({ responses: updatedFormData }).eq("id", anamneseId);
+    }
   };
 
   const calculateAge = (birthDateString: string) => {
@@ -508,30 +605,87 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
             <label className="label">Há laudos, receituários ou documentos escolares/profissionais trazidos para anexar ao processo?</label>
             <input className="input" style={{ marginBottom: '1.5rem' }} value={formData.documentosTrazidos} onChange={e => handleChange("documentosTrazidos", e.target.value)} />
             
-            {formData.documentosAnexos && formData.documentosAnexos.length > 0 && (
-              <div style={{ marginTop: '1.5rem', backgroundColor: 'var(--primary-light)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--primary-mid)' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  📎 Documentos Anexados pelo Paciente
+            <div style={{ marginTop: '1.5rem', backgroundColor: 'var(--primary-light)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--primary-mid)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  📎 Documentos Anexados ({formData.documentosAnexos?.length || 0})
                 </h3>
-                <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingLeft: 0, listStyle: 'none' }}>
+                <label
+                  className="btn btn-outline print-hide"
+                  style={{
+                    padding: '0.4rem 0.85rem',
+                    fontSize: '0.85rem',
+                    cursor: uploadingDocs ? 'not-allowed' : 'pointer',
+                    backgroundColor: 'var(--bg-color)',
+                    margin: 0
+                  }}
+                >
+                  {uploadingDocs ? "Enviando..." : "➕ Anexar Documento"}
+                  <input
+                    type="file"
+                    multiple
+                    disabled={uploadingDocs}
+                    onChange={handleUploadProfDocuments}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+              </div>
+
+              {formData.documentosAnexos && formData.documentosAnexos.length > 0 ? (
+                <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingLeft: 0, listStyle: 'none', margin: 0 }}>
                   {formData.documentosAnexos.map((url: string, idx: number) => {
-                    const fileName = url.split('/').pop()?.split('?')[0] || `Documento ${idx + 1}`;
+                    const displayFileName = getDisplayFileName(url, idx);
                     return (
-                      <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <li
+                        key={idx}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '0.75rem',
+                          backgroundColor: 'var(--bg-color)',
+                          padding: '0.6rem 0.9rem',
+                          borderRadius: 'var(--radius-sm)',
+                          border: '1px solid var(--border-color)'
+                        }}
+                      >
                         <a 
                           href={url} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          style={{ color: 'var(--primary)', textDecoration: 'underline', fontWeight: 500 }}
+                          style={{ color: 'var(--primary)', textDecoration: 'underline', fontWeight: 600, wordBreak: 'break-all' }}
                         >
-                          📄 {decodeURIComponent(fileName)}
+                          📄 {displayFileName}
                         </a>
+                        <div className="print-hide" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-outline"
+                            style={{ padding: '0.25rem 0.6rem', fontSize: '0.8rem', textDecoration: 'none' }}
+                          >
+                            Abrir
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveDocument(idx)}
+                            style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontWeight: 700, fontSize: '0.95rem', padding: '0.2rem 0.4rem' }}
+                            title="Remover anexo"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       </li>
                     );
                   })}
                 </ul>
-              </div>
-            )}
+              ) : (
+                <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                  Nenhum documento digital anexado neste cadastro. Você pode anexar arquivos usando o botão <strong>➕ Anexar Documento</strong> acima.
+                </p>
+              )}
+            </div>
           </section>
 
           <section>
@@ -698,6 +852,14 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
           <h2 className="print-title">12. Expectativas quanto à Avaliação</h2>
           <div className="print-item"><span className="print-label">Expectativas:</span><span className="print-value">{formData.expectativasAvaliacao}</span></div>
           <div className="print-item"><span className="print-label">Documentos trazidos:</span><span className="print-value">{formData.documentosTrazidos}</span></div>
+          {formData.documentosAnexos && formData.documentosAnexos.length > 0 && (
+            <div className="print-item">
+              <span className="print-label">Documentos anexados digitalmente:</span>
+              <span className="print-value">
+                {formData.documentosAnexos.map((url: string, idx: number) => getDisplayFileName(url, idx)).join(", ")}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="print-section allow-break">
