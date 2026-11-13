@@ -14,6 +14,8 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingDocs, setUploadingDocs] = useState(false);
+  const [downloadingIdx, setDownloadingIdx] = useState<number | null>(null);
+  const [downloadingAll, setDownloadingAll] = useState(false);
   const [patient, setPatient] = useState<any>(null);
   const [anamneseId, setAnamneseId] = useState<string | null>(null);
   const [anamneseDate, setAnamneseDate] = useState<string | null>(null);
@@ -190,6 +192,53 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
 
     if (anamneseId) {
       await supabase.from("anamneses").update({ responses: updatedFormData }).eq("id", anamneseId);
+    }
+  };
+
+  const handleDownloadDocument = async (url: string, fileName: string, idx?: number) => {
+    if (idx !== undefined) setDownloadingIdx(idx);
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Falha ao buscar arquivo");
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    } catch {
+      // Fallback usando o endpoint de download do Supabase Storage
+      const sep = url.includes("?") ? "&" : "?";
+      const downloadUrl = `${url}${sep}download=${encodeURIComponent(fileName)}`;
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.setAttribute("download", fileName);
+      a.target = "_blank";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } finally {
+      if (idx !== undefined) setDownloadingIdx(null);
+    }
+  };
+
+  const handleDownloadAllDocuments = async () => {
+    if (!formData.documentosAnexos || formData.documentosAnexos.length === 0) return;
+    setDownloadingAll(true);
+    try {
+      for (let i = 0; i < formData.documentosAnexos.length; i++) {
+        const url = formData.documentosAnexos[i];
+        const fileName = getDisplayFileName(url, i);
+        await handleDownloadDocument(url, fileName);
+        if (i < formData.documentosAnexos.length - 1) {
+          await new Promise(r => setTimeout(r, 500));
+        }
+      }
+    } finally {
+      setDownloadingAll(false);
     }
   };
 
@@ -610,25 +659,47 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   📎 Documentos Anexados ({formData.documentosAnexos?.length || 0})
                 </h3>
-                <label
-                  className="btn btn-outline print-hide"
-                  style={{
-                    padding: '0.4rem 0.85rem',
-                    fontSize: '0.85rem',
-                    cursor: uploadingDocs ? 'not-allowed' : 'pointer',
-                    backgroundColor: 'var(--bg-color)',
-                    margin: 0
-                  }}
-                >
-                  {uploadingDocs ? "Enviando..." : "➕ Anexar Documento"}
-                  <input
-                    type="file"
-                    multiple
-                    disabled={uploadingDocs}
-                    onChange={handleUploadProfDocuments}
-                    style={{ display: 'none' }}
-                  />
-                </label>
+                <div className="print-hide" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                  {formData.documentosAnexos && formData.documentosAnexos.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={handleDownloadAllDocuments}
+                      disabled={downloadingAll}
+                      className="btn btn-outline"
+                      style={{
+                        padding: '0.4rem 0.85rem',
+                        fontSize: '0.85rem',
+                        cursor: downloadingAll ? 'not-allowed' : 'pointer',
+                        backgroundColor: 'var(--bg-color)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.35rem'
+                      }}
+                      title="Baixar todos os documentos de uma vez"
+                    >
+                      {downloadingAll ? "⏳ Baixando todos..." : "📥 Baixar Todos"}
+                    </button>
+                  )}
+                  <label
+                    className="btn btn-outline"
+                    style={{
+                      padding: '0.4rem 0.85rem',
+                      fontSize: '0.85rem',
+                      cursor: uploadingDocs ? 'not-allowed' : 'pointer',
+                      backgroundColor: 'var(--bg-color)',
+                      margin: 0
+                    }}
+                  >
+                    {uploadingDocs ? "Enviando..." : "➕ Anexar Documento"}
+                    <input
+                      type="file"
+                      multiple
+                      disabled={uploadingDocs}
+                      onChange={handleUploadProfDocuments}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                </div>
               </div>
 
               {formData.documentosAnexos && formData.documentosAnexos.length > 0 ? (
@@ -657,13 +728,24 @@ export default function ProfissionalAnamnesePage({ params }: { params: { patient
                         >
                           📄 {displayFileName}
                         </a>
-                        <div className="print-hide" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                        <div className="print-hide" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadDocument(url, displayFileName, idx)}
+                            disabled={downloadingIdx === idx}
+                            className="btn btn-outline"
+                            style={{ padding: '0.25rem 0.6rem', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+                            title="Baixar para o seu computador"
+                          >
+                            {downloadingIdx === idx ? "⏳ Baixando..." : "📥 Baixar"}
+                          </button>
                           <a
                             href={url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="btn btn-outline"
                             style={{ padding: '0.25rem 0.6rem', fontSize: '0.8rem', textDecoration: 'none' }}
+                            title="Visualizar em nova aba"
                           >
                             Abrir
                           </a>
